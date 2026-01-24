@@ -1,0 +1,109 @@
+from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .models import User, Role
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    """Serializer for Role model."""
+    
+    class Meta:
+        model = Role
+        fields = ['id', 'name', 'description', 'permissions', 'is_active']
+        read_only_fields = ['id']
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Serializer for User model."""
+    
+    role_name = serializers.CharField(source='role.get_name_display', read_only=True)
+    
+    class Meta:
+        model = User
+        fields = [
+            'id', 'email', 'username', 'full_name', 'phone',
+            'role', 'role_name', 'avatar', 'is_active',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating users."""
+    
+    password = serializers.CharField(write_only=True, min_length=8)
+    password_confirm = serializers.CharField(write_only=True)
+    
+    class Meta:
+        model = User
+        fields = [
+            'email', 'username', 'full_name', 'phone',
+            'role', 'password', 'password_confirm'
+        ]
+    
+    def validate(self, data):
+        if data['password'] != data['password_confirm']:
+            raise serializers.ValidationError({
+                'password_confirm': 'Las contraseñas no coinciden.'
+            })
+        return data
+    
+    def create(self, validated_data):
+        validated_data.pop('password_confirm')
+        password = validated_data.pop('password')
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating users."""
+    
+    class Meta:
+        model = User
+        fields = ['full_name', 'phone', 'avatar', 'settings']
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """Serializer for password change."""
+    
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, min_length=8)
+    new_password_confirm = serializers.CharField(required=True)
+    
+    def validate(self, data):
+        if data['new_password'] != data['new_password_confirm']:
+            raise serializers.ValidationError({
+                'new_password_confirm': 'Las contraseñas no coinciden.'
+            })
+        return data
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Custom JWT token serializer with additional user info."""
+    
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        
+        # Add custom claims
+        token['email'] = user.email
+        token['full_name'] = user.full_name
+        token['role'] = user.role.name if user.role else None
+        
+        return token
+    
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        
+        # Add user info to response
+        data['user'] = {
+            'id': self.user.id,
+            'email': self.user.email,
+            'full_name': self.user.full_name,
+            'role': self.user.role.name if self.user.role else None,
+            'role_display': self.user.role.get_name_display() if self.user.role else None,
+            'permissions': self.user.role.permissions if self.user.role else [],
+        }
+        
+        return data

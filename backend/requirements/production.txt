@@ -1,0 +1,12 @@
+# Production requirements
+-r base.txt
+
+# Production server
+gunicorn>=21.2.0
+uvicorn>=0.24.0
+
+# Security
+django-csp>=3.7
+
+# Monitoring
+sentry-sdk>=1.38.0

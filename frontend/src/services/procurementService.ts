@@ -1,0 +1,131 @@
+import api from './api'
+
+// COG (Clasificador por Objeto del Gasto)
+export interface Cog {
+  id: number
+  codigo: string
+  descripcion: string
+  capitulo: string
+  concepto: string
+  partida_generica: string
+  partida_especifica: string
+  is_active: boolean
+}
+
+// Detalle de material (línea de solicitud)
+export interface DetalleMaterial {
+  id?: number
+  concepto: string
+  descripcion: string
+  cantidad: number
+  unidad: string
+  cog: number
+  cog_codigo?: string
+  cog_descripcion?: string
+  precio_estimado: number
+  subtotal_estimado?: number
+  notas: string
+}
+
+// Solicitud de material
+export interface SolicitudMaterial {
+  id: number
+  numero: string
+  area: number
+  area_name: string
+  area_nombre?: string
+  fecha_solicitud: string
+  descripcion: string
+  justificacion: string
+  estado: string
+  estado_display: string
+  total_estimado: string
+  urgente: boolean
+  fecha_requerida: string | null
+  created_by: number
+  created_by_name: string
+  detalles: DetalleMaterial[]
+  materiales?: {
+    descripcion: string
+    unidad_medida: string
+    cantidad: number
+  }[]
+  created_at: string
+  updated_at: string
+}
+
+// Alias for backwards compatibility
+export type Solicitud = SolicitudMaterial
+
+export interface CreateSolicitudData {
+  area: number
+  fecha_solicitud: string
+  descripcion: string
+  justificacion: string
+  urgente: boolean
+  fecha_requerida?: string | null
+  detalles: Omit<DetalleMaterial, 'id' | 'cog_codigo' | 'cog_descripcion' | 'subtotal_estimado'>[]
+}
+
+export interface UpdateSolicitudData extends Partial<CreateSolicitudData> {}
+
+// Helper para manejar respuestas paginadas o arrays directos
+const extractData = <T>(data: T[] | { results: T[] }): T[] => {
+  if (Array.isArray(data)) return data
+  if (data && typeof data === 'object' && 'results' in data) return data.results
+  return []
+}
+
+export const procurementService = {
+  // Solicitudes
+  getSolicitudes: async (): Promise<SolicitudMaterial[]> => {
+    const response = await api.get('/procurement/solicitudes/')
+    return extractData(response.data)
+  },
+
+  getSolicitud: async (id: number): Promise<SolicitudMaterial> => {
+    const response = await api.get(`/procurement/solicitudes/${id}/`)
+    return response.data
+  },
+
+  createSolicitud: async (data: CreateSolicitudData): Promise<SolicitudMaterial> => {
+    const response = await api.post('/procurement/solicitudes/', data)
+    return response.data
+  },
+
+  updateSolicitud: async (id: number, data: UpdateSolicitudData): Promise<SolicitudMaterial> => {
+    const response = await api.patch(`/procurement/solicitudes/${id}/`, data)
+    return response.data
+  },
+
+  deleteSolicitud: async (id: number): Promise<void> => {
+    await api.delete(`/procurement/solicitudes/${id}/`)
+  },
+
+  // Cambiar estado de solicitud
+  enviarSolicitud: async (id: number): Promise<SolicitudMaterial> => {
+    const response = await api.post(`/procurement/solicitudes/${id}/submit/`)
+    return response.data
+  },
+
+  cancelarSolicitud: async (id: number): Promise<SolicitudMaterial> => {
+    const response = await api.post(`/procurement/solicitudes/${id}/cancel/`)
+    return response.data
+  },
+
+  // COG
+  getCogs: async (): Promise<Cog[]> => {
+    const response = await api.get('/procurement/cog/')
+    return extractData(response.data)
+  },
+
+  getCog: async (id: number): Promise<Cog> => {
+    const response = await api.get(`/procurement/cog/${id}/`)
+    return response.data
+  },
+
+  searchCogs: async (search: string): Promise<Cog[]> => {
+    const response = await api.get('/procurement/cog/', { params: { search } })
+    return extractData(response.data)
+  },
+}

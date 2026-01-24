@@ -1,0 +1,105 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import toast from 'react-hot-toast'
+import { useAuthStore } from '@/stores/authStore'
+import { authService, LoginCredentials } from '@/services/authService'
+
+export default function LoginPage() {
+  const navigate = useNavigate()
+  const { setAuth } = useAuthStore()
+  const [loading, setLoading] = useState(false)
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginCredentials>()
+
+  const onSubmit = async (data: LoginCredentials) => {
+    setLoading(true)
+    try {
+      const response = await authService.login(data)
+      setAuth(response.user, response.access, response.refresh)
+      toast.success('¡Bienvenido!')
+      navigate('/dashboard')
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Error al iniciar sesión')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      <div>
+        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+          Gastos Distribuidos
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Ingresa con tu cuenta para continuar
+        </p>
+      </div>
+
+      <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <div className="space-y-4 rounded-md shadow-sm">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Correo electrónico
+            </label>
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              {...register('email', {
+                required: 'El correo es requerido',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Correo inválido'
+                }
+              })}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+              placeholder="admin@gastos.local"
+            />
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Contraseña
+            </label>
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              {...register('password', {
+                required: 'La contraseña es requerida',
+                minLength: {
+                  value: 6,
+                  message: 'La contraseña debe tener al menos 6 caracteres',
+                },
+              })}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+              placeholder="••••••••"
+            />
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="group relative flex w-full justify-center rounded-md border border-transparent bg-primary-600 py-2 px-4 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Ingresando...' : 'Ingresar'}
+          </button>
+        </div>
+      </form>
+    </>
+  )
+}
