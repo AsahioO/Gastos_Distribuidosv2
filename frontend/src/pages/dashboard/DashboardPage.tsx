@@ -13,6 +13,7 @@ import {
   CheckCircleIcon,
   BellAlertIcon,
   ArrowTrendingUpIcon,
+  ClipboardDocumentListIcon,
 } from '@heroicons/react/24/outline'
 
 const DashboardPage: React.FC = () => {
@@ -104,16 +105,22 @@ const DashboardPage: React.FC = () => {
   // Usar primero el rol del usuario autenticado, luego el del API stats como fallback
   const userRole = user?.role || stats?.user_role || null
   
-  // Roles con acceso a información financiera (presupuesto, facturas, gastos)
+  // FLUJO DE NEGOCIO:
+  // Área→Adquisiciones→Proveedores→Tesorería(autoriza cotización)→Adquisiciones(OC)→Almacén→Tesorería(pago)
+  
+  // Roles con acceso a información financiera (presupuesto, facturas, pagos)
   const showFinancialInfo = ['admin', 'tesoreria'].includes(userRole || '')
   
-  // Roles con acceso a solicitudes y cotizaciones
-  const showProcurementInfo = ['admin', 'tesoreria', 'adquisiciones', 'area'].includes(userRole || '')
+  // Roles que trabajan con solicitudes (área crea, adquisiciones gestiona)
+  const showSolicitudesInfo = ['admin', 'adquisiciones', 'area'].includes(userRole || '')
   
-  // Roles con acceso a órdenes de compra (no almacén que solo ve entregas)
-  const showOrdersInfo = ['admin', 'tesoreria', 'adquisiciones', 'area'].includes(userRole || '')
+  // Roles que trabajan con cotizaciones (adquisiciones envía, tesorería autoriza)
+  const showCotizacionesInfo = ['admin', 'adquisiciones', 'tesoreria'].includes(userRole || '')
   
-  // Roles con acceso a inventario/entregas
+  // Roles que trabajan con órdenes de compra (solo adquisiciones genera)
+  const showOrdersInfo = ['admin', 'adquisiciones'].includes(userRole || '')
+  
+  // Roles con acceso a inventario/entregas (almacén recibe)
   const showWarehouseInfo = ['admin', 'almacen'].includes(userRole || '')
   
   // Es proveedor externo
@@ -165,18 +172,36 @@ const DashboardPage: React.FC = () => {
               <p className="mt-2 text-blue-100 text-lg">
                 {showProviderInfo 
                   ? 'Consulta tus cotizaciones y órdenes asignadas'
+                  : showFinancialInfo
+                  ? 'Gestión de autorizaciones, pagos y presupuesto'
+                  : showWarehouseInfo
+                  ? 'Control de entregas y recepción de bienes'
                   : 'Aquí está el resumen de tu gestión de gastos'}
               </p>
             </div>
             <div className="hidden lg:flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4">
               <div className="text-center">
-                <p className="text-3xl font-bold">{stats?.solicitudes_pendientes || 0}</p>
-                <p className="text-sm text-blue-200">{showProviderInfo ? 'Cotizaciones' : 'Pendientes'}</p>
+                <p className="text-3xl font-bold">
+                  {showProviderInfo 
+                    ? stats?.cotizaciones_pendientes || 0 
+                    : showFinancialInfo 
+                    ? stats?.facturas_pendientes || 0
+                    : stats?.solicitudes_pendientes || 0}
+                </p>
+                <p className="text-sm text-blue-200">
+                  {showProviderInfo 
+                    ? 'Cotizaciones' 
+                    : showFinancialInfo
+                    ? 'Facturas'
+                    : 'Pendientes'}
+                </p>
               </div>
               <div className="w-px h-12 bg-white/20" />
               <div className="text-center">
                 <p className="text-3xl font-bold">{stats?.ordenes_activas || 0}</p>
-                <p className="text-sm text-blue-200">Órdenes Activas</p>
+                <p className="text-sm text-blue-200">
+                  {showWarehouseInfo ? 'Por Recibir' : 'Órdenes Activas'}
+                </p>
               </div>
             </div>
           </div>
@@ -185,23 +210,37 @@ const DashboardPage: React.FC = () => {
 
       {/* Tarjetas de estadísticas principales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {showProcurementInfo && (
+        {/* Solicitudes - área y adquisiciones */}
+        {showSolicitudesInfo && !showProviderInfo && (
           <StatCard
-            title={showProviderInfo ? "Cotizaciones Enviadas" : "Solicitudes Pendientes"}
-            value={showProviderInfo ? stats?.cotizaciones_pendientes || 0 : stats?.solicitudes_pendientes || 0}
+            title="Solicitudes Pendientes"
+            value={stats?.solicitudes_pendientes || 0}
             gradient="blue"
             icon={<ClockIcon className="w-6 h-6" />}
-            subtitle={showProviderInfo ? "Esperando respuesta" : "Esperando aprobación"}
+            subtitle="Esperando aprobación"
           />
         )}
-        {showProcurementInfo && (
+        {showSolicitudesInfo && !showProviderInfo && (
           <StatCard
-            title={showProviderInfo ? "Órdenes Asignadas" : "Solicitudes Aprobadas"}
-            value={showProviderInfo ? stats?.ordenes_activas || 0 : stats?.solicitudes_aprobadas || 0}
+            title="Solicitudes Aprobadas"
+            value={stats?.solicitudes_aprobadas || 0}
             gradient="green"
             icon={<CheckCircleIcon className="w-6 h-6" />}
           />
         )}
+        
+        {/* Cotizaciones - para tesorería que autoriza */}
+        {showCotizacionesInfo && !showSolicitudesInfo && !showProviderInfo && (
+          <StatCard
+            title="Cotizaciones por Autorizar"
+            value={stats?.cotizaciones_pendientes || 0}
+            gradient="blue"
+            icon={<ClipboardDocumentListIcon className="w-6 h-6" />}
+            subtitle="Pendientes de autorización"
+          />
+        )}
+        
+        {/* Órdenes de Compra - solo adquisiciones */}
         {showOrdersInfo && (
           <StatCard
             title="Órdenes de Compra"
@@ -211,6 +250,8 @@ const DashboardPage: React.FC = () => {
             subtitle="En proceso"
           />
         )}
+        
+        {/* Facturas - tesorería */}
         {showFinancialInfo && (
           <StatCard
             title="Facturas Pendientes"
@@ -218,6 +259,26 @@ const DashboardPage: React.FC = () => {
             gradient="orange"
             icon={<CurrencyDollarIcon className="w-6 h-6" />}
             subtitle="Por procesar"
+          />
+        )}
+        
+        {/* Tarjetas para PROVEEDOR */}
+        {showProviderInfo && (
+          <StatCard
+            title="Cotizaciones Enviadas"
+            value={stats?.cotizaciones_pendientes || 0}
+            gradient="blue"
+            icon={<ClipboardDocumentListIcon className="w-6 h-6" />}
+            subtitle="Esperando respuesta"
+          />
+        )}
+        {showProviderInfo && (
+          <StatCard
+            title="Órdenes Asignadas"
+            value={stats?.ordenes_activas || 0}
+            gradient="green"
+            icon={<ShoppingCartIcon className="w-6 h-6" />}
+            subtitle="Por entregar"
           />
         )}
         {showProviderInfo && (
@@ -229,6 +290,8 @@ const DashboardPage: React.FC = () => {
             subtitle="Este mes"
           />
         )}
+        
+        {/* Tarjetas para ALMACÉN */}
         {showWarehouseInfo && (
           <StatCard
             title="Entregas Pendientes"

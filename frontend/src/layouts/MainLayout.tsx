@@ -25,14 +25,30 @@ interface NavItem {
   roles?: string[]  // Si no se especifica, todos los roles internos pueden verlo
 }
 
-// Navegación principal para usuarios internos - CON restricciones por rol
+// Navegación principal para usuarios internos - CON restricciones por rol según flujo de negocio
+// 
+// FLUJO: Área→Adquisiciones→Proveedores→Tesorería(autoriza)→Adquisiciones(OC)→Almacén→Tesorería(pago)
+//
 const navigation: NavItem[] = [
+  // Todos ven el Dashboard
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
+  
+  // Reportes: solo admin y tesorería
   { name: 'Reportes', href: '/reportes', icon: ChartBarIcon, roles: ['admin', 'tesoreria'] },
-  { name: 'Solicitudes', href: '/solicitudes', icon: DocumentTextIcon, roles: ['admin', 'tesoreria', 'adquisiciones', 'area'] },
-  { name: 'Cotizaciones', href: '/cotizaciones', icon: ClipboardDocumentListIcon, roles: ['admin', 'tesoreria', 'adquisiciones'] },
-  { name: 'Órdenes de Compra', href: '/ordenes', icon: ShoppingCartIcon, roles: ['admin', 'tesoreria', 'adquisiciones'] },
+  
+  // Solicitudes: área crea, adquisiciones gestiona, admin supervisa
+  { name: 'Solicitudes', href: '/solicitudes', icon: DocumentTextIcon, roles: ['admin', 'adquisiciones', 'area'] },
+  
+  // Cotizaciones: adquisiciones envía a proveedores, tesorería autoriza la mejor
+  { name: 'Cotizaciones', href: '/cotizaciones', icon: ClipboardDocumentListIcon, roles: ['admin', 'adquisiciones', 'tesoreria'] },
+  
+  // Órdenes de Compra: adquisiciones genera y envía al proveedor ganador
+  { name: 'Órdenes de Compra', href: '/ordenes', icon: ShoppingCartIcon, roles: ['admin', 'adquisiciones'] },
+  
+  // Inventario/Entregas: almacén recibe mercancía del proveedor
   { name: 'Inventario', href: '/inventario', icon: TruckIcon, roles: ['admin', 'almacen'] },
+  
+  // Facturas/Pagos: tesorería procesa pagos a proveedores
   { name: 'Facturas', href: '/facturas', icon: ReceiptPercentIcon, roles: ['admin', 'tesoreria'] },
 ]
 
