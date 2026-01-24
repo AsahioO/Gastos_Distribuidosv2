@@ -101,10 +101,22 @@ const DashboardPage: React.FC = () => {
   }
 
   // Determinar qué secciones mostrar según el rol
-  const userRole = stats?.user_role || null
+  // Usar primero el rol del usuario autenticado, luego el del API stats como fallback
+  const userRole = user?.role || stats?.user_role || null
+  
+  // Roles con acceso a información financiera (presupuesto, facturas, gastos)
   const showFinancialInfo = ['admin', 'tesoreria'].includes(userRole || '')
+  
+  // Roles con acceso a solicitudes y cotizaciones
   const showProcurementInfo = ['admin', 'tesoreria', 'adquisiciones', 'area'].includes(userRole || '')
+  
+  // Roles con acceso a órdenes de compra (no almacén que solo ve entregas)
+  const showOrdersInfo = ['admin', 'tesoreria', 'adquisiciones', 'area'].includes(userRole || '')
+  
+  // Roles con acceso a inventario/entregas
   const showWarehouseInfo = ['admin', 'almacen'].includes(userRole || '')
+  
+  // Es proveedor externo
   const showProviderInfo = userRole === 'proveedor'
 
   if (loading) {
@@ -127,7 +139,10 @@ const DashboardPage: React.FC = () => {
     value: area.gastado,
   }))
 
-  const presupuestoUsado = stats ? (stats.total_gastado_mes / stats.total_presupuesto) * 100 : 0
+  // Evitar división por cero
+  const presupuestoUsado = stats && stats.total_presupuesto > 0 
+    ? (stats.total_gastado_mes / stats.total_presupuesto) * 100 
+    : 0
 
   return (
     <div className="space-y-6 pb-8">
@@ -187,7 +202,7 @@ const DashboardPage: React.FC = () => {
             icon={<CheckCircleIcon className="w-6 h-6" />}
           />
         )}
-        {!showProviderInfo && (
+        {showOrdersInfo && (
           <StatCard
             title="Órdenes de Compra"
             value={stats?.ordenes_activas || 0}

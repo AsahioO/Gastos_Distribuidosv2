@@ -22,18 +22,18 @@ interface NavItem {
   name: string
   href: string
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
-  roles?: string[]
+  roles?: string[]  // Si no se especifica, todos los roles internos pueden verlo
 }
 
-// Navegación principal para usuarios internos
+// Navegación principal para usuarios internos - CON restricciones por rol
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Reportes', href: '/reportes', icon: ChartBarIcon },
-  { name: 'Solicitudes', href: '/solicitudes', icon: DocumentTextIcon },
-  { name: 'Cotizaciones', href: '/cotizaciones', icon: ClipboardDocumentListIcon },
-  { name: 'Órdenes de Compra', href: '/ordenes', icon: ShoppingCartIcon },
-  { name: 'Inventario', href: '/inventario', icon: TruckIcon },
-  { name: 'Facturas', href: '/facturas', icon: ReceiptPercentIcon },
+  { name: 'Reportes', href: '/reportes', icon: ChartBarIcon, roles: ['admin', 'tesoreria'] },
+  { name: 'Solicitudes', href: '/solicitudes', icon: DocumentTextIcon, roles: ['admin', 'tesoreria', 'adquisiciones', 'area'] },
+  { name: 'Cotizaciones', href: '/cotizaciones', icon: ClipboardDocumentListIcon, roles: ['admin', 'tesoreria', 'adquisiciones'] },
+  { name: 'Órdenes de Compra', href: '/ordenes', icon: ShoppingCartIcon, roles: ['admin', 'tesoreria', 'adquisiciones'] },
+  { name: 'Inventario', href: '/inventario', icon: TruckIcon, roles: ['admin', 'almacen'] },
+  { name: 'Facturas', href: '/facturas', icon: ReceiptPercentIcon, roles: ['admin', 'tesoreria'] },
 ]
 
 // Navegación para proveedores
@@ -64,9 +64,12 @@ export default function MainLayout() {
 
   // Determinar si es proveedor
   const isProveedor = user?.role === 'proveedor'
+  const userRole = user?.role || ''
 
-  // Navegación según tipo de usuario
-  const mainNavigation = isProveedor ? proveedorNavigation : navigation
+  // Navegación según tipo de usuario, filtrada por rol
+  const mainNavigation = isProveedor 
+    ? proveedorNavigation 
+    : navigation.filter(item => !item.roles || item.roles.includes(userRole))
 
   const filteredAdminNav = isProveedor ? [] : adminNavigation.filter(
     item => !item.roles || (user && item.roles.includes(user.role))
