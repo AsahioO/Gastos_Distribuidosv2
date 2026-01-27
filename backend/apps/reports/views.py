@@ -471,8 +471,8 @@ class ProveedorDashboardView(APIView):
             'razon_social': proveedor.razon_social,
             'nombre_comercial': proveedor.nombre_comercial or proveedor.razon_social,
             'rfc': proveedor.rfc,
-            'email': proveedor.email,
-            'telefono': proveedor.telefono,
+            'email': proveedor.contacto_email,
+            'telefono': proveedor.contacto_telefono,
             'estado_cuenta': proveedor.estado,  # pendiente, activo, suspendido
         }
         

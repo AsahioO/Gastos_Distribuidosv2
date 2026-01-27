@@ -138,12 +138,16 @@ export default function AreasPage() {
           <button
             onClick={(e) => { e.stopPropagation(); handleEdit(area) }}
             className="text-primary-600 hover:text-primary-900"
+            title="Editar área"
+            aria-label={`Editar área ${area.nombre}`}
           >
             <PencilIcon className="h-5 w-5" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); handleDelete(area) }}
             className="text-red-600 hover:text-red-900"
+            title="Eliminar área"
+            aria-label={`Eliminar área ${area.nombre}`}
           >
             <TrashIcon className="h-5 w-5" />
           </button>

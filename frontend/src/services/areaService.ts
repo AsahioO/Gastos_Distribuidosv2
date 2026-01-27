@@ -38,10 +38,39 @@ const extractData = <T>(data: T[] | { results: T[] }): T[] => {
   return []
 }
 
+// Backend devuelve 'name' pero frontend usa 'nombre', mapear campos
+interface ApiArea {
+  id: number
+  name: string
+  code: string
+  description: string
+  manager: number | null
+  manager_name?: string
+  presupuesto_anual: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+const mapAreaFromApi = (apiArea: ApiArea): Area => ({
+  id: apiArea.id,
+  nombre: apiArea.name,
+  codigo: apiArea.code,
+  descripcion: apiArea.description,
+  responsable: apiArea.manager,
+  responsable_nombre: apiArea.manager_name,
+  presupuesto_anual: apiArea.presupuesto_anual,
+  presupuesto_disponible: apiArea.presupuesto_anual, // Placeholder
+  is_active: apiArea.is_active,
+  created_at: apiArea.created_at,
+  updated_at: apiArea.updated_at,
+})
+
 export const areaService = {
   getAreas: async (): Promise<Area[]> => {
     const response = await api.get('/areas/')
-    return extractData(response.data)
+    const apiAreas: ApiArea[] = extractData(response.data)
+    return apiAreas.map(mapAreaFromApi)
   },
 
   getArea: async (id: number): Promise<Area> => {

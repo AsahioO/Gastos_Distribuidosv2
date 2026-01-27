@@ -6,10 +6,12 @@ import {
   PencilIcon, 
   PaperAirplaneIcon,
   XCircleIcon,
-  PrinterIcon
+  PrinterIcon,
+  DocumentArrowUpIcon
 } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui'
 import { procurementService, SolicitudMaterial } from '@/services/procurementService'
+import { useAuthStore } from '@/stores/authStore'
 
 const estadoColors: Record<string, string> = {
   borrador: 'bg-gray-100 text-gray-800',
@@ -27,9 +29,15 @@ const estadoColors: Record<string, string> = {
 export default function SolicitudDetailPage() {
   const navigate = useNavigate()
   const { id } = useParams()
+  const { user } = useAuthStore()
   const [solicitud, setSolicitud] = useState<SolicitudMaterial | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+
+  // Permisos según rol
+  const isArea = user?.role === 'area'
+  const isAdquisiciones = user?.role === 'adquisiciones'
+  const isAdmin = user?.role === 'admin'
 
   useEffect(() => {
     const loadData = async () => {
@@ -57,6 +65,20 @@ export default function SolicitudDetailPage() {
       toast.success('Solicitud enviada correctamente')
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Error al enviar la solicitud')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleEnviarACotizacion = async () => {
+    if (!solicitud) return
+    setSubmitting(true)
+    try {
+      const updated = await procurementService.enviarACotizacion(solicitud.id)
+      setSolicitud(updated)
+      toast.success('Solicitud enviada a cotización. Los proveedores ahora pueden cotizar.')
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Error al enviar a cotización')
     } finally {
       setSubmitting(false)
     }
@@ -140,7 +162,8 @@ export default function SolicitudDetailPage() {
 
       {/* Acciones */}
       <div className="mb-6 flex flex-wrap gap-2">
-        {solicitud.estado === 'borrador' && (
+        {/* Solo Área o Admin pueden editar/enviar borradores */}
+        {solicitud.estado === 'borrador' && (isArea || isAdmin) && (
           <>
             <Button onClick={() => navigate(`/solicitudes/${solicitud.id}/editar`)}>
               <PencilIcon className="h-4 w-4 mr-2" />
@@ -152,8 +175,17 @@ export default function SolicitudDetailPage() {
             </Button>
           </>
         )}
+
+        {/* Adquisiciones o Admin pueden enviar a cotización */}
+        {solicitud.estado === 'enviado' && (isAdquisiciones || isAdmin) && (
+          <Button onClick={handleEnviarACotizacion} loading={submitting}>
+            <DocumentArrowUpIcon className="h-4 w-4 mr-2" />
+            Enviar a Cotización
+          </Button>
+        )}
         
-        {['enviado', 'en_cotizacion'].includes(solicitud.estado) && (
+        {/* Solo Área o Admin pueden cancelar */}
+        {['enviado', 'en_cotizacion'].includes(solicitud.estado) && (isArea || isAdmin) && (
           <Button variant="danger" onClick={handleCancelar} loading={submitting}>
             <XCircleIcon className="h-4 w-4 mr-2" />
             Cancelar Solicitud

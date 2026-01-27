@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm, useFieldArray } from 'react-hook-form'
 import toast from 'react-hot-toast'
-import { PlusIcon, TrashIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'
-import { Button, Input, Select } from '@/components/ui'
+import { PlusIcon, TrashIcon, ArrowLeftIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { Button, Input, Select, Modal } from '@/components/ui'
 import { procurementService, Cog, CreateSolicitudData } from '@/services/procurementService'
 import { areaService, Area } from '@/services/areaService'
 
@@ -34,9 +34,30 @@ export default function SolicitudFormPage() {
   
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [pendingFormData, setPendingFormData] = useState<SolicitudForm | null>(null)
   const [areas, setAreas] = useState<Area[]>([])
   const [cogs, setCogs] = useState<Cog[]>([])
   const [cogSearch] = useState('')
+
+  // Opciones predefinidas de unidades
+  const unidadOptions = [
+    { value: 'Pieza', label: 'Pieza' },
+    { value: 'Piezas', label: 'Piezas' },
+    { value: 'Kg', label: 'Kilogramo (Kg)' },
+    { value: 'Lt', label: 'Litro (Lt)' },
+    { value: 'Caja', label: 'Caja' },
+    { value: 'Paquete', label: 'Paquete' },
+    { value: 'Metro', label: 'Metro' },
+    { value: 'Rollo', label: 'Rollo' },
+    { value: 'Par', label: 'Par' },
+    { value: 'Juego', label: 'Juego' },
+    { value: 'Servicio', label: 'Servicio' },
+    { value: 'Unidad', label: 'Unidad' },
+    { value: 'Bolsa', label: 'Bolsa' },
+    { value: 'Galón', label: 'Galón' },
+    { value: 'Otro', label: 'Otro' },
+  ]
 
   const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<SolicitudForm>({
     defaultValues: {
@@ -95,7 +116,7 @@ export default function SolicitudFormPage() {
     loadData()
   }, [id, isEditing, setValue])
 
-  const onSubmit = async (data: SolicitudForm) => {
+  const onSubmit = async (data: SolicitudForm, sendDirectly: boolean = false) => {
     if (data.detalles.length === 0) {
       toast.error('Agrega al menos un material a la solicitud')
       return
@@ -121,8 +142,15 @@ export default function SolicitudFormPage() {
         await procurementService.updateSolicitud(parseInt(id), payload)
         toast.success('Solicitud actualizada correctamente')
       } else {
-        await procurementService.createSolicitud(payload)
-        toast.success('Solicitud creada correctamente')
+        const created = await procurementService.createSolicitud(payload)
+        
+        // Si se eligió enviar directamente, cambiar estado a "enviado"
+        if (sendDirectly) {
+          await procurementService.enviarSolicitud(created.id)
+          toast.success('Solicitud creada y enviada correctamente')
+        } else {
+          toast.success('Solicitud guardada como borrador')
+        }
       }
       navigate('/solicitudes')
     } catch (error: any) {
@@ -133,6 +161,26 @@ export default function SolicitudFormPage() {
       toast.error(String(errorMsg))
     } finally {
       setSubmitting(false)
+      setShowConfirmModal(false)
+      setPendingFormData(null)
+    }
+  }
+
+  // Manejador para guardar como borrador
+  const handleSaveDraft = (data: SolicitudForm) => {
+    onSubmit(data, false)
+  }
+
+  // Manejador para abrir modal de confirmación de envío directo
+  const handleSendDirectly = (data: SolicitudForm) => {
+    setPendingFormData(data)
+    setShowConfirmModal(true)
+  }
+
+  // Confirmar envío directo
+  const confirmSendDirectly = () => {
+    if (pendingFormData) {
+      onSubmit(pendingFormData, true)
     }
   }
 
@@ -264,6 +312,8 @@ export default function SolicitudFormPage() {
                         type="button"
                         onClick={() => remove(index)}
                         className="text-red-500 hover:text-red-700"
+                        title="Eliminar material"
+                        aria-label={`Eliminar material ${index + 1}`}
                       >
                         <TrashIcon className="h-5 w-5" />
                       </button>
@@ -293,9 +343,10 @@ export default function SolicitudFormPage() {
                       error={errors.detalles?.[index]?.cantidad?.message}
                     />
 
-                    <Input
+                    <Select
                       label="Unidad *"
-                      placeholder="Pieza, Kg, Lt..."
+                      options={unidadOptions}
+                      placeholder="Selecciona unidad"
                       {...register(`detalles.${index}.unidad`, { required: 'Requerido' })}
                       error={errors.detalles?.[index]?.unidad?.message}
                     />
@@ -347,11 +398,67 @@ export default function SolicitudFormPage() {
           <Button type="button" variant="secondary" onClick={() => navigate('/solicitudes')}>
             Cancelar
           </Button>
-          <Button type="submit" loading={submitting}>
-            {isEditing ? 'Actualizar Solicitud' : 'Crear Solicitud'}
+          {!isEditing && (
+            <Button 
+              type="button" 
+              variant="secondary"
+              loading={submitting}
+              onClick={handleSubmit(handleSaveDraft)}
+            >
+              Guardar Borrador
+            </Button>
+          )}
+          <Button 
+            type="button" 
+            loading={submitting}
+            onClick={handleSubmit(isEditing ? handleSaveDraft : handleSendDirectly)}
+          >
+            {isEditing ? 'Actualizar Solicitud' : 'Enviar Solicitud'}
           </Button>
         </div>
       </form>
+
+      {/* Modal de confirmación para envío directo */}
+      <Modal 
+        isOpen={showConfirmModal} 
+        onClose={() => setShowConfirmModal(false)} 
+        title="Confirmar Envío de Solicitud"
+        size="md"
+      >
+        <div className="text-center py-4">
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-4">
+            <ExclamationTriangleIcon className="h-10 w-10 text-yellow-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            ¿Estás seguro de enviar esta solicitud?
+          </h3>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-yellow-800 font-medium">
+              ⚠️ Una vez enviada, NO podrás modificar la solicitud.
+            </p>
+            <p className="text-sm text-yellow-700 mt-1">
+              Asegúrate de que todos los datos sean correctos antes de continuar.
+            </p>
+          </div>
+          <p className="text-sm text-gray-500 mb-6">
+            Si necesitas hacer cambios después, deberás cancelar esta solicitud y crear una nueva.
+          </p>
+          <div className="flex justify-center space-x-3">
+            <Button 
+              variant="secondary" 
+              onClick={() => setShowConfirmModal(false)}
+            >
+              Revisar de nuevo
+            </Button>
+            <Button 
+              onClick={confirmSendDirectly}
+              loading={submitting}
+            >
+              Sí, Enviar Solicitud
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

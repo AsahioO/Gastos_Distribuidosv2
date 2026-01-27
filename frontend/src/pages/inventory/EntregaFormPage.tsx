@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { inventoryService, CreateEntregaData } from '../../services/inventoryService'
 import { orderService, OrdenCompra, DetalleOrden } from '../../services/orderService'
@@ -29,28 +29,37 @@ export default function EntregaFormPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditing = Boolean(id)
-  
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [ordenes, setOrdenes] = useState<OrdenCompra[]>([])
   const [selectedOrden, setSelectedOrden] = useState<OrdenCompra | null>(null)
-  
-  const { register, control, handleSubmit, watch, formState: { errors } } = useForm<EntregaFormData>({
+
+  const [searchParams] = useSearchParams()
+  const preSelectedOrdenId = searchParams.get('orden')
+
+  // Calculate local time for default value
+  const getLocalISOString = () => {
+    const tzOffset = new Date().getTimezoneOffset() * 60000
+    return new Date(Date.now() - tzOffset).toISOString().slice(0, 16)
+  }
+
+  const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<EntregaFormData>({
     defaultValues: {
-      orden: '',
+      orden: preSelectedOrdenId || '',
       factura: '',
-      fecha_recepcion: new Date().toISOString().slice(0, 16),
+      fecha_recepcion: getLocalISOString(),
       notas: '',
       completa: false,
       detalles: []
     }
   })
-  
+
   const { fields, replace } = useFieldArray({
     control,
     name: 'detalles'
   })
-  
+
   const watchOrden = watch('orden')
 
   useEffect(() => {
@@ -64,14 +73,17 @@ export default function EntregaFormPage() {
         setSelectedOrden(orden)
         loadOrdenDetalles(orden)
       }
+    } else if (preSelectedOrdenId && !watchOrden && ordenes.length > 0) {
+      // Ensure the form value is set if it was passed via URL but not yet picked up by defaultValues
+      setValue('orden', preSelectedOrdenId)
     }
-  }, [watchOrden, ordenes])
+  }, [watchOrden, ordenes, isEditing, preSelectedOrdenId, setValue])
 
   const loadOrdenes = async () => {
     try {
       const data = await orderService.getOrdenes()
       // Solo órdenes confirmadas o parcialmente entregadas
-      const ordenesValidas = data.filter(o => 
+      const ordenesValidas = data.filter(o =>
         o.estado === 'confirmada' || o.estado === 'parcial'
       )
       setOrdenes(ordenesValidas)
@@ -93,7 +105,7 @@ export default function EntregaFormPage() {
         condicion_buena: true,
         observaciones_condicion: ''
       }))
-    
+
     replace(detallesForm)
   }
 
@@ -101,7 +113,7 @@ export default function EntregaFormPage() {
     try {
       setLoading(true)
       setError('')
-      
+
       const payload: CreateEntregaData = {
         orden: Number(data.orden),
         factura: data.factura ? Number(data.factura) : null,
@@ -118,14 +130,16 @@ export default function EntregaFormPage() {
             observaciones_condicion: d.observaciones_condicion
           }))
       }
-      
+
+      let result
       if (isEditing) {
-        await inventoryService.updateEntrega(Number(id), payload)
+        result = await inventoryService.updateEntrega(Number(id), payload)
       } else {
-        await inventoryService.createEntrega(payload)
+        result = await inventoryService.createEntrega(payload)
       }
-      
-      navigate('/inventario/entregas')
+
+      // Redirect to detail page to allow uploading evidence immediately
+      navigate(`/inventario/entregas/${result.id}`)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { detail?: string } } }
       setError(error.response?.data?.detail || 'Error al guardar la entrega')
@@ -156,7 +170,7 @@ export default function EntregaFormPage() {
         {/* Selección de Orden */}
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-lg font-semibold mb-4">Información de la Entrega</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select
               label="Orden de Compra *"
@@ -227,7 +241,7 @@ export default function EntregaFormPage() {
         {fields.length > 0 && (
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-lg font-semibold mb-4">Detalle de Recepción</h2>
-            
+
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -248,10 +262,10 @@ export default function EntregaFormPage() {
                         <input type="hidden" {...register(`detalles.${index}.detalle_orden`)} />
                       </td>
                       <td className="px-3 py-4 text-sm text-center text-gray-600">
-                        {field.cantidad_ordenada}
+                        {Number(field.cantidad_ordenada).toString()}
                       </td>
                       <td className="px-3 py-4 text-sm text-center text-orange-600 font-medium">
-                        {field.cantidad_pendiente}
+                        {Number(field.cantidad_pendiente).toString()}
                       </td>
                       <td className="px-3 py-4">
                         <input
@@ -294,9 +308,9 @@ export default function EntregaFormPage() {
 
         {/* Submit */}
         <div className="flex justify-end gap-4">
-          <Button 
-            variant="secondary" 
-            type="button" 
+          <Button
+            variant="secondary"
+            type="button"
             onClick={() => navigate('/inventario/entregas')}
           >
             Cancelar

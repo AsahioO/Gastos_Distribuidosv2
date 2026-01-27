@@ -42,7 +42,8 @@ class EntregaBienesCreateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = EntregaBienes
-        fields = ['orden', 'factura', 'fecha_recepcion', 'notas', 'completa', 'detalles']
+        fields = ['id', 'orden', 'factura', 'fecha_recepcion', 'notas', 'completa', 'detalles']
+        read_only_fields = ['id']
     
     def create(self, validated_data):
         detalles_data = validated_data.pop('detalles')
@@ -50,6 +51,9 @@ class EntregaBienesCreateSerializer(serializers.ModelSerializer):
         
         for detalle_data in detalles_data:
             EntregaDetalle.objects.create(entrega=entrega, **detalle_data)
+        
+        # Actualizar estado de la orden de compra según cantidades recibidas
+        entrega.orden.actualizar_estado_entrega()
         
         return entrega
 

@@ -50,20 +50,20 @@ export default function FacturasPage() {
   })
 
   const columns = [
-    { 
-      key: 'uuid_cfdi', 
-      header: 'UUID CFDI', 
+    {
+      key: 'uuid_cfdi',
+      header: 'UUID CFDI',
       render: (item: Factura) => item.uuid_cfdi ? item.uuid_cfdi.substring(0, 8) + '...' : 'Pendiente'
     },
     { key: 'proveedor_nombre', header: 'Proveedor' },
     { key: 'folio', header: 'Folio' },
-    { 
-      key: 'fecha', 
-      header: 'Fecha', 
+    {
+      key: 'fecha',
+      header: 'Fecha',
       render: (item: Factura) => item.fecha ? new Date(item.fecha).toLocaleDateString('es-MX') : '-'
     },
-    { 
-      key: 'total', 
+    {
+      key: 'total',
       header: 'Total',
       render: (item: Factura) => `$${Number(item.total).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
     },
@@ -176,10 +176,25 @@ export default function FacturasPage() {
         </div>
       </div>
 
+      {/* Pending Invoices Section */}
+      <div className="bg-white rounded-lg shadow mb-8">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Facturas Pendientes de Pago / Distribución</h2>
+        </div>
+        <Table
+          columns={columns}
+          data={facturas.filter(f => ['pendiente', 'procesando'].includes(f.status))}
+          keyExtractor={(item) => item.id}
+          emptyMessage="No hay facturas pendientes"
+        />
+      </div>
+
+      <h2 className="text-xl font-bold text-gray-900 mb-4">Historial de Facturas</h2>
+
       {/* Table */}
       <div className="bg-white rounded-lg shadow">
-        <Table 
-          columns={columns} 
+        <Table
+          columns={columns}
           data={filteredFacturas}
           keyExtractor={(item) => item.id}
           emptyMessage="No hay facturas registradas"

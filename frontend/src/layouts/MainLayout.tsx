@@ -55,6 +55,7 @@ const navigation: NavItem[] = [
 // Navegación para proveedores
 const proveedorNavigation: NavItem[] = [
   { name: 'Mi Portal', href: '/portal', icon: HomeIcon },
+  { name: 'Dashboard', href: '/dashboard', icon: ChartBarIcon },
   { name: 'Cotizar', href: '/portal/cotizar', icon: DocumentPlusIcon },
   { name: 'Mis Cotizaciones', href: '/portal/cotizaciones', icon: ClipboardDocumentListIcon },
   { name: 'Mis Órdenes', href: '/portal/ordenes', icon: ShoppingCartIcon },
@@ -115,7 +116,11 @@ export default function MainLayout() {
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
           <div className="flex h-16 items-center justify-between px-4">
             <span className="text-xl font-bold text-primary-600">Gastos Distribuidos</span>
-            <button onClick={() => setSidebarOpen(false)}>
+            <button 
+              onClick={() => setSidebarOpen(false)}
+              title="Cerrar menú"
+              aria-label="Cerrar menú de navegación"
+            >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>

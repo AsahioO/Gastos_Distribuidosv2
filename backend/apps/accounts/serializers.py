@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.db import transaction
+import uuid
 from .models import User, Role
 
 
@@ -50,9 +52,27 @@ class UserCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
+        
+        with transaction.atomic():
+            user = User(**validated_data)
+            user.set_password(password)
+            user.save()
+            
+            # Si el rol es proveedor, crear automáticamente el perfil de proveedor
+            if user.role and user.role.name == Role.RoleType.PROVEEDOR:
+                from apps.companies.models import Proveedor
+                # Crear RFC único temporal usando UUID corto
+                unique_rfc = f"TMP{uuid.uuid4().hex[:10].upper()}"
+                # Crear perfil de proveedor básico
+                Proveedor.objects.create(
+                    user=user,
+                    rfc=unique_rfc,  # RFC temporal único, debe actualizarse después
+                    razon_social=user.full_name or user.username,
+                    contacto_nombre=user.full_name or '',
+                    contacto_email=user.email,
+                    estado=Proveedor.EstadoChoices.ACTIVO
+                )
+        
         return user
 
 

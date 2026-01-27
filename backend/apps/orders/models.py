@@ -38,6 +38,9 @@ class SolicitudAutorizacion(models.Model):
         verbose_name='Estado'
     )
     
+    # Motivo de rechazo (cuando aplica)
+    motivo_rechazo = models.TextField(blank=True, verbose_name='Motivo de rechazo')
+    
     # Audit
     solicitante = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -179,6 +182,31 @@ class OrdenCompra(models.Model):
             count = OrdenCompra.objects.filter(created_at__year=year).count() + 1
             self.numero = f"OC-{year}-{count:05d}"
         super().save(*args, **kwargs)
+
+    def actualizar_estado_entrega(self):
+        """
+        Actualiza el estado de la orden basándose en las cantidades recibidas.
+        Llamar después de registrar una entrega.
+        """
+        if self.estado in [self.EstadoChoices.CANCELADA, self.EstadoChoices.BORRADOR]:
+            return  # No actualizar órdenes canceladas o en borrador
+        
+        detalles = self.detalles.all()
+        if not detalles.exists():
+            return
+        
+        total_ordenado = sum(d.cantidad for d in detalles)
+        total_recibido = sum(d.cantidad_recibida for d in detalles)
+        
+        if total_recibido >= total_ordenado:
+            # Todo entregado
+            self.estado = self.EstadoChoices.ENTREGADA
+        elif total_recibido > 0:
+            # Entrega parcial
+            self.estado = self.EstadoChoices.PARCIAL
+        # Si no hay entregas, mantener estado actual
+        
+        self.save(update_fields=['estado'])
 
 
 class DetalleOrden(models.Model):

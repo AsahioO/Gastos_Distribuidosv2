@@ -14,6 +14,10 @@ SECRET_KEY = 'django-insecure-dev-key-not-for-production'
 
 DEBUG = True
 
+# Process tasks synchronously in development
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
+
 ALLOWED_HOSTS = ['*']
 
 # Application definition - No tenants for development

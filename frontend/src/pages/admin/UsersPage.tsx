@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { Button, Table, Modal, Input, Select } from '@/components/ui'
@@ -7,17 +6,21 @@ import { userService, Role, CreateUserData } from '@/services/userService'
 import type { User } from '@/stores/authStore'
 import { useForm } from 'react-hook-form'
 
+interface UserFormData extends CreateUserData {
+  id?: number
+}
+
 export default function UsersPage() {
-  const navigate = useNavigate()
   const [users, setUsers] = useState<User[]>([])
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateUserData>()
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<UserFormData>()
 
   const loadData = async () => {
     setLoading(true)
@@ -41,6 +44,7 @@ export default function UsersPage() {
 
   const handleCreate = () => {
     setSelectedUser(null)
+    setIsEditing(false)
     reset({
       email: '',
       username: '',
@@ -53,20 +57,46 @@ export default function UsersPage() {
     setModalOpen(true)
   }
 
+  const handleEdit = (user: User) => {
+    setSelectedUser(user)
+    setIsEditing(true)
+    reset({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      full_name: user.full_name || '',
+      phone: user.phone || '',
+      role: typeof user.role === 'number' ? user.role : roles.find(r => r.name === user.role)?.id,
+      password: '',
+      password_confirm: ''
+    })
+    setModalOpen(true)
+  }
+
   const handleDelete = (user: User) => {
     setSelectedUser(user)
     setDeleteModalOpen(true)
   }
 
-  const onSubmit = async (data: CreateUserData) => {
+  const onSubmit = async (data: UserFormData) => {
     setSubmitting(true)
     try {
-      await userService.createUser(data)
-      toast.success('Usuario creado correctamente')
+      if (isEditing && selectedUser) {
+        // Actualizar usuario existente
+        await userService.updateUser(selectedUser.id, {
+          full_name: data.full_name,
+          phone: data.phone,
+        })
+        toast.success('Usuario actualizado correctamente')
+      } else {
+        // Crear nuevo usuario
+        await userService.createUser(data)
+        toast.success('Usuario creado correctamente')
+      }
       setModalOpen(false)
       loadData()
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Error al crear usuario')
+      toast.error(error.response?.data?.detail || `Error al ${isEditing ? 'actualizar' : 'crear'} usuario`)
     } finally {
       setSubmitting(false)
     }
@@ -106,14 +136,18 @@ export default function UsersPage() {
       render: (user: User) => (
         <div className="flex space-x-2">
           <button
-            onClick={(e) => { e.stopPropagation(); navigate(`/usuarios/${user.id}`) }}
+            onClick={(e) => { e.stopPropagation(); handleEdit(user) }}
             className="text-primary-600 hover:text-primary-900"
+            title="Editar usuario"
+            aria-label={`Editar usuario ${user.full_name || user.username}`}
           >
             <PencilIcon className="h-5 w-5" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); handleDelete(user) }}
             className="text-red-600 hover:text-red-900"
+            title="Eliminar usuario"
+            aria-label={`Eliminar usuario ${user.full_name || user.username}`}
           >
             <TrashIcon className="h-5 w-5" />
           </button>
@@ -145,20 +179,28 @@ export default function UsersPage() {
         />
       </div>
 
-      {/* Create User Modal */}
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Nuevo Usuario" size="lg">
+      {/* Create/Edit User Modal */}
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={isEditing ? 'Editar Usuario' : 'Nuevo Usuario'} size="lg">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label="Usuario"
-              {...register('username', { required: 'El usuario es requerido' })}
+              disabled={isEditing}
+              {...register('username', { 
+                required: !isEditing ? 'El usuario es requerido' : false,
+                pattern: {
+                  value: /^[\w.@+-]+$/,
+                  message: 'Solo letras, números y @/./+/-/_'
+                }
+              })}
               error={errors.username?.message}
             />
             <Input
               label="Correo electrónico"
               type="email"
+              disabled={isEditing}
               {...register('email', { 
-                required: 'El correo es requerido',
+                required: !isEditing ? 'El correo es requerido' : false,
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                   message: 'Correo inválido'
@@ -175,39 +217,43 @@ export default function UsersPage() {
               label="Teléfono"
               {...register('phone')}
             />
-            <Select
-              label="Rol"
-              options={roles.map(r => ({ value: r.id, label: r.description || r.name }))}
-              placeholder="Selecciona un rol"
-              {...register('role', { required: 'El rol es requerido', valueAsNumber: true })}
-              error={errors.role?.message}
-            />
+            {!isEditing && (
+              <Select
+                label="Rol"
+                options={roles.map(r => ({ value: r.id, label: r.description || r.name }))}
+                placeholder="Selecciona un rol"
+                {...register('role', { required: 'El rol es requerido', valueAsNumber: true })}
+                error={errors.role?.message}
+              />
+            )}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Contraseña"
-              type="password"
-              {...register('password', { 
-                required: 'La contraseña es requerida',
-                minLength: { value: 8, message: 'Mínimo 8 caracteres' }
-              })}
-              error={errors.password?.message}
-            />
-            <Input
-              label="Confirmar contraseña"
-              type="password"
-              {...register('password_confirm', { required: 'Confirma la contraseña' })}
-              error={errors.password_confirm?.message}
-            />
-          </div>
+          {!isEditing && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Contraseña"
+                type="password"
+                {...register('password', { 
+                  required: 'La contraseña es requerida',
+                  minLength: { value: 8, message: 'Mínimo 8 caracteres' }
+                })}
+                error={errors.password?.message}
+              />
+              <Input
+                label="Confirmar contraseña"
+                type="password"
+                {...register('password_confirm', { required: 'Confirma la contraseña' })}
+                error={errors.password_confirm?.message}
+              />
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 pt-4">
             <Button type="button" variant="secondary" onClick={() => setModalOpen(false)}>
               Cancelar
             </Button>
             <Button type="submit" loading={submitting}>
-              Crear Usuario
+              {isEditing ? 'Guardar Cambios' : 'Crear Usuario'}
             </Button>
           </div>
         </form>

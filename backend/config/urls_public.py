@@ -31,9 +31,10 @@ urlpatterns = [
 # Debug toolbar URLs (only in DEBUG mode)
 if settings.DEBUG:
     try:
-        import debug_toolbar
+        import debug_toolbar  # type: ignore
         urlpatterns = [
             path('__debug__/', include(debug_toolbar.urls)),
         ] + urlpatterns
     except ImportError:
+        # debug_toolbar not installed, skip
         pass

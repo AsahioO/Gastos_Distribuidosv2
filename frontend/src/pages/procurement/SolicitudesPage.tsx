@@ -7,7 +7,8 @@ import {
   PencilIcon, 
   TrashIcon,
   PaperAirplaneIcon,
-  XCircleIcon
+  XCircleIcon,
+  DocumentArrowUpIcon
 } from '@heroicons/react/24/outline'
 import { Button, Table, Modal } from '@/components/ui'
 import { procurementService, SolicitudMaterial } from '@/services/procurementService'
@@ -28,12 +29,18 @@ const estadoColors: Record<string, string> = {
 
 export default function SolicitudesPage() {
   const navigate = useNavigate()
-  const { user: _user } = useAuthStore()
+  const { user } = useAuthStore()
   const [solicitudes, setSolicitudes] = useState<SolicitudMaterial[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [selectedSolicitud, setSelectedSolicitud] = useState<SolicitudMaterial | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  // Determinar permisos según rol
+  const isArea = user?.role === 'area'
+  const isAdquisiciones = user?.role === 'adquisiciones'
+  const isAdmin = user?.role === 'admin'
+  const canCreateSolicitud = isArea || isAdmin
 
   const loadData = async () => {
     setLoading(true)
@@ -75,6 +82,16 @@ export default function SolicitudesPage() {
       loadData()
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Error al enviar la solicitud')
+    }
+  }
+
+  const handleEnviarACotizacion = async (solicitud: SolicitudMaterial) => {
+    try {
+      await procurementService.enviarACotizacion(solicitud.id)
+      toast.success('Solicitud enviada a cotización')
+      loadData()
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Error al enviar a cotización')
     }
   }
 
@@ -174,7 +191,8 @@ export default function SolicitudesPage() {
             <EyeIcon className="h-5 w-5" />
           </button>
           
-          {s.estado === 'borrador' && (
+          {/* Solo Área o Admin pueden editar/enviar borradores */}
+          {s.estado === 'borrador' && (isArea || isAdmin) && (
             <>
               <button
                 onClick={(e) => { e.stopPropagation(); handleEdit(s) }}
@@ -200,7 +218,19 @@ export default function SolicitudesPage() {
             </>
           )}
           
-          {['enviado', 'en_cotizacion'].includes(s.estado) && (
+          {/* Adquisiciones o Admin pueden enviar a cotización las solicitudes enviadas */}
+          {s.estado === 'enviado' && (isAdquisiciones || isAdmin) && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleEnviarACotizacion(s) }}
+              className="p-1 text-gray-500 hover:text-purple-600"
+              title="Enviar a cotización"
+            >
+              <DocumentArrowUpIcon className="h-5 w-5" />
+            </button>
+          )}
+          
+          {/* Solo quien creó o Admin puede cancelar */}
+          {['enviado', 'en_cotizacion'].includes(s.estado) && (isArea || isAdmin) && (
             <button
               onClick={(e) => { e.stopPropagation(); handleCancelar(s) }}
               className="p-1 text-gray-500 hover:text-red-600"
@@ -220,13 +250,17 @@ export default function SolicitudesPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Solicitudes de Material</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Gestiona las solicitudes de material de las áreas
+            {isArea 
+              ? 'Gestiona tus solicitudes de material' 
+              : 'Gestiona las solicitudes de material de las áreas'}
           </p>
         </div>
-        <Button onClick={handleCreate}>
-          <PlusIcon className="h-5 w-5 mr-2" />
-          Nueva Solicitud
-        </Button>
+        {canCreateSolicitud && (
+          <Button onClick={handleCreate}>
+            <PlusIcon className="h-5 w-5 mr-2" />
+            Nueva Solicitud
+          </Button>
+        )}
       </div>
 
       {/* Filtros rápidos */}

@@ -7,7 +7,7 @@ export default function EntregaDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
+
   const [entrega, setEntrega] = useState<EntregaBienes | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -100,8 +100,8 @@ export default function EntregaDetailPage() {
             <div>
               <label className="text-sm text-gray-500">Orden de Compra</label>
               <p className="font-medium">
-                <Link 
-                  to={`/ordenes/${entrega.orden}`} 
+                <Link
+                  to={`/ordenes/${entrega.orden}`}
                   className="text-blue-600 hover:underline"
                 >
                   {entrega.orden_numero}
@@ -117,11 +117,10 @@ export default function EntregaDetailPage() {
             <div>
               <label className="text-sm text-gray-500">Estado</label>
               <p>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  entrega.completa 
-                    ? 'bg-green-100 text-green-800' 
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${entrega.completa
+                    ? 'bg-green-100 text-green-800'
                     : 'bg-yellow-100 text-yellow-800'
-                }`}>
+                  }`}>
                   {entrega.completa ? 'Completa' : 'Parcial'}
                 </span>
               </p>
@@ -160,14 +159,13 @@ export default function EntregaDetailPage() {
                     {detalle.concepto || `Detalle #${detalle.detalle_orden}`}
                   </td>
                   <td className="px-6 py-4 text-sm text-center font-medium">
-                    {detalle.cantidad_recibida}
+                    {Number(detalle.cantidad_recibida).toString()}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      detalle.condicion_buena
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${detalle.condicion_buena
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
-                    }`}>
+                      }`}>
                       {detalle.condicion_buena ? 'Buena' : 'Dañado'}
                     </span>
                   </td>
@@ -194,8 +192,8 @@ export default function EntregaDetailPage() {
               className="hidden"
               title="Seleccionar imagen"
             />
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               onClick={() => fileInputRef.current?.click()}
               loading={uploading}
             >

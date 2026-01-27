@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { 
-  ArrowLeftIcon, 
-  PencilIcon, 
+import {
+  ArrowLeftIcon,
+  PencilIcon,
   PaperAirplaneIcon,
   CheckCircleIcon,
   PrinterIcon,
@@ -26,7 +26,7 @@ export default function OrdenDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  
+
   const [orden, setOrden] = useState<OrdenCompra | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -43,7 +43,11 @@ export default function OrdenDetailPage() {
       setOrden(data)
     } catch (error) {
       toast.error('Error al cargar la orden')
-      navigate('/ordenes')
+      if (user?.role === 'proveedor') {
+        navigate('/portal/ordenes')
+      } else {
+        navigate('/ordenes')
+      }
     } finally {
       setLoading(false)
     }
@@ -56,7 +60,7 @@ export default function OrdenDetailPage() {
   const handleSend = async () => {
     if (!orden) return
     if (!confirm('¿Está seguro de enviar esta orden al proveedor?')) return
-    
+
     try {
       await orderService.sendOrden(orden.id)
       toast.success('Orden enviada al proveedor')
@@ -69,7 +73,7 @@ export default function OrdenDetailPage() {
   const handleConfirm = async () => {
     if (!orden) return
     if (!confirm('¿Confirmar que el proveedor ha aceptado la orden?')) return
-    
+
     try {
       await orderService.confirmOrden(orden.id)
       toast.success('Orden confirmada por el proveedor')
@@ -82,7 +86,7 @@ export default function OrdenDetailPage() {
   const handleCancel = async () => {
     if (!orden) return
     if (!confirm('¿Está seguro de cancelar esta orden de compra?')) return
-    
+
     try {
       await orderService.cancelOrden(orden.id)
       toast.success('Orden cancelada')
@@ -126,7 +130,13 @@ export default function OrdenDetailPage() {
   return (
     <div className="max-w-5xl mx-auto">
       <button
-        onClick={() => navigate('/ordenes')}
+        onClick={() => {
+          if (user?.role === 'proveedor') {
+            navigate('/portal/ordenes')
+          } else {
+            navigate('/ordenes')
+          }
+        }}
         className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
       >
         <ArrowLeftIcon className="h-5 w-5 mr-1" />
@@ -160,14 +170,14 @@ export default function OrdenDetailPage() {
                 <h3 className="text-sm font-medium text-gray-500">Proveedor</h3>
                 <p className="mt-1 text-lg font-medium">{orden.proveedor_nombre}</p>
               </div>
-              
+
               {orden.fecha_entrega_esperada && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Fecha de Entrega Esperada</h3>
                   <p className="mt-1">{formatDate(orden.fecha_entrega_esperada)}</p>
                 </div>
               )}
-              
+
               {orden.condiciones_pago && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Condiciones de Pago</h3>
@@ -194,7 +204,7 @@ export default function OrdenDetailPage() {
                   </div>
                 </div>
               </div>
-              
+
               {orden.referencia_externa && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Referencia Externa</h3>
@@ -307,32 +317,32 @@ export default function OrdenDetailPage() {
               <PrinterIcon className="h-5 w-5 mr-2" />
               Imprimir
             </Button>
-            
+
             {canEdit && (
               <Button variant="secondary" onClick={handleEdit}>
                 <PencilIcon className="h-5 w-5 mr-2" />
                 Editar
               </Button>
             )}
-            
+
             {canCancel && (
               <Button variant="danger" onClick={handleCancel}>
                 <XMarkIcon className="h-5 w-5 mr-2" />
                 Cancelar Orden
               </Button>
             )}
-            
+
             {canSend && (
               <Button onClick={handleSend}>
                 <PaperAirplaneIcon className="h-5 w-5 mr-2" />
                 Enviar a Proveedor
               </Button>
             )}
-            
+
             {canConfirm && (
               <Button onClick={handleConfirm}>
                 <CheckCircleIcon className="h-5 w-5 mr-2" />
-                Confirmar Recepción
+                Confirmar Orden
               </Button>
             )}
           </div>

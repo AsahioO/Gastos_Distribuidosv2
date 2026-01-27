@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from decimal import Decimal
 from .models import SolicitudAutorizacion, AutorizacionPresupuestal, OrdenCompra, DetalleOrden
 
 
@@ -26,11 +27,11 @@ class SolicitudAutorizacionSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'numero', 'solicitud', 'solicitud_numero',
             'cotizacion', 'cotizacion_numero', 'fecha_solicitud',
-            'monto_solicitado', 'justificacion', 'estado',
+            'monto_solicitado', 'justificacion', 'estado', 'motivo_rechazo',
             'solicitante', 'solicitante_nombre', 'autorizacion_presupuestal',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'numero', 'solicitante', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'numero', 'solicitante', 'motivo_rechazo', 'created_at', 'updated_at']
 
 
 class DetalleOrdenSerializer(serializers.ModelSerializer):
@@ -85,7 +86,7 @@ class OrdenCompraCreateSerializer(serializers.ModelSerializer):
             subtotal += detalle.subtotal
         
         orden.subtotal = subtotal
-        orden.iva = subtotal * 0.16
+        orden.iva = subtotal * Decimal('0.16')
         orden.total = subtotal + orden.iva
         orden.save()
         
@@ -108,7 +109,7 @@ class OrdenCompraCreateSerializer(serializers.ModelSerializer):
                 subtotal += detalle.subtotal
             
             instance.subtotal = subtotal
-            instance.iva = subtotal * 0.16
+            instance.iva = subtotal * Decimal('0.16')
             instance.total = subtotal + instance.iva
             instance.save()
         

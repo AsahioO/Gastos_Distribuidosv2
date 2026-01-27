@@ -5,7 +5,8 @@ import {
   ArrowLeftIcon, 
   PencilIcon, 
   CheckCircleIcon,
-  DocumentTextIcon 
+  DocumentTextIcon,
+  ShoppingCartIcon
 } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui'
 import { quotationService, Cotizacion } from '@/services/quotationService'
@@ -52,14 +53,28 @@ export default function CotizacionDetailPage() {
   const handleSelect = async () => {
     if (!cotizacion) return
     
-    if (!confirm('¿Está seguro de seleccionar esta cotización como ganadora?')) return
+    if (!confirm('¿Está seguro de AUTORIZAR esta cotización como ganadora? Las demás cotizaciones de esta solicitud serán rechazadas automáticamente.')) return
     
     try {
       await quotationService.selectCotizacion(cotizacion.id)
-      toast.success('Cotización seleccionada como ganadora')
+      toast.success('Cotización autorizada correctamente')
       loadCotizacion(id!)
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Error al seleccionar')
+      toast.error(error.response?.data?.detail || 'Error al autorizar')
+    }
+  }
+
+  const handleCreateOrder = async () => {
+    if (!cotizacion) return
+    
+    if (!confirm('¿Desea generar la Orden de Compra basada en esta cotización autorizada?')) return
+    
+    try {
+      const order = await quotationService.createOrder(cotizacion.id)
+      toast.success('Orden de compra generada correctamente')
+      navigate(`/ordenes/${order.id}`)
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Error al generar orden')
     }
   }
 
@@ -90,7 +105,10 @@ export default function CotizacionDetailPage() {
   }
 
   const canEdit = cotizacion.estado === 'pendiente' && ['admin', 'adquisiciones', 'proveedor'].includes(user?.role || '')
-  const canSelect = cotizacion.estado === 'recibida' && ['admin', 'adquisiciones'].includes(user?.role || '')
+  // Tesorería autoriza/selecciona la cotización ganadora
+  const canSelect = cotizacion.estado === 'pendiente' && ['admin', 'tesoreria'].includes(user?.role || '')
+  // Adquisiciones genera OC desde cotización autorizada
+  const canCreateOrder = cotizacion.estado === 'seleccionada' && ['admin', 'adquisiciones'].includes(user?.role || '')
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -266,7 +284,14 @@ export default function CotizacionDetailPage() {
             {canSelect && (
               <Button onClick={handleSelect}>
                 <CheckCircleIcon className="h-5 w-5 mr-2" />
-                Seleccionar como Ganadora
+                Autorizar Cotización
+              </Button>
+            )}
+
+            {canCreateOrder && (
+              <Button onClick={handleCreateOrder}>
+                <ShoppingCartIcon className="h-5 w-5 mr-2" />
+                Generar Orden de Compra
               </Button>
             )}
           </div>

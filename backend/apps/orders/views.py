@@ -61,7 +61,15 @@ class SolicitudAutorizacionViewSet(viewsets.ModelViewSet):
         """Reject authorization request."""
         solicitud = self.get_object()
         
+        motivo = request.data.get('motivo_rechazo', '')
+        if not motivo:
+            return Response(
+                {'error': 'Se requiere un motivo de rechazo.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         solicitud.estado = SolicitudAutorizacion.EstadoChoices.RECHAZADA
+        solicitud.motivo_rechazo = motivo
         solicitud.save()
         
         return Response(SolicitudAutorizacionSerializer(solicitud).data)

@@ -139,38 +139,126 @@ function App() {
           </ProtectedRoute>
         } />
         
-        {/* Procurement routes */}
-        <Route path="/solicitudes" element={<SolicitudesPage />} />
-        <Route path="/solicitudes/nueva" element={<SolicitudFormPage />} />
-        <Route path="/solicitudes/:id" element={<SolicitudDetailPage />} />
-        <Route path="/solicitudes/:id/editar" element={<SolicitudFormPage />} />
+        {/* Procurement routes - Área crea, Adquisiciones gestiona */}
+        <Route path="/solicitudes" element={
+          <ProtectedRoute allowedRoles={['admin', 'adquisiciones', 'area']}>
+            <SolicitudesPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/solicitudes/nueva" element={
+          <ProtectedRoute allowedRoles={['admin', 'adquisiciones', 'area']}>
+            <SolicitudFormPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/solicitudes/:id" element={
+          <ProtectedRoute allowedRoles={['admin', 'adquisiciones', 'area']}>
+            <SolicitudDetailPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/solicitudes/:id/editar" element={
+          <ProtectedRoute allowedRoles={['admin', 'adquisiciones', 'area']}>
+            <SolicitudFormPage />
+          </ProtectedRoute>
+        } />
         
-        {/* Quotation routes */}
-        <Route path="/cotizaciones" element={<CotizacionesPage />} />
-        <Route path="/cotizaciones/nueva" element={<CotizacionFormPage />} />
-        <Route path="/cotizaciones/:id" element={<CotizacionDetailPage />} />
-        <Route path="/cotizaciones/:id/editar" element={<CotizacionFormPage />} />
+        {/* Quotation routes - Adquisiciones envía, Tesorería autoriza */}
+        <Route path="/cotizaciones" element={
+          <ProtectedRoute allowedRoles={['admin', 'adquisiciones', 'tesoreria']}>
+            <CotizacionesPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/cotizaciones/nueva" element={
+          <ProtectedRoute allowedRoles={['admin', 'adquisiciones']}>
+            <CotizacionFormPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/cotizaciones/:id" element={
+          <ProtectedRoute allowedRoles={['admin', 'adquisiciones', 'tesoreria']}>
+            <CotizacionDetailPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/cotizaciones/:id/editar" element={
+          <ProtectedRoute allowedRoles={['admin', 'adquisiciones']}>
+            <CotizacionFormPage />
+          </ProtectedRoute>
+        } />
         
-        {/* Order routes */}
-        <Route path="/ordenes" element={<OrdenesPage />} />
-        <Route path="/ordenes/nueva" element={<OrdenFormPage />} />
-        <Route path="/ordenes/:id" element={<OrdenDetailPage />} />
-        <Route path="/ordenes/:id/editar" element={<OrdenFormPage />} />
+        {/* Order routes - Adquisiciones genera y envía */}
+        <Route path="/ordenes" element={
+          <ProtectedRoute allowedRoles={['admin', 'adquisiciones']}>
+            <OrdenesPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/ordenes/nueva" element={
+          <ProtectedRoute allowedRoles={['admin', 'adquisiciones']}>
+            <OrdenFormPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/ordenes/:id" element={
+          <ProtectedRoute allowedRoles={['admin', 'adquisiciones']}>
+            <OrdenDetailPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/ordenes/:id/editar" element={
+          <ProtectedRoute allowedRoles={['admin', 'adquisiciones']}>
+            <OrdenFormPage />
+          </ProtectedRoute>
+        } />
         
-        {/* Inventory routes */}
-        <Route path="/inventario/entregas" element={<EntregasPage />} />
-        <Route path="/inventario/entregas/nueva" element={<EntregaFormPage />} />
-        <Route path="/inventario/entregas/:id" element={<EntregaDetailPage />} />
-        <Route path="/inventario/salidas" element={<SalidasPage />} />
-        <Route path="/inventario/salidas/nueva" element={<SalidaFormPage />} />
-        <Route path="/inventario/salidas/:id" element={<SalidaDetailPage />} />
+        {/* Inventory routes - Almacén recibe y distribuye */}
+        <Route path="/inventario/entregas" element={
+          <ProtectedRoute allowedRoles={['admin', 'almacen']}>
+            <EntregasPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/inventario/entregas/nueva" element={
+          <ProtectedRoute allowedRoles={['admin', 'almacen']}>
+            <EntregaFormPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/inventario/entregas/:id" element={
+          <ProtectedRoute allowedRoles={['admin', 'almacen']}>
+            <EntregaDetailPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/inventario/salidas" element={
+          <ProtectedRoute allowedRoles={['admin', 'almacen']}>
+            <SalidasPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/inventario/salidas/nueva" element={
+          <ProtectedRoute allowedRoles={['admin', 'almacen']}>
+            <SalidaFormPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/inventario/salidas/:id" element={
+          <ProtectedRoute allowedRoles={['admin', 'almacen']}>
+            <SalidaDetailPage />
+          </ProtectedRoute>
+        } />
         <Route path="/inventario" element={<Navigate to="/inventario/entregas" replace />} />
         
-        {/* Invoice routes */}
-        <Route path="/facturas" element={<FacturasPage />} />
-        <Route path="/facturas/subir" element={<FacturaUploadPage />} />
-        <Route path="/facturas/:id" element={<FacturaDetailPage />} />
-        <Route path="/facturas/:id/distribuir" element={<FacturaDistributePage />} />
+        {/* Invoice routes - Tesorería procesa pagos */}
+        <Route path="/facturas" element={
+          <ProtectedRoute allowedRoles={['admin', 'tesoreria']}>
+            <FacturasPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/facturas/subir" element={
+          <ProtectedRoute allowedRoles={['admin', 'tesoreria']}>
+            <FacturaUploadPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/facturas/:id" element={
+          <ProtectedRoute allowedRoles={['admin', 'tesoreria']}>
+            <FacturaDetailPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/facturas/:id/distribuir" element={
+          <ProtectedRoute allowedRoles={['admin', 'tesoreria']}>
+            <FacturaDistributePage />
+          </ProtectedRoute>
+        } />
       </Route>
 
       {/* Catch all */}

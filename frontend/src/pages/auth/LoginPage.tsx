@@ -22,7 +22,9 @@ export default function LoginPage() {
       const response = await authService.login(data)
       setAuth(response.user, response.access, response.refresh)
       toast.success('¡Bienvenido!')
-      navigate('/dashboard')
+      // Redirigir según el rol: proveedores a /portal, otros a /dashboard
+      const redirectTo = response.user.role === 'proveedor' ? '/portal' : '/dashboard'
+      navigate(redirectTo)
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Error al iniciar sesión')
     } finally {

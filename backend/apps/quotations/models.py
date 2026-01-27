@@ -1,5 +1,6 @@
 """Quotation models."""
 
+from decimal import Decimal
 from django.db import models
 from django.conf import settings
 
@@ -75,9 +76,9 @@ class CotizacionMaterial(models.Model):
         """Recalculate totals from details."""
         subtotal = self.detalles.aggregate(
             total=models.Sum('subtotal')
-        )['total'] or 0
+        )['total'] or Decimal('0')
         self.subtotal = subtotal
-        self.iva = subtotal * 0.16
+        self.iva = subtotal * Decimal('0.16')
         self.total = subtotal + self.iva
         self.save(update_fields=['subtotal', 'iva', 'total'])
 

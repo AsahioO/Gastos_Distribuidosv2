@@ -113,6 +113,11 @@ export const procurementService = {
     return response.data
   },
 
+  enviarACotizacion: async (id: number): Promise<SolicitudMaterial> => {
+    const response = await api.post(`/procurement/solicitudes/${id}/send_to_quotation/`)
+    return response.data
+  },
+
   // COG
   getCogs: async (): Promise<Cog[]> => {
     const response = await api.get('/procurement/cog/')

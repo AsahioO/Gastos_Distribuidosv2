@@ -258,7 +258,7 @@ export default function MisOrdenesPage() {
                     <p className="text-lg font-semibold text-gray-900">{formatCurrency(orden.total)}</p>
                     <div className="flex items-center gap-2 mt-2 justify-end">
                       <Link
-                        to={`/ordenes/${orden.id}`}
+                        to={`/portal/ordenes/${orden.id}`}
                         className="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-800"
                       >
                         <EyeIcon className="h-4 w-4" />

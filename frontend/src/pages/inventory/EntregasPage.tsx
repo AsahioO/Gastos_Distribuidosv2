@@ -1,27 +1,40 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { inventoryService, EntregaBienes } from '../../services/inventoryService'
+import { orderService, OrdenCompra } from '../../services/orderService'
 import Button from '../../components/ui/Button'
 import Table from '../../components/ui/Table'
 
 export default function EntregasPage() {
   const navigate = useNavigate()
   const [entregas, setEntregas] = useState<EntregaBienes[]>([])
+  const [pendingOrders, setPendingOrders] = useState<OrdenCompra[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filterCompleta, setFilterCompleta] = useState<string>('all')
 
   useEffect(() => {
-    loadEntregas()
+    loadData()
   }, [])
 
-  const loadEntregas = async () => {
+  const loadData = async () => {
     try {
       setLoading(true)
-      const data = await inventoryService.getEntregas()
-      setEntregas(data)
+      const [entregasData, ordenesData] = await Promise.all([
+        inventoryService.getEntregas(),
+        orderService.getOrdenes()
+      ])
+
+      setEntregas(entregasData)
+
+      // Filter for orders that need receiving
+      const pending = ordenesData.filter(o =>
+        o.estado === 'confirmada' || o.estado === 'parcial'
+      )
+      setPendingOrders(pending)
+
     } catch (err) {
-      setError('Error al cargar las entregas')
+      setError('Error al cargar los datos')
       console.error(err)
     } finally {
       setLoading(false)
@@ -38,9 +51,9 @@ export default function EntregasPage() {
   const columns = [
     { key: 'numero', header: 'Número' },
     { key: 'orden_numero', header: 'Orden de Compra' },
-    { 
-      key: 'fecha_recepcion', 
-      header: 'Fecha Recepción', 
+    {
+      key: 'fecha_recepcion',
+      header: 'Fecha Recepción',
       render: (item: EntregaBienes) => new Date(item.fecha_recepcion).toLocaleDateString('es-MX')
     },
     { key: 'recibido_por_nombre', header: 'Recibido Por' },
@@ -48,11 +61,10 @@ export default function EntregasPage() {
       key: 'completa',
       header: 'Estado',
       render: (item: EntregaBienes) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          item.completa 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-yellow-100 text-yellow-800'
-        }`}>
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.completa
+          ? 'bg-green-100 text-green-800'
+          : 'bg-yellow-100 text-yellow-800'
+          }`}>
           {item.completa ? 'Completa' : 'Parcial'}
         </span>
       )
@@ -139,10 +151,60 @@ export default function EntregasPage() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Pending Orders Section */}
+      <div className="bg-white rounded-lg shadow mb-8">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Órdenes Pendientes por Recibir</h2>
+        </div>
+        <Table
+          columns={[
+            { key: 'numero', header: 'Número' },
+            { key: 'proveedor_nombre', header: 'Proveedor' },
+            {
+              key: 'fecha_entrega_esperada',
+              header: 'Fecha Esperada',
+              render: (item: OrdenCompra) => item.fecha_entrega_esperada
+                ? new Date(item.fecha_entrega_esperada).toLocaleDateString('es-MX')
+                : 'N/A'
+            },
+            { key: 'total', header: 'Total', render: (item: OrdenCompra) => `$${Number(item.total).toLocaleString('es-MX')}` },
+            {
+              key: 'estado',
+              header: 'Estado',
+              render: (item: OrdenCompra) => (
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.estado === 'confirmada'
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'bg-orange-100 text-orange-800'
+                  }`}>
+                  {item.estado_display}
+                </span>
+              )
+            },
+            {
+              key: 'actions',
+              header: 'Acciones',
+              render: (row: OrdenCompra) => (
+                <Button
+                  size="sm"
+                  onClick={() => navigate(`/inventario/entregas/nueva?orden=${row.id}`)}
+                >
+                  Recibir
+                </Button>
+              )
+            }
+          ]}
+          data={pendingOrders}
+          keyExtractor={(item) => item.id}
+          emptyMessage="No hay órdenes pendientes de recepción"
+        />
+      </div>
+
+      <h2 className="text-xl font-bold text-gray-900 mb-4">Historial de Entregas</h2>
+
+      {/* Existing History Table */}
       <div className="bg-white rounded-lg shadow">
-        <Table 
-          columns={columns} 
+        <Table
+          columns={columns}
           data={filteredEntregas}
           keyExtractor={(item) => item.id}
           emptyMessage="No hay entregas registradas"

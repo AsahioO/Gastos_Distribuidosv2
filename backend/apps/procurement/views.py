@@ -116,6 +116,33 @@ class SolicitudMaterialViewSet(viewsets.ModelViewSet):
         
         return Response(SolicitudMaterialSerializer(solicitud).data)
 
+    @action(detail=True, methods=['post'])
+    def send_to_quotation(self, request, pk=None):
+        """
+        Enviar solicitud a cotización (solo Adquisiciones o Admin).
+        Cambia el estado de 'enviado' a 'en_cotizacion'.
+        """
+        solicitud = self.get_object()
+        user = request.user
+        
+        # Verificar permisos: solo adquisiciones o admin
+        if not (user.is_admin or user.is_adquisiciones):
+            return Response(
+                {'error': 'No tiene permisos para realizar esta acción.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if solicitud.estado != SolicitudMaterial.EstadoChoices.ENVIADO:
+            return Response(
+                {'error': 'Solo se pueden enviar a cotización solicitudes en estado "enviado".'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        solicitud.estado = SolicitudMaterial.EstadoChoices.EN_COTIZACION
+        solicitud.save()
+        
+        return Response(SolicitudMaterialSerializer(solicitud).data)
+
 
 class DetalleMaterialViewSet(viewsets.ModelViewSet):
     queryset = DetalleMaterial.objects.select_related('solicitud', 'cog')

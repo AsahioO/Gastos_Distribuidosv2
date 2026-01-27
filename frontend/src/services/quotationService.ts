@@ -101,6 +101,12 @@ export const quotationService = {
     return response.data
   },
 
+  // Generar orden de compra desde cotización
+  createOrder: async (id: number, data?: { fecha_entrega_esperada?: string, condiciones_pago?: string, notas?: string }) => {
+    const response = await api.post(`/quotations/cotizaciones/${id}/create_order/`, data || {})
+    return response.data
+  },
+
   // Proveedores
   getProveedores: async (): Promise<Proveedor[]> => {
     const response = await api.get('/companies/proveedores/')
