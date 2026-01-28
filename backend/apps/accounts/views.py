@@ -42,6 +42,7 @@ class UserViewSet(viewsets.ModelViewSet):
     
     queryset = User.objects.select_related('role').all()
     permission_classes = [IsAuthenticated]
+    pagination_class = None  # Deshabilitar paginación para obtener todos los usuarios
     
     def get_serializer_class(self):
         if self.action == 'create':
@@ -54,6 +55,40 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action in ['create', 'destroy']:
             return [IsAuthenticated(), IsAdmin()]
         return super().get_permissions()
+    
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete user if possible, otherwise deactivate them.
+        This handles cases where the user has related records (solicitudes, etc.)
+        """
+        user = self.get_object()
+        
+        # Prevent deleting yourself
+        if user.id == request.user.id:
+            return Response(
+                {'detail': 'No puede eliminar su propia cuenta.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Try to delete, if ProtectedError occurs, deactivate instead
+        from django.db.models import ProtectedError
+        try:
+            user.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except ProtectedError:
+            # User has related records, deactivate instead
+            if user.is_active:
+                user.is_active = False
+                user.save()
+                return Response(
+                    {'detail': 'El usuario tiene registros asociados y no puede ser eliminado. Ha sido desactivado en su lugar.'},
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(
+                    {'detail': 'El usuario tiene registros asociados y no puede ser eliminado. Ya está desactivado.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
     
     def get_queryset(self):
         user = self.request.user

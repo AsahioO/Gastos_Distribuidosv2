@@ -104,25 +104,25 @@ const DashboardPage: React.FC = () => {
   // Determinar qué secciones mostrar según el rol
   // Usar primero el rol del usuario autenticado, luego el del API stats como fallback
   const userRole = user?.role || stats?.user_role || null
-  
+
   // FLUJO DE NEGOCIO:
   // Área→Adquisiciones→Proveedores→Tesorería(autoriza cotización)→Adquisiciones(OC)→Almacén→Tesorería(pago)
-  
+
   // Roles con acceso a información financiera (presupuesto, facturas, pagos)
   const showFinancialInfo = ['admin', 'tesoreria'].includes(userRole || '')
-  
+
   // Roles que trabajan con solicitudes (área crea, adquisiciones gestiona)
   const showSolicitudesInfo = ['admin', 'adquisiciones', 'area'].includes(userRole || '')
-  
+
   // Roles que trabajan con cotizaciones (adquisiciones envía, tesorería autoriza)
   const showCotizacionesInfo = ['admin', 'adquisiciones', 'tesoreria'].includes(userRole || '')
-  
+
   // Roles que trabajan con órdenes de compra (solo adquisiciones genera)
   const showOrdersInfo = ['admin', 'adquisiciones'].includes(userRole || '')
-  
+
   // Roles con acceso a inventario/entregas (almacén recibe)
   const showWarehouseInfo = ['admin', 'almacen'].includes(userRole || '')
-  
+
   // Es proveedor externo
   const showProviderInfo = userRole === 'proveedor'
 
@@ -147,66 +147,83 @@ const DashboardPage: React.FC = () => {
   }))
 
   // Evitar división por cero
-  const presupuestoUsado = stats && stats.total_presupuesto > 0 
-    ? (stats.total_gastado_mes / stats.total_presupuesto) * 100 
+  const presupuestoUsado = stats && stats.total_presupuesto > 0
+    ? (stats.total_gastado_mes / stats.total_presupuesto) * 100
     : 0
 
   return (
     <div className="space-y-6 pb-8">
-      {/* Header con saludo */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-8 text-white shadow-xl">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4" />
-        <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/4" />
-        
+      {/* Header Premium con saludo */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 rounded-3xl p-8 text-white shadow-2xl shadow-indigo-500/25">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-white/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-60 h-60 bg-gradient-to-tr from-purple-400/20 to-transparent rounded-full translate-y-1/2 -translate-x-1/4 blur-2xl" />
+        <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-xl" />
+
+        {/* Subtle pattern overlay */}
+        <div className="absolute inset-0 opacity-10" style={{
+          backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
+          backgroundSize: '32px 32px'
+        }} />
+
         <div className="relative">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold">
-                  {getGreeting()}, {user?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuario'} 👋
-                </h1>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRoleColor(userRole)} text-white`}>
+              <div className="flex flex-wrap items-center gap-3 mb-3">
+                {/* Icon box similar to login */}
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg shadow-black/10">
+                  <span className="text-2xl">👋</span>
+                </div>
+                <div>
+                  <h1 className="text-3xl lg:text-4xl font-bold tracking-tight drop-shadow-sm">
+                    {getGreeting()}, {user?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuario'}
+                  </h1>
+                </div>
+                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${getRoleColor(userRole)} text-white shadow-lg`}>
                   {getRoleLabel(userRole)}
                 </span>
               </div>
-              <p className="mt-2 text-blue-100 text-lg">
-                {showProviderInfo 
+              <p className="text-indigo-100 text-lg font-medium">
+                {showProviderInfo
                   ? 'Consulta tus cotizaciones y órdenes asignadas'
                   : showFinancialInfo
-                  ? 'Gestión de autorizaciones, pagos y presupuesto'
-                  : showWarehouseInfo
-                  ? 'Control de entregas y recepción de bienes'
-                  : 'Aquí está el resumen de tu gestión de gastos'}
+                    ? 'Gestión de autorizaciones, pagos y presupuesto'
+                    : showWarehouseInfo
+                      ? 'Control de entregas y recepción de bienes'
+                      : 'Aquí está el resumen de tu gestión de gastos'}
               </p>
             </div>
-            <div className="hidden lg:flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4">
+
+            {/* Stats box with glassmorphism */}
+            <div className="flex items-center gap-6 bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-lg shadow-black/10">
               <div className="text-center">
-                <p className="text-3xl font-bold">
-                  {showProviderInfo 
-                    ? stats?.cotizaciones_pendientes || 0 
-                    : showFinancialInfo 
-                    ? stats?.facturas_pendientes || 0
-                    : stats?.solicitudes_pendientes || 0}
-                </p>
-                <p className="text-sm text-blue-200">
-                  {showProviderInfo 
-                    ? 'Cotizaciones' 
+                <p className="text-4xl font-bold drop-shadow-sm">
+                  {showProviderInfo
+                    ? stats?.cotizaciones_pendientes || 0
                     : showFinancialInfo
-                    ? 'Facturas'
-                    : 'Pendientes'}
+                      ? stats?.facturas_pendientes || 0
+                      : stats?.solicitudes_pendientes || 0}
+                </p>
+                <p className="text-sm text-indigo-200 font-medium mt-1">
+                  {showProviderInfo
+                    ? 'Cotizaciones'
+                    : showFinancialInfo
+                      ? 'Facturas'
+                      : 'Pendientes'}
                 </p>
               </div>
-              <div className="w-px h-12 bg-white/20" />
+              <div className="w-px h-16 bg-gradient-to-b from-transparent via-white/30 to-transparent" />
               <div className="text-center">
-                <p className="text-3xl font-bold">{stats?.ordenes_activas || 0}</p>
-                <p className="text-sm text-blue-200">
-                  {showWarehouseInfo ? 'Por Recibir' : 'Órdenes Activas'}
+                <p className="text-4xl font-bold drop-shadow-sm">{stats?.ordenes_activas || 0}</p>
+                <p className="text-sm text-indigo-200 font-medium mt-1">
+                  {showWarehouseInfo ? 'Por Recibir' : 'Órdenes'}
                 </p>
               </div>
             </div>
           </div>
         </div>
       </div>
+
 
       {/* Tarjetas de estadísticas principales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -215,7 +232,7 @@ const DashboardPage: React.FC = () => {
           <StatCard
             title="Solicitudes Pendientes"
             value={stats?.solicitudes_pendientes || 0}
-            gradient="blue"
+            gradient="primary"
             icon={<ClockIcon className="w-6 h-6" />}
             subtitle="Esperando aprobación"
           />
@@ -224,22 +241,22 @@ const DashboardPage: React.FC = () => {
           <StatCard
             title="Solicitudes Aprobadas"
             value={stats?.solicitudes_aprobadas || 0}
-            gradient="green"
+            gradient="success"
             icon={<CheckCircleIcon className="w-6 h-6" />}
           />
         )}
-        
+
         {/* Cotizaciones - para tesorería que autoriza */}
         {showCotizacionesInfo && !showSolicitudesInfo && !showProviderInfo && (
           <StatCard
             title="Cotizaciones por Autorizar"
             value={stats?.cotizaciones_pendientes || 0}
-            gradient="blue"
+            gradient="primary"
             icon={<ClipboardDocumentListIcon className="w-6 h-6" />}
             subtitle="Pendientes de autorización"
           />
         )}
-        
+
         {/* Órdenes de Compra - solo adquisiciones */}
         {showOrdersInfo && (
           <StatCard
@@ -250,24 +267,24 @@ const DashboardPage: React.FC = () => {
             subtitle="En proceso"
           />
         )}
-        
+
         {/* Facturas - tesorería */}
         {showFinancialInfo && (
           <StatCard
             title="Facturas Pendientes"
             value={stats?.facturas_pendientes || 0}
-            gradient="orange"
+            gradient="warning"
             icon={<CurrencyDollarIcon className="w-6 h-6" />}
             subtitle="Por procesar"
           />
         )}
-        
+
         {/* Tarjetas para PROVEEDOR */}
         {showProviderInfo && (
           <StatCard
             title="Cotizaciones Enviadas"
             value={stats?.cotizaciones_pendientes || 0}
-            gradient="blue"
+            gradient="primary"
             icon={<ClipboardDocumentListIcon className="w-6 h-6" />}
             subtitle="Esperando respuesta"
           />
@@ -276,7 +293,7 @@ const DashboardPage: React.FC = () => {
           <StatCard
             title="Órdenes Asignadas"
             value={stats?.ordenes_activas || 0}
-            gradient="green"
+            gradient="success"
             icon={<ShoppingCartIcon className="w-6 h-6" />}
             subtitle="Por entregar"
           />
@@ -290,13 +307,13 @@ const DashboardPage: React.FC = () => {
             subtitle="Este mes"
           />
         )}
-        
+
         {/* Tarjetas para ALMACÉN */}
         {showWarehouseInfo && (
           <StatCard
             title="Entregas Pendientes"
             value={stats?.ordenes_activas || 0}
-            gradient="orange"
+            gradient="warning"
             icon={<TruckIcon className="w-6 h-6" />}
             subtitle="Por recibir"
           />
@@ -305,166 +322,166 @@ const DashboardPage: React.FC = () => {
 
       {/* Presupuesto y Gasto del mes - Solo para roles financieros */}
       {showFinancialInfo && (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 bg-white" shadow="lg">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Presupuesto del Mes</h3>
-              <p className="text-sm text-gray-500">Control de gastos vs presupuesto asignado</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2 bg-white" shadow="lg">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Presupuesto del Mes</h3>
+                <p className="text-sm text-gray-500">Control de gastos vs presupuesto asignado</p>
+              </div>
+              <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
+                <ArrowTrendingUpIcon className="w-4 h-4" />
+                <span className="text-sm font-medium">En control</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
-              <ArrowTrendingUpIcon className="w-4 h-4" />
-              <span className="text-sm font-medium">En control</span>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4">
-              <p className="text-sm text-gray-500">Presupuesto Total</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {formatCurrency(stats?.total_presupuesto || 0)}
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4">
+                <p className="text-sm text-gray-500">Presupuesto Total</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {formatCurrency(stats?.total_presupuesto || 0)}
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
+                <p className="text-sm text-blue-600">Gastado</p>
+                <p className="text-2xl font-bold text-blue-700 mt-1">
+                  {formatCurrency(stats?.total_gastado_mes || 0)}
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4">
+                <p className="text-sm text-emerald-600">Disponible</p>
+                <p className="text-2xl font-bold text-emerald-700 mt-1">
+                  {formatCurrency(stats?.total_disponible || 0)}
+                </p>
+              </div>
             </div>
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
-              <p className="text-sm text-blue-600">Gastado</p>
-              <p className="text-2xl font-bold text-blue-700 mt-1">
-                {formatCurrency(stats?.total_gastado_mes || 0)}
-              </p>
-            </div>
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4">
-              <p className="text-sm text-emerald-600">Disponible</p>
-              <p className="text-2xl font-bold text-emerald-700 mt-1">
-                {formatCurrency(stats?.total_disponible || 0)}
-              </p>
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Progreso del presupuesto</span>
-              <span className="font-medium text-gray-900">{presupuestoUsado.toFixed(1)}%</span>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Progreso del presupuesto</span>
+                <span className="font-medium text-gray-900">{presupuestoUsado.toFixed(1)}%</span>
+              </div>
+              <ProgressBar
+                value={presupuestoUsado}
+                max={100}
+                size="lg"
+                color="auto"
+                animated
+              />
             </div>
-            <ProgressBar
-              value={presupuestoUsado}
-              max={100}
-              size="lg"
-              color="auto"
-              animated
-            />
-          </div>
-        </Card>
+          </Card>
 
-        {/* Alertas y notificaciones */}
-        <Card className="bg-white" shadow="lg">
-          <div className="flex items-center gap-2 mb-4">
-            <BellAlertIcon className="w-5 h-5 text-amber-500" />
-            <h3 className="text-lg font-semibold text-gray-900">Alertas</h3>
-          </div>
-          
-          <div className="space-y-3">
-            {stats?.solicitudes_pendientes ? (
-              <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
-                <div className="w-2 h-2 mt-2 rounded-full bg-amber-500 animate-pulse" />
-                <div>
-                  <p className="text-sm font-medium text-amber-800">
-                    {stats.solicitudes_pendientes} solicitudes pendientes
-                  </p>
-                  <p className="text-xs text-amber-600 mt-1">Requieren tu atención</p>
+          {/* Alertas y notificaciones */}
+          <Card className="bg-white" shadow="lg">
+            <div className="flex items-center gap-2 mb-4">
+              <BellAlertIcon className="w-5 h-5 text-amber-500" />
+              <h3 className="text-lg font-semibold text-gray-900">Alertas</h3>
+            </div>
+
+            <div className="space-y-3">
+              {stats?.solicitudes_pendientes ? (
+                <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
+                  <div className="w-2 h-2 mt-2 rounded-full bg-amber-500 animate-pulse" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-800">
+                      {stats.solicitudes_pendientes} solicitudes pendientes
+                    </p>
+                    <p className="text-xs text-amber-600 mt-1">Requieren tu atención</p>
+                  </div>
                 </div>
-              </div>
-            ) : null}
-            
-            {stats?.facturas_pendientes ? (
-              <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                <div className="w-2 h-2 mt-2 rounded-full bg-blue-500 animate-pulse" />
-                <div>
-                  <p className="text-sm font-medium text-blue-800">
-                    {stats.facturas_pendientes} facturas por procesar
-                  </p>
-                  <p className="text-xs text-blue-600 mt-1">En espera de validación</p>
-                </div>
-              </div>
-            ) : null}
+              ) : null}
 
-            {presupuestoUsado >= 80 && (
-              <div className="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-100">
-                <div className="w-2 h-2 mt-2 rounded-full bg-red-500 animate-pulse" />
-                <div>
-                  <p className="text-sm font-medium text-red-800">
-                    Presupuesto al {presupuestoUsado.toFixed(0)}%
-                  </p>
-                  <p className="text-xs text-red-600 mt-1">Cerca del límite mensual</p>
+              {stats?.facturas_pendientes ? (
+                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                  <div className="w-2 h-2 mt-2 rounded-full bg-blue-500 animate-pulse" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-800">
+                      {stats.facturas_pendientes} facturas por procesar
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">En espera de validación</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              ) : null}
 
-            {(!stats?.solicitudes_pendientes && !stats?.facturas_pendientes && presupuestoUsado < 80) && (
-              <div className="flex items-center justify-center py-8 text-gray-400">
-                <p className="text-sm">No hay alertas activas</p>
-              </div>
-            )}
-          </div>
-        </Card>
-      </div>
+              {presupuestoUsado >= 80 && (
+                <div className="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-100">
+                  <div className="w-2 h-2 mt-2 rounded-full bg-red-500 animate-pulse" />
+                  <div>
+                    <p className="text-sm font-medium text-red-800">
+                      Presupuesto al {presupuestoUsado.toFixed(0)}%
+                    </p>
+                    <p className="text-xs text-red-600 mt-1">Cerca del límite mensual</p>
+                  </div>
+                </div>
+              )}
+
+              {(!stats?.solicitudes_pendientes && !stats?.facturas_pendientes && presupuestoUsado < 80) && (
+                <div className="flex items-center justify-center py-8 text-gray-400">
+                  <p className="text-sm">No hay alertas activas</p>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* Gráficos - Solo para roles con acceso a información financiera */}
       {showFinancialInfo && gastosPorArea.length > 0 && (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-white" shadow="lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Gastos vs Presupuesto por Área</h3>
-          <p className="text-sm text-gray-500 mb-4">Comparativa del mes actual</p>
-          <ExpenseBarChart data={barChartData} height={280} />
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="bg-white" shadow="lg">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Gastos vs Presupuesto por Área</h3>
+            <p className="text-sm text-gray-500 mb-4">Comparativa del mes actual</p>
+            <ExpenseBarChart data={barChartData} height={280} />
+          </Card>
 
-        <Card className="bg-white" shadow="lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Tendencia Anual</h3>
-          <p className="text-sm text-gray-500 mb-4">Evolución de gastos mensuales</p>
-          <TrendLineChart data={gastosMensuales} height={280} />
-        </Card>
-      </div>
+          <Card className="bg-white" shadow="lg">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Tendencia Anual</h3>
+            <p className="text-sm text-gray-500 mb-4">Evolución de gastos mensuales</p>
+            <TrendLineChart data={gastosMensuales} height={280} />
+          </Card>
+        </div>
       )}
 
       {/* Gastos por área (detalle) y Distribución - Solo para roles financieros */}
       {showFinancialInfo && gastosPorArea.length > 0 && (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 bg-white" shadow="lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Detalle por Área</h3>
-          <div className="space-y-4">
-            {gastosPorArea.map((area, index) => (
-              <div key={index} className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444'][index % 5] }}
-                    />
-                    <span className="font-medium text-gray-900">{area.area}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2 bg-white" shadow="lg">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Detalle por Área</h3>
+            <div className="space-y-4">
+              {gastosPorArea.map((area, index) => (
+                <div key={index} className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444'][index % 5] }}
+                      />
+                      <span className="font-medium text-gray-900">{area.area}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm text-gray-500">
+                        {formatCurrency(area.gastado)} / {formatCurrency(area.presupuesto)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-sm text-gray-500">
-                      {formatCurrency(area.gastado)} / {formatCurrency(area.presupuesto)}
-                    </span>
-                  </div>
+                  <ProgressBar
+                    value={area.porcentaje}
+                    max={100}
+                    size="sm"
+                    color="auto"
+                    showLabel
+                  />
                 </div>
-                <ProgressBar
-                  value={area.porcentaje}
-                  max={100}
-                  size="sm"
-                  color="auto"
-                  showLabel
-                />
-              </div>
-            ))}
-          </div>
-        </Card>
+              ))}
+            </div>
+          </Card>
 
-        <Card className="bg-white" shadow="lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Distribución de Gastos</h3>
-          <p className="text-sm text-gray-500 mb-4">Por área del mes</p>
-          <DistributionPieChart data={pieChartData} height={250} />
-        </Card>
-      </div>
+          <Card className="bg-white" shadow="lg">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Distribución de Gastos</h3>
+            <p className="text-sm text-gray-500 mb-4">Por área del mes</p>
+            <DistributionPieChart data={pieChartData} height={250} />
+          </Card>
+        </div>
       )}
 
       {/* Solicitudes recientes y Actividad */}

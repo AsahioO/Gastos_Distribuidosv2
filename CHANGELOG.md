@@ -15,6 +15,46 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
+## [0.9.1] - 2026-01-27
+
+### 🔒 Análisis de Seguridad y Mejoras de UI
+
+#### Seguridad
+- **Añadido** `docs/SECURITY_ANALYSIS.md` - Análisis completo de seguridad con vulnerabilidades y soluciones
+- **Documentado** Vulnerabilidades críticas: SECRET_KEY hardcodeada, CORS permisivo en local
+- **Documentado** Almacenamiento de tokens en localStorage y recomendaciones de httpOnly cookies
+- **Documentado** Plan de remediación en 3 fases
+
+#### Backend - Usuarios
+- **Corregido** `UserSerializer` - Añadido campo `role_display` para mostrar nombre de rol correctamente
+- **Corregido** `UserViewSet` - Deshabilitada paginación para cargar todos los usuarios
+- **Mejorado** `UserCreateSerializer` - Manejo robusto de creación de proveedores con RFC único
+- **Añadido** Soft delete en `UserViewSet.destroy()` - Desactiva usuarios con registros asociados
+
+#### Backend - Dashboard
+- **Añadido** Management command `populate_demo_data` en `apps/reports/management/commands/`
+- **Añadido** Datos de demostración: presupuestos, facturas y distribuciones de gastos
+
+#### Frontend - Dashboard
+- **Rediseñado** `DashboardPage` header con gradiente indigo-purple premium
+- **Añadido** Glassmorphism con backdrop-blur y bordes translúcidos
+- **Añadido** Patrón de puntos decorativo y efectos de sombra con color
+- **Rediseñado** `Card.tsx` - Nuevos gradientes premium (primary, success, warning, purple)
+- **Añadido** Sombras coloreadas para cada tipo de gradiente
+- **Añadido** Animaciones de hover en círculos decorativos de StatCard
+
+#### Frontend - Usuarios
+- **Mejorado** `UsersPage` - Filtros dinámicos por rol con contadores
+- **Añadido** Búsqueda de usuarios por nombre, email o username
+- **Añadido** Avatares con iniciales y colores por rol
+- **Mejorado** Manejo de errores con mensajes descriptivos
+
+#### Componentes UI
+- **Añadido** `PageHeader` - Componente reutilizable con 3 variantes (default, gradient, minimal)
+
+---
+
+
 ## [0.9.0] - 2026-01-24
 
 ### 🎉 Portal de Proveedores (Fase 9)

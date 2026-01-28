@@ -31,7 +31,7 @@ export default function SolicitudFormPage() {
   const navigate = useNavigate()
   const { id } = useParams()
   const isEditing = Boolean(id)
-  
+
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -143,7 +143,7 @@ export default function SolicitudFormPage() {
         toast.success('Solicitud actualizada correctamente')
       } else {
         const created = await procurementService.createSolicitud(payload)
-        
+
         // Si se eligió enviar directamente, cambiar estado a "enviado"
         if (sendDirectly) {
           await procurementService.enviarSolicitud(created.id)
@@ -154,10 +154,10 @@ export default function SolicitudFormPage() {
       }
       navigate('/solicitudes')
     } catch (error: any) {
-      const errorMsg = error.response?.data?.detail || 
-                       error.response?.data?.message ||
-                       Object.values(error.response?.data || {})[0] ||
-                       'Error al guardar la solicitud'
+      const errorMsg = error.response?.data?.detail ||
+        error.response?.data?.message ||
+        Object.values(error.response?.data || {})[0] ||
+        'Error al guardar la solicitud'
       toast.error(String(errorMsg))
     } finally {
       setSubmitting(false)
@@ -196,11 +196,11 @@ export default function SolicitudFormPage() {
     return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value)
   }
 
-  const filteredCogs = cogSearch 
-    ? (Array.isArray(cogs) ? cogs : []).filter(c => 
-        c.codigo.toLowerCase().includes(cogSearch.toLowerCase()) ||
-        c.descripcion.toLowerCase().includes(cogSearch.toLowerCase())
-      )
+  const filteredCogs = cogSearch
+    ? (Array.isArray(cogs) ? cogs : []).filter(c =>
+      c.codigo.toLowerCase().includes(cogSearch.toLowerCase()) ||
+      c.descripcion.toLowerCase().includes(cogSearch.toLowerCase())
+    )
     : (Array.isArray(cogs) ? cogs : [])
 
   if (loading) {
@@ -217,7 +217,7 @@ export default function SolicitudFormPage() {
   return (
     <div>
       <div className="mb-6">
-        <button 
+        <button
           onClick={() => navigate('/solicitudes')}
           className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
         >
@@ -229,11 +229,11 @@ export default function SolicitudFormPage() {
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(handleSaveDraft)} className="space-y-6">
         {/* Datos generales */}
         <div className="bg-white shadow rounded-lg p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Datos Generales</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Select
               label="Área solicitante *"
@@ -335,8 +335,8 @@ export default function SolicitudFormPage() {
                       type="number"
                       step="0.01"
                       min="0.01"
-                      {...register(`detalles.${index}.cantidad`, { 
-                        required: 'Requerido', 
+                      {...register(`detalles.${index}.cantidad`, {
+                        required: 'Requerido',
                         valueAsNumber: true,
                         min: { value: 0.01, message: 'Mínimo 0.01' }
                       })}
@@ -399,8 +399,8 @@ export default function SolicitudFormPage() {
             Cancelar
           </Button>
           {!isEditing && (
-            <Button 
-              type="button" 
+            <Button
+              type="button"
               variant="secondary"
               loading={submitting}
               onClick={handleSubmit(handleSaveDraft)}
@@ -408,8 +408,8 @@ export default function SolicitudFormPage() {
               Guardar Borrador
             </Button>
           )}
-          <Button 
-            type="button" 
+          <Button
+            type="button"
             loading={submitting}
             onClick={handleSubmit(isEditing ? handleSaveDraft : handleSendDirectly)}
           >
@@ -419,9 +419,9 @@ export default function SolicitudFormPage() {
       </form>
 
       {/* Modal de confirmación para envío directo */}
-      <Modal 
-        isOpen={showConfirmModal} 
-        onClose={() => setShowConfirmModal(false)} 
+      <Modal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
         title="Confirmar Envío de Solicitud"
         size="md"
       >
@@ -444,13 +444,13 @@ export default function SolicitudFormPage() {
             Si necesitas hacer cambios después, deberás cancelar esta solicitud y crear una nueva.
           </p>
           <div className="flex justify-center space-x-3">
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               onClick={() => setShowConfirmModal(false)}
             >
               Revisar de nuevo
             </Button>
-            <Button 
+            <Button
               onClick={confirmSendDirectly}
               loading={submitting}
             >

@@ -18,12 +18,13 @@ class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model."""
     
     role_name = serializers.CharField(source='role.get_name_display', read_only=True)
+    role_display = serializers.CharField(source='role.get_name_display', read_only=True)
     
     class Meta:
         model = User
         fields = [
             'id', 'email', 'username', 'full_name', 'phone',
-            'role', 'role_name', 'avatar', 'is_active',
+            'role', 'role_name', 'role_display', 'avatar', 'is_active',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
@@ -60,18 +61,26 @@ class UserCreateSerializer(serializers.ModelSerializer):
             
             # Si el rol es proveedor, crear automáticamente el perfil de proveedor
             if user.role and user.role.name == Role.RoleType.PROVEEDOR:
-                from apps.companies.models import Proveedor
-                # Crear RFC único temporal usando UUID corto
-                unique_rfc = f"TMP{uuid.uuid4().hex[:10].upper()}"
-                # Crear perfil de proveedor básico
-                Proveedor.objects.create(
-                    user=user,
-                    rfc=unique_rfc,  # RFC temporal único, debe actualizarse después
-                    razon_social=user.full_name or user.username,
-                    contacto_nombre=user.full_name or '',
-                    contacto_email=user.email,
-                    estado=Proveedor.EstadoChoices.ACTIVO
-                )
+                try:
+                    from apps.companies.models import Proveedor
+                    # Crear RFC único temporal usando UUID corto + timestamp
+                    import time
+                    unique_rfc = f"TMP{int(time.time())}{uuid.uuid4().hex[:4].upper()}"
+                    # Crear perfil de proveedor básico
+                    Proveedor.objects.create(
+                        user=user,
+                        rfc=unique_rfc,  # RFC temporal único, debe actualizarse después
+                        razon_social=user.full_name or user.username or user.email,
+                        contacto_nombre=user.full_name or '',
+                        contacto_email=user.email,
+                        estado=Proveedor.EstadoChoices.ACTIVO
+                    )
+                except Exception as e:
+                    # Si falla la creación del proveedor, aún creamos el usuario
+                    # pero logueamos el error
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"Error creando perfil de proveedor para {user.email}: {e}")
         
         return user
 

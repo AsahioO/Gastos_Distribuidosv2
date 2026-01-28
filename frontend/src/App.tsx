@@ -36,32 +36,33 @@ import NuevaCotizacionPage from '@/pages/proveedor/NuevaCotizacionPage'
 import MisCotizacionesPage from '@/pages/proveedor/MisCotizacionesPage'
 import MisOrdenesPage from '@/pages/proveedor/MisOrdenesPage'
 import MisFacturasPage from '@/pages/proveedor/MisFacturasPage'
+import LandingPage from '@/pages/landing/LandingPage'
 
 // Protected Route component
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { isAuthenticated, user } = useAuthStore()
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
-  
+
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
     // Redirigir proveedores a su portal, otros al dashboard
     const redirectTo = user.role === 'proveedor' ? '/portal' : '/dashboard'
     return <Navigate to={redirectTo} replace />
   }
-  
+
   return <>{children}</>
 }
 
 // Componente para redirección según rol
 function HomeRedirect() {
   const { user } = useAuthStore()
-  
+
   if (user?.role === 'proveedor') {
     return <Navigate to="/portal" replace />
   }
-  
+
   return <Navigate to="/dashboard" replace />
 }
 
@@ -70,6 +71,9 @@ function App() {
 
   return (
     <Routes>
+      {/* Public routes */}
+      <Route path="/" element={<LandingPage />} />
+
       {/* Auth routes */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
@@ -81,10 +85,10 @@ function App() {
           isAuthenticated ? <MainLayout /> : <Navigate to="/login" replace />
         }
       >
-        <Route path="/" element={<HomeRedirect />} />
+        <Route path="/home" element={<HomeRedirect />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/reportes" element={<ReportesPage />} />
-        
+
         {/* Portal del Proveedor - Fase 9 */}
         <Route path="/portal" element={
           <ProtectedRoute allowedRoles={['proveedor']}>
@@ -121,7 +125,7 @@ function App() {
             <MisFacturasPage />
           </ProtectedRoute>
         } />
-        
+
         {/* Admin routes */}
         <Route path="/usuarios" element={
           <ProtectedRoute allowedRoles={['admin']}>
@@ -138,7 +142,7 @@ function App() {
             <ProveedoresPage />
           </ProtectedRoute>
         } />
-        
+
         {/* Procurement routes - Área crea, Adquisiciones gestiona */}
         <Route path="/solicitudes" element={
           <ProtectedRoute allowedRoles={['admin', 'adquisiciones', 'area']}>
@@ -160,7 +164,7 @@ function App() {
             <SolicitudFormPage />
           </ProtectedRoute>
         } />
-        
+
         {/* Quotation routes - Adquisiciones envía, Tesorería autoriza */}
         <Route path="/cotizaciones" element={
           <ProtectedRoute allowedRoles={['admin', 'adquisiciones', 'tesoreria']}>
@@ -182,7 +186,7 @@ function App() {
             <CotizacionFormPage />
           </ProtectedRoute>
         } />
-        
+
         {/* Order routes - Adquisiciones genera y envía */}
         <Route path="/ordenes" element={
           <ProtectedRoute allowedRoles={['admin', 'adquisiciones']}>
@@ -204,7 +208,7 @@ function App() {
             <OrdenFormPage />
           </ProtectedRoute>
         } />
-        
+
         {/* Inventory routes - Almacén recibe y distribuye */}
         <Route path="/inventario/entregas" element={
           <ProtectedRoute allowedRoles={['admin', 'almacen']}>
@@ -237,7 +241,7 @@ function App() {
           </ProtectedRoute>
         } />
         <Route path="/inventario" element={<Navigate to="/inventario/entregas" replace />} />
-        
+
         {/* Invoice routes - Tesorería procesa pagos */}
         <Route path="/facturas" element={
           <ProtectedRoute allowedRoles={['admin', 'tesoreria']}>

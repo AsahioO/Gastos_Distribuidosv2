@@ -34,7 +34,8 @@ const extractData = <T>(data: T[] | { results: T[] }): T[] => {
 
 export const userService = {
   getUsers: async (): Promise<User[]> => {
-    const response = await api.get('/auth/users/')
+    // Usamos page_size grande para obtener todos los usuarios (evitar paginación)
+    const response = await api.get('/auth/users/', { params: { page_size: 1000 } })
     return extractData(response.data)
   },
 
@@ -53,8 +54,9 @@ export const userService = {
     return response.data
   },
 
-  deleteUser: async (id: number): Promise<void> => {
-    await api.delete(`/auth/users/${id}/`)
+  deleteUser: async (id: number): Promise<{ detail?: string } | void> => {
+    const response = await api.delete(`/auth/users/${id}/`)
+    return response.data
   },
 
   toggleUserStatus: async (id: number): Promise<User> => {

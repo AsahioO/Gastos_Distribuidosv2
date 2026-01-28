@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { 
-  PlusIcon, 
-  EyeIcon, 
-  PencilIcon, 
+import {
+  PlusIcon,
+  EyeIcon,
+  PencilIcon,
   TrashIcon,
   PaperAirplaneIcon,
   XCircleIcon,
-  DocumentArrowUpIcon
+  DocumentArrowUpIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline'
-import { Button, Table, Modal } from '@/components/ui'
+import { Button, Table, Modal, PageHeader } from '@/components/ui'
 import { procurementService, SolicitudMaterial } from '@/services/procurementService'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -135,21 +136,21 @@ export default function SolicitudesPage() {
   }
 
   const columns = [
-    { 
-      key: 'numero', 
+    {
+      key: 'numero',
       header: 'Número',
       render: (s: SolicitudMaterial) => (
         <span className="font-medium text-primary-600">{s.numero}</span>
       )
     },
-    { 
-      key: 'fecha_solicitud', 
+    {
+      key: 'fecha_solicitud',
       header: 'Fecha',
       render: (s: SolicitudMaterial) => formatDate(s.fecha_solicitud)
     },
     { key: 'area_name', header: 'Área' },
-    { 
-      key: 'descripcion', 
+    {
+      key: 'descripcion',
       header: 'Descripción',
       render: (s: SolicitudMaterial) => (
         <span className="max-w-xs truncate block">{s.descripcion || '-'}</span>
@@ -190,7 +191,7 @@ export default function SolicitudesPage() {
           >
             <EyeIcon className="h-5 w-5" />
           </button>
-          
+
           {/* Solo Área o Admin pueden editar/enviar borradores */}
           {s.estado === 'borrador' && (isArea || isAdmin) && (
             <>
@@ -217,7 +218,7 @@ export default function SolicitudesPage() {
               </button>
             </>
           )}
-          
+
           {/* Adquisiciones o Admin pueden enviar a cotización las solicitudes enviadas */}
           {s.estado === 'enviado' && (isAdquisiciones || isAdmin) && (
             <button
@@ -228,7 +229,7 @@ export default function SolicitudesPage() {
               <DocumentArrowUpIcon className="h-5 w-5" />
             </button>
           )}
-          
+
           {/* Solo quien creó o Admin puede cancelar */}
           {['enviado', 'en_cotizacion'].includes(s.estado) && (isArea || isAdmin) && (
             <button
@@ -246,22 +247,22 @@ export default function SolicitudesPage() {
 
   return (
     <div>
-      <div className="sm:flex sm:items-center sm:justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Solicitudes de Material</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            {isArea 
-              ? 'Gestiona tus solicitudes de material' 
-              : 'Gestiona las solicitudes de material de las áreas'}
-          </p>
-        </div>
-        {canCreateSolicitud && (
-          <Button onClick={handleCreate}>
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Nueva Solicitud
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Solicitudes de Material"
+        subtitle={isArea
+          ? 'Gestiona tus solicitudes de material'
+          : 'Gestiona las solicitudes de material de las áreas'}
+        icon={<DocumentTextIcon className="w-6 h-6" />}
+        gradient="blue"
+        actions={
+          canCreateSolicitud ? (
+            <Button onClick={handleCreate}>
+              <PlusIcon className="h-5 w-5 mr-2" />
+              Nueva Solicitud
+            </Button>
+          ) : undefined
+        }
+      />
 
       {/* Filtros rápidos */}
       <div className="mb-4 flex flex-wrap gap-2">
@@ -293,10 +294,10 @@ export default function SolicitudesPage() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      <Modal 
-        isOpen={deleteModalOpen} 
-        onClose={() => setDeleteModalOpen(false)} 
-        title="Eliminar Solicitud" 
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Eliminar Solicitud"
         size="sm"
       >
         <p className="text-gray-600">
