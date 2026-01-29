@@ -52,13 +52,20 @@ class FacturaViewSet(viewsets.ModelViewSet):
         
         factura = serializer.save(uploaded_by=request.user)
         
-        # Queue async task to process the XML
-        process_cfdi_xml.delay(factura.id)
+        # Try async processing, fall back to sync if Celery/Redis not available
+        try:
+            process_cfdi_xml.delay(factura.id)
+            message = 'Factura recibida. El procesamiento se realizará en segundo plano.'
+        except Exception:
+            # Celery/Redis not available, process synchronously
+            process_cfdi_xml(factura.id)
+            factura.refresh_from_db()
+            message = 'Factura procesada correctamente.'
         
         return Response(
             {
                 'id': factura.id,
-                'message': 'Factura recibida. El procesamiento se realizará en segundo plano.',
+                'message': message,
                 'status': factura.status
             },
             status=status.HTTP_201_CREATED
@@ -96,11 +103,17 @@ class FacturaViewSet(viewsets.ModelViewSet):
         for dist in distributions:
             dist['created_by_id'] = request.user.id
         
-        # Queue async task
-        distribute_invoice_expenses.delay(factura.id, distributions)
+        # Try async processing, fall back to sync if Celery/Redis not available
+        try:
+            distribute_invoice_expenses.delay(factura.id, distributions)
+            message = 'La distribución se procesará en segundo plano.'
+        except Exception:
+            # Celery/Redis not available, process synchronously
+            distribute_invoice_expenses(factura.id, distributions)
+            message = 'Distribución completada correctamente.'
         
         return Response({
-            'message': 'La distribución se procesará en segundo plano.'
+            'message': message
         })
     
     @action(detail=True, methods=['post'])
@@ -119,9 +132,16 @@ class FacturaViewSet(viewsets.ModelViewSet):
         factura.error_message = ''
         factura.save()
         
-        process_cfdi_xml.delay(factura.id)
+        # Try async processing, fall back to sync if Celery/Redis not available
+        try:
+            process_cfdi_xml.delay(factura.id)
+            message = 'Reprocesamiento iniciado.'
+        except Exception:
+            # Celery/Redis not available, process synchronously
+            process_cfdi_xml(factura.id)
+            message = 'Factura reprocesada correctamente.'
         
-        return Response({'message': 'Reprocesamiento iniciado.'})
+        return Response({'message': message})
 
 
 class FacturaDetalleViewSet(viewsets.ReadOnlyModelViewSet):

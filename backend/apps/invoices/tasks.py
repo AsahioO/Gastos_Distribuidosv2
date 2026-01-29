@@ -45,8 +45,14 @@ def process_cfdi_xml(self, factura_id: int):
         if errors:
             raise CFDIParseError("; ".join(errors))
         
+        # Check for duplicate UUID
+        uuid_from_xml = data['timbre']['uuid']
+        existing = Factura.objects.filter(uuid_cfdi=uuid_from_xml).exclude(id=factura.id).first()
+        if existing:
+            raise CFDIParseError(f"Ya existe una factura con este UUID: {uuid_from_xml}. Folio existente: {existing.folio or 'N/A'}")
+        
         # Update factura with parsed data
-        factura.uuid_cfdi = data['timbre']['uuid']
+        factura.uuid_cfdi = uuid_from_xml
         factura.folio = data.get('folio', '')
         factura.serie = data.get('serie', '')
         
@@ -59,6 +65,28 @@ def process_cfdi_xml(self, factura_id: int):
         factura.nombre_emisor = data['emisor']['nombre']
         factura.rfc_receptor = data['receptor']['rfc']
         factura.nombre_receptor = data['receptor']['nombre']
+        
+        # Auto-detect proveedor from XML RFC if not already set
+        if not factura.proveedor_id:
+            from apps.companies.models import Proveedor
+            rfc_emisor = data['emisor']['rfc']
+            nombre_emisor = data['emisor']['nombre']
+            
+            # Try to find existing proveedor by RFC
+            proveedor = Proveedor.objects.filter(rfc=rfc_emisor).first()
+            
+            if not proveedor:
+                # Create new proveedor automatically
+                proveedor = Proveedor.objects.create(
+                    rfc=rfc_emisor,
+                    razon_social=nombre_emisor,
+                    nombre_comercial=nombre_emisor,
+                    contacto_email=f'{rfc_emisor.lower()}@proveedor.temporal',  # Placeholder email
+                    estado=Proveedor.EstadoChoices.ACTIVO,
+                )
+                logger.info(f"Created new proveedor from XML: {rfc_emisor} - {nombre_emisor}")
+            
+            factura.proveedor = proveedor
         
         # Amounts
         factura.subtotal = data['subtotal']
@@ -107,7 +135,7 @@ def process_cfdi_xml(self, factura_id: int):
                 importe=concepto['importe'],
                 descuento=concepto.get('descuento', Decimal('0')),
                 objeto_imp=concepto.get('objeto_imp', ''),
-                impuestos=concepto.get('impuestos', {}),
+                impuestos=decimal_to_str(concepto.get('impuestos', {})),
             )
         
         logger.info(f"Successfully processed factura {factura_id}: {factura.uuid_cfdi}")

@@ -18,7 +18,9 @@ class Factura(models.Model):
         'companies.Proveedor',
         on_delete=models.PROTECT,
         related_name='facturas',
-        verbose_name='Proveedor'
+        verbose_name='Proveedor',
+        null=True,
+        blank=True  # Will be auto-detected from XML RFC
     )
     
     # XML File
@@ -26,7 +28,7 @@ class Factura(models.Model):
     pdf_file = models.FileField(upload_to='facturas/pdf/', blank=True, null=True, verbose_name='Archivo PDF')
     
     # CFDI Data (extracted from XML)
-    uuid_cfdi = models.CharField(max_length=36, unique=True, blank=True, verbose_name='UUID CFDI')
+    uuid_cfdi = models.CharField(max_length=36, unique=True, blank=True, null=True, verbose_name='UUID CFDI')
     folio = models.CharField(max_length=50, blank=True, verbose_name='Folio')
     serie = models.CharField(max_length=25, blank=True, verbose_name='Serie')
     fecha = models.DateTimeField(null=True, blank=True, verbose_name='Fecha de emisión')

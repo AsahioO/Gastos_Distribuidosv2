@@ -26,6 +26,32 @@ export default function FacturasPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+
+  const handleDelete = async (factura: Factura) => {
+    if (factura.status === 'distribuida') {
+      setError('No se puede eliminar una factura que ya fue distribuida')
+      return
+    }
+
+    const confirmed = confirm(
+      `¿Estás seguro de eliminar esta factura?\n\nProveedor: ${factura.proveedor_nombre}\nUUID: ${factura.uuid_cfdi || 'Pendiente'}\nTotal: $${Number(factura.total).toLocaleString('es-MX')}`
+    )
+
+    if (!confirmed) return
+
+    try {
+      setDeletingId(factura.id)
+      await facturaService.deleteFactura(factura.id)
+      setFacturas(prev => prev.filter(f => f.id !== factura.id))
+      setError('')
+    } catch (err) {
+      setError('Error al eliminar la factura')
+      console.error(err)
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   useEffect(() => {
     loadFacturas()
@@ -94,6 +120,15 @@ export default function FacturasPage() {
             >
               Distribuir
             </Link>
+          )}
+          {row.status !== 'distribuida' && (
+            <button
+              onClick={() => handleDelete(row)}
+              disabled={deletingId === row.id}
+              className="text-red-600 hover:text-red-800 disabled:opacity-50"
+            >
+              {deletingId === row.id ? 'Eliminando...' : 'Eliminar'}
+            </button>
           )}
         </div>
       )

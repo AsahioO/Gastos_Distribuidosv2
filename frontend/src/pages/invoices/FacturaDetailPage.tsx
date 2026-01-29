@@ -22,7 +22,7 @@ const statusLabels: Record<string, string> = {
 export default function FacturaDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  
+
   const [factura, setFactura] = useState<Factura | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
@@ -63,6 +63,33 @@ export default function FacturaDetailPage() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!factura) return
+
+    if (factura.status === 'distribuida') {
+      setError('No se puede eliminar una factura que ya fue distribuida')
+      return
+    }
+
+    const confirmed = confirm(
+      `¿Estás seguro de eliminar esta factura?\n\nUUID: ${factura.uuid_cfdi || 'Pendiente'}\nProveedor: ${factura.proveedor_nombre}\nTotal: $${Number(factura.total).toLocaleString('es-MX')}\n\nEsta acción no se puede deshacer.`
+    )
+
+    if (!confirmed) return
+
+    try {
+      setActionLoading(true)
+      await facturaService.deleteFactura(factura.id)
+      navigate('/facturas')
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } }
+      setError(error.response?.data?.error || 'Error al eliminar la factura')
+      console.error(err)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -97,12 +124,21 @@ export default function FacturaDetailPage() {
             </Button>
           )}
           {factura.status === 'error' && (
-            <Button 
-              onClick={handleReprocess} 
+            <Button
+              onClick={handleReprocess}
               loading={actionLoading}
               className="bg-orange-600 hover:bg-orange-700"
             >
               Reprocesar
+            </Button>
+          )}
+          {factura.status !== 'distribuida' && (
+            <Button
+              onClick={handleDelete}
+              loading={actionLoading}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Eliminar
             </Button>
           )}
           <Button variant="secondary" onClick={() => navigate('/facturas')}>

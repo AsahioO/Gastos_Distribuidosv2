@@ -27,10 +27,15 @@ class DistribucionGastoSerializer(serializers.ModelSerializer):
 
 
 class FacturaSerializer(serializers.ModelSerializer):
-    proveedor_nombre = serializers.CharField(source='proveedor.razon_social', read_only=True)
+    proveedor_nombre = serializers.SerializerMethodField()
     conceptos = FacturaDetalleSerializer(many=True, read_only=True)
     distribuciones = DistribucionGastoSerializer(many=True, read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    
+    def get_proveedor_nombre(self, obj):
+        if obj.proveedor:
+            return obj.proveedor.razon_social
+        return obj.nombre_emisor or 'Pendiente de procesar'
     
     class Meta:
         model = Factura
@@ -58,6 +63,19 @@ class FacturaUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Factura
         fields = ['proveedor', 'xml_file', 'pdf_file']
+        extra_kwargs = {
+            'proveedor': {
+                'required': False,
+                'allow_null': True,
+                'help_text': 'Opcional. Si no se especifica, se detectará automáticamente del XML.'
+            }
+        }
+    
+    def create(self, validated_data):
+        # Ensure uuid_cfdi is None (not empty string) for new uploads
+        validated_data['uuid_cfdi'] = None
+        # proveedor can be None, will be auto-detected from XML during processing
+        return super().create(validated_data)
 
 
 class DistributeRequestSerializer(serializers.Serializer):

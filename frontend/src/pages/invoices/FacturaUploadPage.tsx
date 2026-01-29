@@ -9,12 +9,12 @@ export default function FacturaUploadPage() {
   const navigate = useNavigate()
   const xmlInputRef = useRef<HTMLInputElement>(null)
   const pdfInputRef = useRef<HTMLInputElement>(null)
-  
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [proveedores, setProveedores] = useState<Proveedor[]>([])
-  
+
   const [proveedor, setProveedor] = useState<string>('')
   const [xmlFile, setXmlFile] = useState<File | null>(null)
   const [pdfFile, setPdfFile] = useState<File | null>(null)
@@ -58,12 +58,7 @@ export default function FacturaUploadPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!proveedor) {
-      setError('Seleccione un proveedor')
-      return
-    }
-    
+
     if (!xmlFile) {
       setError('Seleccione un archivo XML')
       return
@@ -72,15 +67,15 @@ export default function FacturaUploadPage() {
     try {
       setLoading(true)
       setError('')
-      
+
       const result = await facturaService.uploadFactura({
-        proveedor: Number(proveedor),
+        proveedor: proveedor ? Number(proveedor) : undefined,
         xml_file: xmlFile,
         pdf_file: pdfFile || undefined
       })
-      
+
       setSuccess(result.message)
-      
+
       // Redirect after 2 seconds
       setTimeout(() => {
         navigate('/facturas')
@@ -118,18 +113,21 @@ export default function FacturaUploadPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-lg font-semibold mb-4">Información de la Factura</h2>
-          
+
           <div className="space-y-4">
             <Select
-              label="Proveedor *"
+              label="Proveedor (Opcional)"
               value={proveedor}
               onChange={(e) => setProveedor(e.target.value)}
-              placeholder="Seleccione un proveedor"
+              placeholder="Auto-detectar del XML"
               options={proveedores.map(p => ({
                 value: p.id,
                 label: `${p.razon_social} (${p.rfc})`
               }))}
             />
+            <p className="text-xs text-gray-500 -mt-2">
+              Si no seleccionas un proveedor, se detectará automáticamente del RFC del XML.
+            </p>
 
             {/* XML Upload */}
             <div>
@@ -220,15 +218,15 @@ export default function FacturaUploadPage() {
           <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
             <li>El archivo XML debe ser un CFDI 4.0 válido</li>
             <li>El sistema extraerá automáticamente la información del XML</li>
-            <li>El procesamiento se realiza en segundo plano</li>
-            <li>Recibirás una notificación cuando esté listo</li>
+            <li>El proveedor se detectará automáticamente del RFC del emisor</li>
+            <li>Si el proveedor no existe, se creará automáticamente</li>
           </ul>
         </div>
 
         <div className="flex justify-end gap-4">
-          <Button 
-            variant="secondary" 
-            type="button" 
+          <Button
+            variant="secondary"
+            type="button"
             onClick={() => navigate('/facturas')}
           >
             Cancelar

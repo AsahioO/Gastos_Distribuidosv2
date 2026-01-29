@@ -71,7 +71,7 @@ export interface Factura {
 }
 
 export interface UploadFacturaData {
-  proveedor: number
+  proveedor?: number  // Optional - will be auto-detected from XML if not provided
   xml_file: File
   pdf_file?: File
 }
@@ -90,7 +90,7 @@ export const facturaService = {
     const params = new URLSearchParams()
     if (filters?.status) params.append('status', filters.status)
     if (filters?.proveedor) params.append('proveedor', String(filters.proveedor))
-    
+
     const response = await api.get(`/invoices/?${params.toString()}`)
     return extractData(response.data)
   },
@@ -102,10 +102,12 @@ export const facturaService = {
 
   uploadFactura: async (data: UploadFacturaData): Promise<{ id: number; message: string; status: string }> => {
     const formData = new FormData()
-    formData.append('proveedor', String(data.proveedor))
+    if (data.proveedor) {
+      formData.append('proveedor', String(data.proveedor))
+    }
     formData.append('xml_file', data.xml_file)
     if (data.pdf_file) formData.append('pdf_file', data.pdf_file)
-    
+
     const response = await api.post('/invoices/upload/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
