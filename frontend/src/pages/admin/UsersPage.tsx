@@ -19,14 +19,16 @@ interface UserFormData extends CreateUserData {
 
 // Colores por rol para las badges (keys en minúsculas para coincidir con role_display.toLowerCase())
 const roleColors: Record<string, string> = {
-  'administrador': 'bg-red-100 text-red-800 border-red-200',
-  'admin': 'bg-red-100 text-red-800 border-red-200',
-  'adquisiciones': 'bg-blue-100 text-blue-800 border-blue-200',
-  'almacén': 'bg-amber-100 text-amber-800 border-amber-200',
-  'almacen': 'bg-amber-100 text-amber-800 border-amber-200',
-  'área': 'bg-green-100 text-green-800 border-green-200',
-  'area': 'bg-green-100 text-green-800 border-green-200',
-  'proveedor': 'bg-purple-100 text-purple-800 border-purple-200',
+  'administrador': 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800',
+  'admin': 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800',
+  'adquisiciones': 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+  'almacén': 'bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+  'almacen': 'bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+  'área': 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800',
+  'area': 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800',
+  'proveedor': 'bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+  'tesorería': 'bg-teal-100 dark:bg-teal-900/50 text-teal-800 dark:text-teal-300 border-teal-200 dark:border-teal-800',
+  'tesoreria': 'bg-teal-100 dark:bg-teal-900/50 text-teal-800 dark:text-teal-300 border-teal-200 dark:border-teal-800',
 }
 
 export default function UsersPage() {
@@ -215,7 +217,7 @@ export default function UsersPage() {
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
             {(user.full_name || user.username || 'U').charAt(0).toUpperCase()}
           </div>
-          <span className="font-medium text-gray-900">{user.username}</span>
+          <span className="font-medium text-gray-900 dark:text-white">{user.username}</span>
         </div>
       )
     },
@@ -226,7 +228,7 @@ export default function UsersPage() {
       header: 'Rol',
       render: (user: User) => {
         const roleName = user.role_display?.toLowerCase() || 'otro'
-        const colorClass = roleColors[roleName] || 'bg-gray-100 text-gray-800 border-gray-200'
+        const colorClass = roleColors[roleName] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600'
         return (
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${colorClass}`}>
             {user.role_display || 'Sin rol'}
@@ -241,7 +243,7 @@ export default function UsersPage() {
         <div className="flex space-x-2">
           <button
             onClick={(e) => { e.stopPropagation(); handleEdit(user) }}
-            className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+            className="p-1.5 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
             title="Editar usuario"
             aria-label={`Editar usuario ${user.full_name || user.username}`}
           >
@@ -249,7 +251,7 @@ export default function UsersPage() {
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); handleDelete(user) }}
-            className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+            className="p-1.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
             title="Eliminar usuario"
             aria-label={`Eliminar usuario ${user.full_name || user.username}`}
           >
@@ -278,7 +280,7 @@ export default function UsersPage() {
       />
 
       {/* Barra de búsqueda y filtros */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-4">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Buscador */}
           <div className="flex-1 relative">
@@ -288,7 +290,7 @@ export default function UsersPage() {
               placeholder="Buscar por nombre, usuario o correo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm"
             />
             {searchTerm && (
               <button
@@ -302,19 +304,19 @@ export default function UsersPage() {
 
           {/* Filtros por rol */}
           <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-sm text-gray-500 hidden sm:inline">Rol:</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:inline">Rol:</span>
             {/* Botón Todos */}
             <button
               onClick={() => setRoleFilter('todos')}
               className={`px-3 py-1.5 text-sm rounded-lg border transition-all flex items-center gap-1.5 ${roleFilter === 'todos'
-                ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-medium shadow-sm'
-                : 'border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                ? 'bg-indigo-50 dark:bg-indigo-900/40 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm'
+                : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
                 }`}
             >
               Todos
               <span className={`text-xs px-1.5 py-0.5 rounded-full ${roleFilter === 'todos'
-                ? 'bg-indigo-200 text-indigo-800'
-                : 'bg-gray-100 text-gray-500'
+                ? 'bg-indigo-200 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                 }`}>
                 {users.length}
               </span>
@@ -349,8 +351,8 @@ export default function UsersPage() {
         {/* Clear filters */}
         {hasActiveFilters && (
           <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
-            <p className="text-sm text-gray-500">
-              Mostrando <span className="font-medium text-gray-900">{filteredUsers.length}</span> de <span className="font-medium">{users.length}</span> usuarios
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Mostrando <span className="font-medium text-gray-900 dark:text-white">{filteredUsers.length}</span> de <span className="font-medium">{users.length}</span> usuarios
             </p>
             <button
               onClick={clearFilters}
@@ -363,7 +365,7 @@ export default function UsersPage() {
         )}
       </div>
 
-      <div className="bg-white shadow rounded-xl overflow-hidden border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 shadow rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
         <Table
           columns={columns}
           data={filteredUsers}
@@ -455,7 +457,7 @@ export default function UsersPage() {
 
       {/* Delete Confirmation Modal */}
       <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Eliminar Usuario" size="sm">
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-300">
           ¿Estás seguro de que deseas eliminar al usuario <strong>{selectedUser?.full_name}</strong>?
           Esta acción no se puede deshacer.
         </p>

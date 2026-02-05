@@ -10,9 +10,13 @@ import {
   ClockIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
+  DocumentTextIcon,
+  TruckIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline'
 import { Card } from '@/components/ui'
 import { proveedorPortalService, ProveedorDashboardData } from '@/services/proveedorPortalService'
+import { dashboardService, type ActividadReciente } from '@/services/dashboardService'
 
 const estadoColors: Record<string, string> = {
   pendiente: 'bg-yellow-100 text-yellow-800',
@@ -31,6 +35,7 @@ const ordenEstadoColors: Record<string, string> = {
 
 export default function ProveedorDashboardPage() {
   const [data, setData] = useState<ProveedorDashboardData | null>(null)
+  const [actividad, setActividad] = useState<ActividadReciente[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -39,8 +44,12 @@ export default function ProveedorDashboardPage() {
 
   const loadDashboard = async () => {
     try {
-      const response = await proveedorPortalService.getDashboard()
-      setData(response)
+      const [dashboardData, actividadData] = await Promise.all([
+        proveedorPortalService.getDashboard(),
+        dashboardService.getActividadReciente()
+      ])
+      setData(dashboardData)
+      setActividad(actividadData)
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Error al cargar el dashboard')
     } finally {
@@ -99,12 +108,12 @@ export default function ProveedorDashboardPage() {
             <ExclamationTriangleIcon className={`h-5 w-5 ${info_proveedor.estado_cuenta === 'suspendido' ? 'text-red-400' : 'text-yellow-400'}`} />
             <div className="ml-3">
               <h3 className={`text-sm font-medium ${info_proveedor.estado_cuenta === 'suspendido' ? 'text-red-800' : 'text-yellow-800'}`}>
-                {info_proveedor.estado_cuenta === 'suspendido' 
+                {info_proveedor.estado_cuenta === 'suspendido'
                   ? 'Cuenta Suspendida'
                   : 'Cuenta Pendiente de Aprobación'}
               </h3>
               <p className={`text-sm mt-1 ${info_proveedor.estado_cuenta === 'suspendido' ? 'text-red-700' : 'text-yellow-700'}`}>
-                {info_proveedor.estado_cuenta === 'suspendido' 
+                {info_proveedor.estado_cuenta === 'suspendido'
                   ? 'Su cuenta ha sido suspendida. Contacte al administrador para más información.'
                   : 'Su cuenta está en proceso de aprobación. Una vez aprobada podrá cotizar y recibir órdenes.'}
               </p>
@@ -310,6 +319,41 @@ export default function ProveedorDashboardPage() {
           </Link>
         </div>
       </Card>
+
+      {/* Actividad Reciente */}
+      {actividad.length > 0 && (
+        <Card>
+          <div className="p-4 border-b border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900">Actividad Reciente</h3>
+          </div>
+          <div className="p-4 space-y-4">
+            {actividad.map((item, index) => (
+              <div key={item.id} className="flex gap-4">
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    {item.tipo === 'solicitud' && <DocumentTextIcon className="w-5 h-5 text-blue-500" />}
+                    {item.tipo === 'cotizacion' && <ChartBarIcon className="w-5 h-5 text-purple-500" />}
+                    {item.tipo === 'orden' && <ShoppingCartIcon className="w-5 h-5 text-emerald-500" />}
+                    {item.tipo === 'factura' && <CurrencyDollarIcon className="w-5 h-5 text-amber-500" />}
+                    {item.tipo === 'entrega' && <TruckIcon className="w-5 h-5 text-teal-500" />}
+                  </div>
+                  {index < actividad.length - 1 && (
+                    <div className="absolute left-1/2 top-10 bottom-0 w-px bg-gray-200 -translate-x-1/2 h-full" />
+                  )}
+                </div>
+                <div className="flex-1 pb-4">
+                  <p className="text-sm text-gray-900">{item.descripcion}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-gray-500">{item.fecha}</span>
+                    <span className="text-xs text-gray-300">•</span>
+                    <span className="text-xs text-gray-500">{item.usuario}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   )
 }

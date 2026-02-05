@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { dashboardService, type DashboardStats, type GastosPorArea, type GastosMensuales, type SolicitudReciente, type ActividadReciente } from '@/services/dashboardService'
-import { Card, StatCard, StatusBadge, LoadingOverlay, ProgressBar } from '@/components/ui'
+import { Card, StatusBadge, LoadingOverlay, ProgressBar } from '@/components/ui'
 import { ExpenseBarChart, TrendLineChart, DistributionPieChart } from '@/components/charts/Charts'
 import {
   DocumentTextIcon,
@@ -17,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 const DashboardPage: React.FC = () => {
+  const navigate = useNavigate()
   const { user } = useAuthStore()
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<DashboardStats | null>(null)
@@ -153,204 +155,231 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-8">
-      {/* Header Premium con saludo */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 rounded-3xl p-8 text-white shadow-2xl shadow-indigo-500/25">
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-white/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-60 h-60 bg-gradient-to-tr from-purple-400/20 to-transparent rounded-full translate-y-1/2 -translate-x-1/4 blur-2xl" />
-        <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-xl" />
+      {/* Header limpio */}
+      <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-lg shadow-lg p-6 text-white">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <span className="text-3xl">👋</span>
+              <h1 className="text-2xl lg:text-3xl font-bold">
+                {getGreeting()}, {user?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuario'}
+              </h1>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${getRoleColor(userRole)} text-white`}>
+                {getRoleLabel(userRole)}
+              </span>
+            </div>
+            <p className="text-primary-100">
+              {showProviderInfo
+                ? 'Consulta tus cotizaciones y órdenes asignadas'
+                : showFinancialInfo
+                  ? 'Gestión de autorizaciones, pagos y presupuesto'
+                  : showWarehouseInfo
+                    ? 'Control de entregas y recepción de bienes'
+                    : 'Aquí está el resumen de tu gestión de gastos'}
+            </p>
+          </div>
 
-        {/* Subtle pattern overlay */}
-        <div className="absolute inset-0 opacity-10" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-          backgroundSize: '32px 32px'
-        }} />
-
-        <div className="relative">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div>
-              <div className="flex flex-wrap items-center gap-3 mb-3">
-                {/* Icon box similar to login */}
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg shadow-black/10">
-                  <span className="text-2xl">👋</span>
-                </div>
-                <div>
-                  <h1 className="text-3xl lg:text-4xl font-bold tracking-tight drop-shadow-sm">
-                    {getGreeting()}, {user?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuario'}
-                  </h1>
-                </div>
-                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${getRoleColor(userRole)} text-white shadow-lg`}>
-                  {getRoleLabel(userRole)}
-                </span>
-              </div>
-              <p className="text-indigo-100 text-lg font-medium">
+          {/* Stats box */}
+          <div className="flex items-center gap-6 bg-white/10 backdrop-blur-sm rounded-xl p-4">
+            <div className="text-center">
+              <p className="text-3xl font-bold">
                 {showProviderInfo
-                  ? 'Consulta tus cotizaciones y órdenes asignadas'
+                  ? stats?.cotizaciones_pendientes || 0
                   : showFinancialInfo
-                    ? 'Gestión de autorizaciones, pagos y presupuesto'
-                    : showWarehouseInfo
-                      ? 'Control de entregas y recepción de bienes'
-                      : 'Aquí está el resumen de tu gestión de gastos'}
+                    ? stats?.facturas_pendientes || 0
+                    : stats?.solicitudes_pendientes || 0}
+              </p>
+              <p className="text-sm text-primary-200">
+                {showProviderInfo
+                  ? 'Cotizaciones'
+                  : showFinancialInfo
+                    ? 'Facturas'
+                    : 'Pendientes'}
               </p>
             </div>
-
-            {/* Stats box with glassmorphism */}
-            <div className="flex items-center gap-6 bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-lg shadow-black/10">
-              <div className="text-center">
-                <p className="text-4xl font-bold drop-shadow-sm">
-                  {showProviderInfo
-                    ? stats?.cotizaciones_pendientes || 0
-                    : showFinancialInfo
-                      ? stats?.facturas_pendientes || 0
-                      : stats?.solicitudes_pendientes || 0}
-                </p>
-                <p className="text-sm text-indigo-200 font-medium mt-1">
-                  {showProviderInfo
-                    ? 'Cotizaciones'
-                    : showFinancialInfo
-                      ? 'Facturas'
-                      : 'Pendientes'}
-                </p>
-              </div>
-              <div className="w-px h-16 bg-gradient-to-b from-transparent via-white/30 to-transparent" />
-              <div className="text-center">
-                <p className="text-4xl font-bold drop-shadow-sm">{stats?.ordenes_activas || 0}</p>
-                <p className="text-sm text-indigo-200 font-medium mt-1">
-                  {showWarehouseInfo ? 'Por Recibir' : 'Órdenes'}
-                </p>
-              </div>
+            <div className="w-px h-12 bg-white/20" />
+            <div className="text-center">
+              <p className="text-3xl font-bold">{stats?.ordenes_activas || 0}</p>
+              <p className="text-sm text-primary-200">
+                {showWarehouseInfo ? 'Por Recibir' : 'Órdenes'}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
 
-      {/* Tarjetas de estadísticas principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Tarjetas de estadísticas principales - Estilo limpio */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Solicitudes - área y adquisiciones */}
         {showSolicitudesInfo && !showProviderInfo && (
-          <StatCard
-            title="Solicitudes Pendientes"
-            value={stats?.solicitudes_pendientes || 0}
-            gradient="primary"
-            icon={<ClockIcon className="w-6 h-6" />}
-            subtitle="Esperando aprobación"
-          />
+          <Card className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <ClockIcon className="h-8 w-8 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Solicitudes Pendientes</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.solicitudes_pendientes || 0}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Esperando aprobación</p>
+              </div>
+            </div>
+          </Card>
         )}
         {showSolicitudesInfo && !showProviderInfo && (
-          <StatCard
-            title="Solicitudes Aprobadas"
-            value={stats?.solicitudes_aprobadas || 0}
-            gradient="success"
-            icon={<CheckCircleIcon className="w-6 h-6" />}
-          />
+          <Card className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <CheckCircleIcon className="h-8 w-8 text-emerald-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Solicitudes Aprobadas</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.solicitudes_aprobadas || 0}</p>
+              </div>
+            </div>
+          </Card>
         )}
 
         {/* Cotizaciones - para tesorería que autoriza */}
         {showCotizacionesInfo && !showSolicitudesInfo && !showProviderInfo && (
-          <StatCard
-            title="Cotizaciones por Autorizar"
-            value={stats?.cotizaciones_pendientes || 0}
-            gradient="primary"
-            icon={<ClipboardDocumentListIcon className="w-6 h-6" />}
-            subtitle="Pendientes de autorización"
-          />
+          <Card className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <ClipboardDocumentListIcon className="h-8 w-8 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cotizaciones por Autorizar</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.cotizaciones_pendientes || 0}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Pendientes de autorización</p>
+              </div>
+            </div>
+          </Card>
         )}
 
         {/* Órdenes de Compra - solo adquisiciones */}
         {showOrdersInfo && (
-          <StatCard
-            title="Órdenes de Compra"
-            value={stats?.ordenes_activas || 0}
-            gradient="purple"
-            icon={<ShoppingCartIcon className="w-6 h-6" />}
-            subtitle="En proceso"
-          />
+          <Card className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <ShoppingCartIcon className="h-8 w-8 text-indigo-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Órdenes de Compra</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.ordenes_activas || 0}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">En proceso</p>
+              </div>
+            </div>
+          </Card>
         )}
 
         {/* Facturas - tesorería */}
         {showFinancialInfo && (
-          <StatCard
-            title="Facturas Pendientes"
-            value={stats?.facturas_pendientes || 0}
-            gradient="warning"
-            icon={<CurrencyDollarIcon className="w-6 h-6" />}
-            subtitle="Por procesar"
-          />
+          <Card className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <CurrencyDollarIcon className="h-8 w-8 text-amber-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Facturas Pendientes</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.facturas_pendientes || 0}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Por procesar</p>
+              </div>
+            </div>
+          </Card>
         )}
 
         {/* Tarjetas para PROVEEDOR */}
         {showProviderInfo && (
-          <StatCard
-            title="Cotizaciones Enviadas"
-            value={stats?.cotizaciones_pendientes || 0}
-            gradient="primary"
-            icon={<ClipboardDocumentListIcon className="w-6 h-6" />}
-            subtitle="Esperando respuesta"
-          />
+          <Card className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <ClipboardDocumentListIcon className="h-8 w-8 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cotizaciones Enviadas</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.cotizaciones_pendientes || 0}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Esperando respuesta</p>
+              </div>
+            </div>
+          </Card>
         )}
         {showProviderInfo && (
-          <StatCard
-            title="Órdenes Asignadas"
-            value={stats?.ordenes_activas || 0}
-            gradient="success"
-            icon={<ShoppingCartIcon className="w-6 h-6" />}
-            subtitle="Por entregar"
-          />
+          <Card className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <ShoppingCartIcon className="h-8 w-8 text-emerald-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Órdenes Asignadas</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.ordenes_activas || 0}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Por entregar</p>
+              </div>
+            </div>
+          </Card>
         )}
         {showProviderInfo && (
-          <StatCard
-            title="Entregas Completadas"
-            value={stats?.ordenes_completadas || 0}
-            gradient="purple"
-            icon={<TruckIcon className="w-6 h-6" />}
-            subtitle="Este mes"
-          />
+          <Card className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <TruckIcon className="h-8 w-8 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Entregas Completadas</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.ordenes_completadas || 0}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Este mes</p>
+              </div>
+            </div>
+          </Card>
         )}
 
         {/* Tarjetas para ALMACÉN */}
         {showWarehouseInfo && (
-          <StatCard
-            title="Entregas Pendientes"
-            value={stats?.ordenes_activas || 0}
-            gradient="warning"
-            icon={<TruckIcon className="w-6 h-6" />}
-            subtitle="Por recibir"
-          />
+          <Card className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <TruckIcon className="h-8 w-8 text-teal-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Entregas Pendientes</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.ordenes_activas || 0}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Por recibir</p>
+              </div>
+            </div>
+          </Card>
         )}
       </div>
 
       {/* Presupuesto y Gasto del mes - Solo para roles financieros */}
       {showFinancialInfo && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2 bg-white" shadow="lg">
+          <Card className="lg:col-span-2" shadow="lg">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Presupuesto del Mes</h3>
-                <p className="text-sm text-gray-500">Control de gastos vs presupuesto asignado</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Presupuesto del Mes</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Control de gastos vs presupuesto asignado</p>
               </div>
-              <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
+              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 rounded-full">
                 <ArrowTrendingUpIcon className="w-4 h-4" />
                 <span className="text-sm font-medium">En control</span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4">
-                <p className="text-sm text-gray-500">Presupuesto Total</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-xl p-4">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Presupuesto Total</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                   {formatCurrency(stats?.total_presupuesto || 0)}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
-                <p className="text-sm text-blue-600">Gastado</p>
-                <p className="text-2xl font-bold text-blue-700 mt-1">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40 rounded-xl p-4">
+                <p className="text-sm text-blue-600 dark:text-blue-400">Gastado</p>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300 mt-1">
                   {formatCurrency(stats?.total_gastado_mes || 0)}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4">
-                <p className="text-sm text-emerald-600">Disponible</p>
-                <p className="text-2xl font-bold text-emerald-700 mt-1">
+              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/40 dark:to-emerald-800/40 rounded-xl p-4">
+                <p className="text-sm text-emerald-600 dark:text-emerald-400">Disponible</p>
+                <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300 mt-1">
                   {formatCurrency(stats?.total_disponible || 0)}
                 </p>
               </div>
@@ -358,8 +387,8 @@ const DashboardPage: React.FC = () => {
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Progreso del presupuesto</span>
-                <span className="font-medium text-gray-900">{presupuestoUsado.toFixed(1)}%</span>
+                <span className="text-gray-600 dark:text-gray-400">Progreso del presupuesto</span>
+                <span className="font-medium text-gray-900 dark:text-white">{presupuestoUsado.toFixed(1)}%</span>
               </div>
               <ProgressBar
                 value={presupuestoUsado}
@@ -372,51 +401,59 @@ const DashboardPage: React.FC = () => {
           </Card>
 
           {/* Alertas y notificaciones */}
-          <Card className="bg-white" shadow="lg">
+          <Card shadow="lg">
             <div className="flex items-center gap-2 mb-4">
               <BellAlertIcon className="w-5 h-5 text-amber-500" />
-              <h3 className="text-lg font-semibold text-gray-900">Alertas</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Alertas</h3>
             </div>
 
             <div className="space-y-3">
               {stats?.solicitudes_pendientes ? (
-                <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
+                <div
+                  onClick={() => navigate('/cotizaciones')}
+                  className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-100 dark:border-amber-800 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/50 hover:border-amber-200 dark:hover:border-amber-700 transition-colors group"
+                >
                   <div className="w-2 h-2 mt-2 rounded-full bg-amber-500 animate-pulse" />
-                  <div>
-                    <p className="text-sm font-medium text-amber-800">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
                       {stats.solicitudes_pendientes} solicitudes pendientes
                     </p>
-                    <p className="text-xs text-amber-600 mt-1">Requieren tu atención</p>
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Requieren tu atención</p>
                   </div>
+                  <span className="text-amber-400 group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors">→</span>
                 </div>
               ) : null}
 
               {stats?.facturas_pendientes ? (
-                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <div
+                  onClick={() => navigate('/facturas')}
+                  className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-100 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 hover:border-blue-200 dark:hover:border-blue-700 transition-colors group"
+                >
                   <div className="w-2 h-2 mt-2 rounded-full bg-blue-500 animate-pulse" />
-                  <div>
-                    <p className="text-sm font-medium text-blue-800">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
                       {stats.facturas_pendientes} facturas por procesar
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">En espera de validación</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">En espera de validación</p>
                   </div>
+                  <span className="text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors">→</span>
                 </div>
               ) : null}
 
               {presupuestoUsado >= 80 && (
-                <div className="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-100">
+                <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-100 dark:border-red-800">
                   <div className="w-2 h-2 mt-2 rounded-full bg-red-500 animate-pulse" />
                   <div>
-                    <p className="text-sm font-medium text-red-800">
+                    <p className="text-sm font-medium text-red-800 dark:text-red-300">
                       Presupuesto al {presupuestoUsado.toFixed(0)}%
                     </p>
-                    <p className="text-xs text-red-600 mt-1">Cerca del límite mensual</p>
+                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">Cerca del límite mensual</p>
                   </div>
                 </div>
               )}
 
               {(!stats?.solicitudes_pendientes && !stats?.facturas_pendientes && presupuestoUsado < 80) && (
-                <div className="flex items-center justify-center py-8 text-gray-400">
+                <div className="flex items-center justify-center py-8 text-gray-400 dark:text-gray-500">
                   <p className="text-sm">No hay alertas activas</p>
                 </div>
               )}
@@ -428,15 +465,15 @@ const DashboardPage: React.FC = () => {
       {/* Gráficos - Solo para roles con acceso a información financiera */}
       {showFinancialInfo && gastosPorArea.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-white" shadow="lg">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Gastos vs Presupuesto por Área</h3>
-            <p className="text-sm text-gray-500 mb-4">Comparativa del mes actual</p>
+          <Card shadow="lg">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Gastos vs Presupuesto por Área</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Comparativa del mes actual</p>
             <ExpenseBarChart data={barChartData} height={280} />
           </Card>
 
-          <Card className="bg-white" shadow="lg">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Tendencia Anual</h3>
-            <p className="text-sm text-gray-500 mb-4">Evolución de gastos mensuales</p>
+          <Card shadow="lg">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Tendencia Anual</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Evolución de gastos mensuales</p>
             <TrendLineChart data={gastosMensuales} height={280} />
           </Card>
         </div>

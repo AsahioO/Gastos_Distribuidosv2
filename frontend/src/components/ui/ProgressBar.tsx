@@ -112,10 +112,10 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
     red: 'stroke-red-500',
     yellow: 'stroke-amber-500',
     purple: 'stroke-purple-500',
-    auto: percentage >= 90 ? 'stroke-red-500' 
-        : percentage >= 75 ? 'stroke-amber-500' 
-        : percentage >= 50 ? 'stroke-blue-500' 
-        : 'stroke-emerald-500',
+    auto: percentage >= 90 ? 'stroke-red-500'
+      : percentage >= 75 ? 'stroke-amber-500'
+        : percentage >= 50 ? 'stroke-blue-500'
+          : 'stroke-emerald-500',
   }
 
   return (

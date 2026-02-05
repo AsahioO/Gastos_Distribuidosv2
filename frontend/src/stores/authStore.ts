@@ -10,6 +10,10 @@ export interface User {
   role: string
   role_display?: string
   permissions?: string[]
+  settings?: {
+    theme?: 'light' | 'dark'
+    [key: string]: unknown
+  }
 }
 
 interface AuthState {

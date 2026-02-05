@@ -45,22 +45,22 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className={`w-full ${sizes[size]} transform overflow-hidden rounded-lg bg-white p-6 text-left align-middle shadow-xl transition-all`}>
-                <div className="flex items-center justify-between mb-4">
-                  {title && (
+                {title && (
+                  <div className="flex items-center justify-between mb-4">
                     <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
                       {title}
                     </Dialog.Title>
-                  )}
-                  <button
-                    type="button"
-                    className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
-                    onClick={onClose}
-                    title="Cerrar"
-                    aria-label="Cerrar modal"
-                  >
-                    <XMarkIcon className="h-6 w-6" />
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
+                      onClick={onClose}
+                      title="Cerrar"
+                      aria-label="Cerrar modal"
+                    >
+                      <XMarkIcon className="h-6 w-6" />
+                    </button>
+                  </div>
+                )}
                 {children}
               </Dialog.Panel>
             </Transition.Child>

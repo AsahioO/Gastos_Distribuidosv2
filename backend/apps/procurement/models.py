@@ -100,13 +100,31 @@ class SolicitudMaterial(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.numero:
-            # Generate unique number
+            # Generate unique number with transaction safety
             from django.utils import timezone
+            from django.db import transaction
+            
             year = timezone.now().year
-            count = SolicitudMaterial.objects.filter(
-                created_at__year=year
-            ).count() + 1
-            self.numero = f"SOL-{year}-{count:05d}"
+            
+            # Use transaction to prevent race conditions
+            with transaction.atomic():
+                # Get the last solicitud number for this year
+                last_solicitud = SolicitudMaterial.objects.filter(
+                    numero__startswith=f"SOL-{year}-"
+                ).select_for_update().order_by('-numero').first()
+                
+                if last_solicitud:
+                    # Extract the counter from the last numero
+                    try:
+                        last_number = int(last_solicitud.numero.split('-')[-1])
+                        count = last_number + 1
+                    except (ValueError, IndexError):
+                        count = 1
+                else:
+                    count = 1
+                
+                self.numero = f"SOL-{year}-{count:05d}"
+        
         super().save(*args, **kwargs)
     
     def update_total(self):
