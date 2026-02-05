@@ -12,22 +12,22 @@ interface CardProps {
 
 // Gradientes premium con estilo consistente al login
 const gradientClasses = {
-  none: 'bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50',
+  none: 'bg-white/80 backdrop-blur-sm border border-gray-200/50',
   primary: 'bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-600 text-white',
   success: 'bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 text-white',
   purple: 'bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-600 text-white',
   warning: 'bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 text-white',
   danger: 'bg-gradient-to-br from-rose-500 via-red-500 to-pink-600 text-white',
   teal: 'bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-600 text-white',
-  glass: 'bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl border border-white/20 dark:border-gray-600/20',
+  glass: 'bg-white/70 backdrop-blur-xl border border-white/20',
 }
 
 // Sombras con color para más profundidad
 const shadowClasses = {
-  sm: 'shadow-sm dark:shadow-black/20',
-  md: 'shadow-md shadow-gray-200/50 dark:shadow-black/30',
-  lg: 'shadow-lg shadow-gray-300/30 dark:shadow-black/40',
-  xl: 'shadow-xl shadow-gray-300/40 dark:shadow-black/50',
+  sm: 'shadow-sm',
+  md: 'shadow-md shadow-gray-200/50',
+  lg: 'shadow-lg shadow-gray-300/30',
+  xl: 'shadow-xl shadow-gray-300/40',
 }
 
 // Sombras coloreadas para gradientes

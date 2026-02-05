@@ -219,9 +219,9 @@ const DashboardPage: React.FC = () => {
                 <ClockIcon className="h-8 w-8 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Solicitudes Pendientes</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.solicitudes_pendientes || 0}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">Esperando aprobación</p>
+                <p className="text-sm font-medium text-gray-500">Solicitudes Pendientes</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats?.solicitudes_pendientes || 0}</p>
+                <p className="text-xs text-gray-400">Esperando aprobación</p>
               </div>
             </div>
           </Card>
@@ -233,8 +233,8 @@ const DashboardPage: React.FC = () => {
                 <CheckCircleIcon className="h-8 w-8 text-emerald-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Solicitudes Aprobadas</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.solicitudes_aprobadas || 0}</p>
+                <p className="text-sm font-medium text-gray-500">Solicitudes Aprobadas</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats?.solicitudes_aprobadas || 0}</p>
               </div>
             </div>
           </Card>
@@ -248,9 +248,9 @@ const DashboardPage: React.FC = () => {
                 <ClipboardDocumentListIcon className="h-8 w-8 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cotizaciones por Autorizar</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.cotizaciones_pendientes || 0}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">Pendientes de autorización</p>
+                <p className="text-sm font-medium text-gray-500">Cotizaciones por Autorizar</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats?.cotizaciones_pendientes || 0}</p>
+                <p className="text-xs text-gray-400">Pendientes de autorización</p>
               </div>
             </div>
           </Card>
@@ -264,9 +264,9 @@ const DashboardPage: React.FC = () => {
                 <ShoppingCartIcon className="h-8 w-8 text-indigo-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Órdenes de Compra</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.ordenes_activas || 0}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">En proceso</p>
+                <p className="text-sm font-medium text-gray-500">Órdenes de Compra</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats?.ordenes_activas || 0}</p>
+                <p className="text-xs text-gray-400">En proceso</p>
               </div>
             </div>
           </Card>
@@ -280,9 +280,9 @@ const DashboardPage: React.FC = () => {
                 <CurrencyDollarIcon className="h-8 w-8 text-amber-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Facturas Pendientes</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.facturas_pendientes || 0}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">Por procesar</p>
+                <p className="text-sm font-medium text-gray-500">Facturas Pendientes</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats?.facturas_pendientes || 0}</p>
+                <p className="text-xs text-gray-400">Por procesar</p>
               </div>
             </div>
           </Card>
@@ -296,9 +296,9 @@ const DashboardPage: React.FC = () => {
                 <ClipboardDocumentListIcon className="h-8 w-8 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cotizaciones Enviadas</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.cotizaciones_pendientes || 0}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">Esperando respuesta</p>
+                <p className="text-sm font-medium text-gray-500">Cotizaciones Enviadas</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats?.cotizaciones_pendientes || 0}</p>
+                <p className="text-xs text-gray-400">Esperando respuesta</p>
               </div>
             </div>
           </Card>
@@ -310,9 +310,9 @@ const DashboardPage: React.FC = () => {
                 <ShoppingCartIcon className="h-8 w-8 text-emerald-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Órdenes Asignadas</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.ordenes_activas || 0}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">Por entregar</p>
+                <p className="text-sm font-medium text-gray-500">Órdenes Asignadas</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats?.ordenes_activas || 0}</p>
+                <p className="text-xs text-gray-400">Por entregar</p>
               </div>
             </div>
           </Card>
@@ -324,9 +324,9 @@ const DashboardPage: React.FC = () => {
                 <TruckIcon className="h-8 w-8 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Entregas Completadas</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.ordenes_completadas || 0}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">Este mes</p>
+                <p className="text-sm font-medium text-gray-500">Entregas Completadas</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats?.ordenes_completadas || 0}</p>
+                <p className="text-xs text-gray-400">Este mes</p>
               </div>
             </div>
           </Card>
@@ -340,9 +340,9 @@ const DashboardPage: React.FC = () => {
                 <TruckIcon className="h-8 w-8 text-teal-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Entregas Pendientes</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.ordenes_activas || 0}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">Por recibir</p>
+                <p className="text-sm font-medium text-gray-500">Entregas Pendientes</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats?.ordenes_activas || 0}</p>
+                <p className="text-xs text-gray-400">Por recibir</p>
               </div>
             </div>
           </Card>
@@ -355,31 +355,31 @@ const DashboardPage: React.FC = () => {
           <Card className="lg:col-span-2" shadow="lg">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Presupuesto del Mes</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Control de gastos vs presupuesto asignado</p>
+                <h3 className="text-lg font-semibold text-gray-900">Presupuesto del Mes</h3>
+                <p className="text-sm text-gray-500">Control de gastos vs presupuesto asignado</p>
               </div>
-              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 rounded-full">
+              <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
                 <ArrowTrendingUpIcon className="w-4 h-4" />
                 <span className="text-sm font-medium">En control</span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-xl p-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Presupuesto Total</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4">
+                <p className="text-sm text-gray-500">Presupuesto Total</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
                   {formatCurrency(stats?.total_presupuesto || 0)}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40 rounded-xl p-4">
-                <p className="text-sm text-blue-600 dark:text-blue-400">Gastado</p>
-                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300 mt-1">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
+                <p className="text-sm text-blue-600">Gastado</p>
+                <p className="text-2xl font-bold text-blue-700 mt-1">
                   {formatCurrency(stats?.total_gastado_mes || 0)}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/40 dark:to-emerald-800/40 rounded-xl p-4">
-                <p className="text-sm text-emerald-600 dark:text-emerald-400">Disponible</p>
-                <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300 mt-1">
+              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4">
+                <p className="text-sm text-emerald-600">Disponible</p>
+                <p className="text-2xl font-bold text-emerald-700 mt-1">
                   {formatCurrency(stats?.total_disponible || 0)}
                 </p>
               </div>
@@ -387,8 +387,8 @@ const DashboardPage: React.FC = () => {
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Progreso del presupuesto</span>
-                <span className="font-medium text-gray-900 dark:text-white">{presupuestoUsado.toFixed(1)}%</span>
+                <span className="text-gray-600">Progreso del presupuesto</span>
+                <span className="font-medium text-gray-900">{presupuestoUsado.toFixed(1)}%</span>
               </div>
               <ProgressBar
                 value={presupuestoUsado}
@@ -404,56 +404,56 @@ const DashboardPage: React.FC = () => {
           <Card shadow="lg">
             <div className="flex items-center gap-2 mb-4">
               <BellAlertIcon className="w-5 h-5 text-amber-500" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Alertas</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Alertas</h3>
             </div>
 
             <div className="space-y-3">
               {stats?.solicitudes_pendientes ? (
                 <div
                   onClick={() => navigate('/cotizaciones')}
-                  className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-100 dark:border-amber-800 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/50 hover:border-amber-200 dark:hover:border-amber-700 transition-colors group"
+                  className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100 cursor-pointer hover:bg-amber-100 hover:border-amber-200 transition-colors group"
                 >
                   <div className="w-2 h-2 mt-2 rounded-full bg-amber-500 animate-pulse" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                    <p className="text-sm font-medium text-amber-800">
                       {stats.solicitudes_pendientes} solicitudes pendientes
                     </p>
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Requieren tu atención</p>
+                    <p className="text-xs text-amber-600 mt-1">Requieren tu atención</p>
                   </div>
-                  <span className="text-amber-400 group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors">→</span>
+                  <span className="text-amber-400 group-hover:text-amber-600 transition-colors">→</span>
                 </div>
               ) : null}
 
               {stats?.facturas_pendientes ? (
                 <div
                   onClick={() => navigate('/facturas')}
-                  className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-100 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 hover:border-blue-200 dark:hover:border-blue-700 transition-colors group"
+                  className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100 cursor-pointer hover:bg-blue-100 hover:border-blue-200 transition-colors group"
                 >
                   <div className="w-2 h-2 mt-2 rounded-full bg-blue-500 animate-pulse" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                    <p className="text-sm font-medium text-blue-800">
                       {stats.facturas_pendientes} facturas por procesar
                     </p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">En espera de validación</p>
+                    <p className="text-xs text-blue-600 mt-1">En espera de validación</p>
                   </div>
-                  <span className="text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors">→</span>
+                  <span className="text-blue-400 group-hover:text-blue-600 transition-colors">→</span>
                 </div>
               ) : null}
 
               {presupuestoUsado >= 80 && (
-                <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-100 dark:border-red-800">
+                <div className="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-100">
                   <div className="w-2 h-2 mt-2 rounded-full bg-red-500 animate-pulse" />
                   <div>
-                    <p className="text-sm font-medium text-red-800 dark:text-red-300">
+                    <p className="text-sm font-medium text-red-800">
                       Presupuesto al {presupuestoUsado.toFixed(0)}%
                     </p>
-                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">Cerca del límite mensual</p>
+                    <p className="text-xs text-red-600 mt-1">Cerca del límite mensual</p>
                   </div>
                 </div>
               )}
 
               {(!stats?.solicitudes_pendientes && !stats?.facturas_pendientes && presupuestoUsado < 80) && (
-                <div className="flex items-center justify-center py-8 text-gray-400 dark:text-gray-500">
+                <div className="flex items-center justify-center py-8 text-gray-400">
                   <p className="text-sm">No hay alertas activas</p>
                 </div>
               )}
@@ -466,14 +466,14 @@ const DashboardPage: React.FC = () => {
       {showFinancialInfo && gastosPorArea.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card shadow="lg">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Gastos vs Presupuesto por Área</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Comparativa del mes actual</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Gastos vs Presupuesto por Área</h3>
+            <p className="text-sm text-gray-500 mb-4">Comparativa del mes actual</p>
             <ExpenseBarChart data={barChartData} height={280} />
           </Card>
 
           <Card shadow="lg">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Tendencia Anual</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Evolución de gastos mensuales</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Tendencia Anual</h3>
+            <p className="text-sm text-gray-500 mb-4">Evolución de gastos mensuales</p>
             <TrendLineChart data={gastosMensuales} height={280} />
           </Card>
         </div>

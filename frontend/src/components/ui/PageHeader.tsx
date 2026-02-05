@@ -65,7 +65,7 @@ export default function PageHeader({
                 {breadcrumbs.map((crumb, index) => (
                     <React.Fragment key={index}>
                         {index > 0 && (
-                            <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                         )}
@@ -74,13 +74,13 @@ export default function PageHeader({
                                 to={crumb.href}
                                 className={clsx(
                                     'hover:underline',
-                                    variant === 'gradient' ? 'text-white/70 hover:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                    variant === 'gradient' ? 'text-white/70 hover:text-white' : 'text-gray-500 hover:text-gray-700'
                                 )}
                             >
                                 {crumb.label}
                             </Link>
                         ) : (
-                            <span className={variant === 'gradient' ? 'text-white/90 font-medium' : 'text-gray-700 dark:text-gray-200 font-medium'}>
+                            <span className={variant === 'gradient' ? 'text-white/90 font-medium' : 'text-gray-700 font-medium'}>
                                 {crumb.label}
                             </span>
                         )}
@@ -139,7 +139,7 @@ export default function PageHeader({
         return (
             <div className={clsx('mb-6', className)}>
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
                     {actions && (
                         <div className="flex items-center gap-3">
                             {actions}
@@ -155,9 +155,9 @@ export default function PageHeader({
     return (
         <div className={clsx('mb-6', className)}>
             {/* Header principal con fondo sutil */}
-            <div className="relative overflow-hidden bg-gradient-to-r from-slate-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-5 md:p-6 border border-gray-200/60 dark:border-gray-700/60 shadow-sm">
+            <div className="relative overflow-hidden bg-gradient-to-r from-slate-50 to-gray-100 rounded-xl p-5 md:p-6 border border-gray-200/60 shadow-sm">
                 {/* Decoración sutil */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 dark:from-blue-500/10 dark:to-indigo-500/10 rounded-full -translate-y-1/2 translate-x-1/4" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-full -translate-y-1/2 translate-x-1/4" />
 
                 <div className="relative">
                     {renderBreadcrumbs()}
@@ -173,9 +173,9 @@ export default function PageHeader({
                                 </div>
                             )}
                             <div>
-                                <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
+                                <h1 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h1>
                                 {subtitle && (
-                                    <p className="mt-1 text-gray-500 dark:text-gray-400 text-sm">{subtitle}</p>
+                                    <p className="mt-1 text-gray-500 text-sm">{subtitle}</p>
                                 )}
                             </div>
                         </div>

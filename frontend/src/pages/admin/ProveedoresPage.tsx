@@ -144,8 +144,8 @@ export default function ProveedoresPage() {
       header: 'Estado',
       render: (p: Proveedor) => (
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.is_active
-            ? 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300'
-            : 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300'
+            ? 'bg-green-100 text-green-800'
+            : 'bg-red-100 text-red-800'
           }`}>
           {p.is_active ? 'Activo' : 'Inactivo'}
         </span>
@@ -158,7 +158,7 @@ export default function ProveedoresPage() {
         <div className="flex space-x-1">
           <button
             onClick={(e) => { e.stopPropagation(); openModal(p) }}
-            className="p-1 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+            className="p-1 text-gray-500 hover:text-primary-600"
             title="Editar"
           >
             <PencilIcon className="h-5 w-5" />
@@ -166,7 +166,7 @@ export default function ProveedoresPage() {
           {['admin'].includes(user?.role || '') && (
             <button
               onClick={(e) => { e.stopPropagation(); handleDelete(p) }}
-              className="p-1 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+              className="p-1 text-gray-500 hover:text-red-600"
               title="Eliminar"
             >
               <TrashIcon className="h-5 w-5" />
@@ -181,8 +181,8 @@ export default function ProveedoresPage() {
     <div>
       <div className="sm:flex sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Proveedores</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <h1 className="text-2xl font-bold text-gray-900">Proveedores</h1>
+          <p className="mt-1 text-sm text-gray-500">
             Gestiona los proveedores del sistema
           </p>
         </div>
@@ -195,7 +195,7 @@ export default function ProveedoresPage() {
       </div>
 
       {/* Barra de Filtros */}
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 mb-4 border border-gray-200 dark:border-gray-700">
+      <div className="bg-white shadow rounded-lg p-4 mb-4 border border-gray-200">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Búsqueda */}
           <div className="flex-1">
@@ -208,7 +208,7 @@ export default function ProveedoresPage() {
                 placeholder="Buscar por razón social, RFC, email o ciudad..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
               />
             </div>
           </div>
@@ -218,7 +218,7 @@ export default function ProveedoresPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
-              className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+              className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
             >
               <option value="all">Todos los estados</option>
               <option value="active">Activos</option>
@@ -230,7 +230,7 @@ export default function ProveedoresPage() {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
               <XMarkIcon className="h-4 w-4 mr-1" />
               Limpiar
@@ -239,13 +239,13 @@ export default function ProveedoresPage() {
         </div>
 
         {/* Contador de resultados */}
-        <div className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-3 text-sm text-gray-500">
           Mostrando {filteredProveedores.length} de {proveedores.length} proveedores
-          {hasActiveFilters && <span className="ml-1 text-primary-600 dark:text-primary-400">(filtrado)</span>}
+          {hasActiveFilters && <span className="ml-1 text-primary-600">(filtrado)</span>}
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+      <div className="bg-white shadow rounded-lg overflow-hidden border border-gray-200">
         <Table
           columns={columns}
           data={filteredProveedores}

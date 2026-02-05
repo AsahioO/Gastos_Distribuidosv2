@@ -254,7 +254,7 @@ export default function MainLayout() {
         </div>
 
         {/* Page content */}
-        <main className="py-6 bg-gray-100 dark:bg-gray-900 min-h-[calc(100vh-4rem)] transition-colors duration-300">
+        <main className="py-6 bg-gray-100 min-h-[calc(100vh-4rem)] transition-colors duration-300">
           <div className="px-4 sm:px-6 lg:px-8 animate-fade-in">
             <Outlet />
           </div>
