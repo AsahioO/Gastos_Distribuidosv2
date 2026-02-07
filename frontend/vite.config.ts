@@ -15,7 +15,11 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://backend:8000',
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/media': {
+        target: 'http://localhost:8000',
         changeOrigin: true,
       },
     },

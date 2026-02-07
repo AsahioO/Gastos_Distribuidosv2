@@ -39,11 +39,19 @@ Sistema multi-tenant para gestión de adquisiciones, compras y distribución de 
 - **Recepción de Materiales**: Control de entregas de proveedores
 - **Salidas de Almacén**: Registro de entregas a áreas solicitantes
 
+### Personalización de Usuario
+- **Perfiles Personalizables**: Edición de información personal y foto de perfil
+- **Avatares**: Subida de fotos de perfil (JPG/PNG/WebP, máx 2MB) con drag & drop
+- **Logos Empresariales**: Proveedores y empresas pueden subir sus logos
+- **Cambio de Contraseña**: Gestión segura de credenciales
+- **Preferencias**: Configuración de notificaciones y tema (próximamente)
+
 ### Portal de Proveedores
 - **Dashboard Exclusivo**: Panel con estadísticas y acciones rápidas
 - **Cotizaciones en Línea**: Respuesta a solicitudes de cotización
 - **Confirmación de Órdenes**: Aceptación de órdenes de compra
 - **Seguimiento de Facturas**: Estado de pagos y documentos
+- **Perfil Empresarial**: Logo y datos de contacto personalizables
 
 ### Reportes y Analytics
 - **Dashboard Ejecutivo**: KPIs y métricas en tiempo real

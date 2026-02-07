@@ -12,6 +12,8 @@ export interface User {
   role: string
   role_display: string
   permissions: string[]
+  avatar?: string | null
+  phone?: string
 }
 
 export interface LoginResponse {

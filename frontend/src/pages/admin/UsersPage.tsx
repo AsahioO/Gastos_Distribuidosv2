@@ -214,8 +214,14 @@ export default function UsersPage() {
       header: 'Usuario',
       render: (user: User) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
-            {(user.full_name || user.username || 'U').charAt(0).toUpperCase()}
+          <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+            {user.avatar ? (
+              <img src={user.avatar} alt={user.full_name || user.username} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
+                {(user.full_name || user.username || 'U').charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
           <span className="font-medium text-gray-900">{user.username}</span>
         </div>

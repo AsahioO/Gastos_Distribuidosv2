@@ -14,7 +14,8 @@ export interface CreateUserData {
 export interface UpdateUserData {
   full_name?: string
   phone?: string
-  avatar?: string
+  avatar?: File | null
+  settings?: Record<string, unknown>
 }
 
 export interface Role {
@@ -67,5 +68,31 @@ export const userService = {
   getRoles: async (): Promise<Role[]> => {
     const response = await api.get('/auth/roles/')
     return extractData(response.data)
+  },
+
+  /** Actualizar perfil del usuario autenticado (soporta avatar como File con FormData) */
+  updateMyProfile: async (data: UpdateUserData): Promise<User> => {
+    const formData = new FormData()
+    if (data.full_name !== undefined) formData.append('full_name', data.full_name)
+    if (data.phone !== undefined) formData.append('phone', data.phone)
+    if (data.avatar !== undefined && data.avatar !== null) formData.append('avatar', data.avatar)
+    if (data.settings !== undefined) formData.append('settings', JSON.stringify(data.settings))
+
+    const response = await api.put('/auth/users/update_me/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  },
+
+  /** Obtener perfil del usuario autenticado */
+  getMyProfile: async (): Promise<User> => {
+    const response = await api.get('/auth/users/me/')
+    return response.data
+  },
+
+  /** Cambiar contraseña del usuario autenticado */
+  changePassword: async (data: { old_password: string; new_password: string; new_password_confirm: string }): Promise<{ message: string }> => {
+    const response = await api.post('/auth/users/change_password/', data)
+    return response.data
   },
 }

@@ -101,7 +101,76 @@ Los proveedores tienen su propio acceso al sistema donde pueden:
 
 ---
 
-## 📄 Facturas Electrónicas (CFDI)
+## � Gestión de Perfil de Usuario
+
+Todos los usuarios pueden personalizar su perfil y gestionar su información personal desde el menú **Mi Perfil**.
+
+### ¿Cómo Acceder a Mi Perfil?
+
+Haz clic en tu **foto de perfil** o nombre en la barra superior (esquina superior derecha) o en el panel lateral. Esto te llevará a la página de perfil.
+
+### Secciones del Perfil
+
+#### 📸 Información Personal
+
+Aquí puedes actualizar:
+
+- **Foto de perfil**: Sube una imagen que te represente
+  - Formatos permitidos: JPG, PNG, WebP
+  - Tamaño máximo: 2 MB
+  - Puedes arrastrar y soltar la imagen o hacer clic en "Subir"
+  - Vista previa en tiempo real antes de guardar
+- **Nombre completo**: Tu nombre como aparecerá en el sistema
+- **Teléfono**: Número de contacto (opcional)
+- **Correo electrónico**: Solo lectura, no se puede modificar
+- **Nombre de usuario**: Solo lectura, no se puede modificar
+
+> [!TIP]
+> Tu foto de perfil aparecerá en toda la aplicación: en el menú, en la lista de usuarios (para administradores), y en notificaciones futuras.
+
+#### 🔐 Contraseña
+
+Para cambiar tu contraseña de forma segura:
+
+1. Ingresa tu **contraseña actual** para verificar tu identidad
+2. Escribe tu **nueva contraseña** (mínimo 8 caracteres)
+3. **Confirma** la nueva contraseña escribiéndola de nuevo
+4. Haz clic en **"Cambiar contraseña"**
+
+> [!WARNING]
+> Por seguridad, serás desconectado después de cambiar tu contraseña. Tendrás que volver a iniciar sesión con la nueva credencial.
+
+#### ⚙️ Preferencias
+
+Próximamente podrás configurar:
+- Notificaciones por email
+- Notificaciones en el sistema
+- Tema de la interfaz (claro/oscuro)
+- Formato de moneda y fechas
+
+### Logos de Empresa (Solo para Proveedores)
+
+Si eres un **proveedor**, desde tu perfil también podrás:
+
+- Subir el **logo de tu empresa** que aparecerá en tu portal
+- Actualizar tus **datos de contacto** comercial
+- Ver tu RFC y razón social
+
+El logo de tu empresa aparecerá en:
+- Tu dashboard del portal de proveedores
+- Documentos generados (cotizaciones, órdenes)
+- Comunicaciones oficiales
+
+### ¿Por Qué Personalizar mi Perfil?
+
+1. **Identificación fácil**: Otros usuarios te reconocerán rápidamente
+2. **Profesionalismo**: Una foto de perfil hace más confiable la comunicación
+3. **Seguridad**: Mantener tus datos actualizados ayuda en caso de necesitar recuperar acceso
+4. **Experiencia personalizada**: El sistema se adapta mejor a tus necesidades
+
+---
+
+## �📄 Facturas Electrónicas (CFDI)
 
 El sistema procesa automáticamente facturas electrónicas del SAT en formato CFDI 4.0:
 
@@ -176,4 +245,4 @@ Si tienes dudas o problemas con el sistema, contacta a:
 
 ---
 
-*Versión del documento: 2.0 | Última actualización: Enero 2026*
+*Versión del documento: 2.1 | Última actualización: Febrero 2026*

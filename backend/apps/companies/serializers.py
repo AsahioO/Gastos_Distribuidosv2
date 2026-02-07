@@ -11,7 +11,7 @@ class CompanySerializer(serializers.ModelSerializer):
             'id', 'rfc', 'razon_social', 'nombre_comercial',
             'calle', 'numero_exterior', 'numero_interior', 'colonia',
             'municipio', 'estado', 'codigo_postal', 'direccion_completa',
-            'telefono', 'email', 'is_active', 'created_at', 'updated_at'
+            'telefono', 'email', 'logo', 'is_active', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -22,7 +22,7 @@ class ProveedorSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'rfc', 'razon_social', 'nombre_comercial',
             'contacto_nombre', 'contacto_email', 'contacto_telefono',
-            'direccion', 'estado', 'documentos', 'created_at', 'updated_at'
+            'direccion', 'logo', 'estado', 'documentos', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'estado', 'created_at', 'updated_at']
 

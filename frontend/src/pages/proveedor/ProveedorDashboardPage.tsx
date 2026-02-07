@@ -86,10 +86,22 @@ export default function ProveedorDashboardPage() {
       {/* Header con información del proveedor */}
       <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-lg shadow-lg p-6 text-white">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">{info_proveedor.nombre_comercial}</h1>
-            <p className="text-primary-100">{info_proveedor.razon_social}</p>
-            <p className="text-primary-200 text-sm mt-1">RFC: {info_proveedor.rfc}</p>
+          <div className="flex items-center gap-4">
+            {/* Logo del proveedor */}
+            <div className="w-16 h-16 rounded-xl overflow-hidden bg-white/20 flex-shrink-0 flex items-center justify-center">
+              {(data as any)?.info_proveedor?.logo ? (
+                <img src={(data as any).info_proveedor.logo} alt="Logo" className="w-full h-full object-contain" />
+              ) : (
+                <span className="text-2xl font-bold text-white/80">
+                  {info_proveedor.nombre_comercial?.charAt(0)?.toUpperCase() || 'P'}
+                </span>
+              )}
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">{info_proveedor.nombre_comercial}</h1>
+              <p className="text-primary-100">{info_proveedor.razon_social}</p>
+              <p className="text-primary-200 text-sm mt-1">RFC: {info_proveedor.rfc}</p>
+            </div>
           </div>
           <div className="text-right">
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${estadoColors[info_proveedor.estado_cuenta]}`}>
@@ -97,6 +109,12 @@ export default function ProveedorDashboardPage() {
             </span>
             <p className="text-primary-200 text-sm mt-2">{info_proveedor.email}</p>
             <p className="text-primary-200 text-sm">{info_proveedor.telefono}</p>
+            <Link to="/perfil" className="inline-flex items-center gap-1 mt-2 text-xs text-primary-200 hover:text-white transition-colors">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Editar perfil
+            </Link>
           </div>
         </div>
       </div>

@@ -29,6 +29,14 @@ class Company(models.Model):
     telefono = models.CharField(max_length=20, blank=True, verbose_name='Teléfono')
     email = models.EmailField(blank=True, verbose_name='Correo electrónico')
     
+    # Branding
+    logo = models.ImageField(
+        upload_to='company_logos/',
+        blank=True,
+        null=True,
+        verbose_name='Logo'
+    )
+    
     # Status
     is_active = models.BooleanField(default=True, verbose_name='Activa')
     
@@ -87,6 +95,14 @@ class Proveedor(models.Model):
     
     # Address
     direccion = models.TextField(blank=True, verbose_name='Dirección')
+    
+    # Branding
+    logo = models.ImageField(
+        upload_to='proveedor_logos/',
+        blank=True,
+        null=True,
+        verbose_name='Logo'
+    )
     
     # Status
     estado = models.CharField(

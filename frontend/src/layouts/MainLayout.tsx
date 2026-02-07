@@ -197,17 +197,23 @@ export default function MainLayout() {
 
           {/* User info en sidebar */}
           <div className="p-4 border-t border-slate-700/50">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
-                <span className="text-white font-medium text-sm">
-                  {user?.full_name?.charAt(0).toUpperCase() || 'U'}
-                </span>
+            <Link to="/perfil" className="flex items-center gap-3 group">
+              <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-transparent group-hover:ring-blue-500 transition-all">
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+                    <span className="text-white font-medium text-sm">
+                      {user?.full_name?.charAt(0).toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{user?.full_name || 'Usuario'}</p>
+                <p className="text-sm font-medium text-white truncate group-hover:text-blue-300 transition-colors">{user?.full_name || 'Usuario'}</p>
                 <p className="text-xs text-slate-400 truncate">{user?.role_display || user?.role}</p>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </div>
@@ -234,12 +240,25 @@ export default function MainLayout() {
 
             {/* Profile dropdown */}
             <div className="flex items-center gap-x-3 pl-3 border-l border-gray-200">
-              <div className="hidden sm:flex sm:flex-col sm:items-end">
-                <p className="text-sm font-medium text-gray-700">
-                  {user?.full_name || 'Usuario'}
-                </p>
-                <p className="text-xs text-gray-500">{user?.role_display || user?.role}</p>
-              </div>
+              <Link to="/perfil" className="flex items-center gap-x-3 hover:opacity-80 transition-opacity">
+                <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+                      <span className="text-white font-medium text-xs">
+                        {user?.full_name?.charAt(0).toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="hidden sm:flex sm:flex-col sm:items-end">
+                  <p className="text-sm font-medium text-gray-700">
+                    {user?.full_name || 'Usuario'}
+                  </p>
+                  <p className="text-xs text-gray-500">{user?.role_display || user?.role}</p>
+                </div>
+              </Link>
               <button
                 onClick={handleLogout}
                 className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"

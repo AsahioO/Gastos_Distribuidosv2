@@ -176,6 +176,39 @@ Este documento describe el plan de desarrollo del sistema, organizado en fases.
 
 ---
 
+## Fase 9.5: Personalización de Perfil de Usuario ✅
+
+**Objetivo**: Permitir a los usuarios gestionar su información personal y apariencia.
+
+### Backend
+- [x] Campo `logo` en modelo Company
+- [x] Campo `logo` en modelo Proveedor
+- [x] Migración para campos de imagen
+- [x] Serializers actualizados con campos de imagen
+- [x] Inclusión de `avatar` en respuesta JWT
+- [x] Configuración de MEDIA_URL y servicio de archivos
+
+### Frontend
+- [x] Página `/perfil` con tabs (Información Personal, Contraseña, Preferencias)
+- [x] Componente `AvatarUpload` reutilizable
+  - [x] Drag & drop de imágenes
+  - [x] Validación de formato y tamaño (JPG/PNG/WebP, máx 2MB)
+  - [x] Preview en tiempo real
+- [x] Integración de avatares reales en:
+  - [x] Sidebar y top bar
+  - [x] Tabla de usuarios (/usuarios)
+  - [x] Portal de proveedores
+- [x] Método `updateMyProfile()` con soporte FormData
+- [x] Método `changePassword()` seguro
+- [x] Configuración de proxy `/media` en Vite
+
+### UX
+- [x] Links clickeables a perfil desde layout
+- [x] Visualización de logos de empresa/proveedor
+- [x] Actualización reactiva del store al cambiar perfil
+
+---
+
 ## Fase 10: Notificaciones en Tiempo Real ⏳
 
 **Objetivo**: Sistema de alertas y notificaciones.
@@ -317,13 +350,14 @@ Este documento describe el plan de desarrollo del sistema, organizado en fases.
 
 ### Corto Plazo (Q1 2026)
 1. ~~Fase 9: Portal de Proveedores~~ ✅
-2. Fase 10: Notificaciones
-3. Fase 11: Autorizaciones
+2. ~~Fase 9.5: Personalización de Perfil~~ ✅
+3. Fase 10: Notificaciones
+4. Fase 11: Autorizaciones
 
 ### Mediano Plazo (Q2 2026)
-4. Fase 12: Documentos
-5. Fase 13: Configuración
-6. Fase 14: Multi-tenancy
+5. Fase 12: Documentos
+6. Fase 13: Configuración
+7. Fase 14: Multi-tenancy
 
 ### Largo Plazo (Q3-Q4 2026)
 7. Fase 15: Reportes Avanzados

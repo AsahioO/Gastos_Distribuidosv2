@@ -12,6 +12,60 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - Fase 11: Autorizaciones y firmas digitales
 - Fase 12: Documentos adjuntos
 - Fase 13: Configuración del sistema
+- Sistema de plantillas personalizables para generación de PDFs
+
+---
+
+## [0.9.2] - 2026-02-06
+
+### 👤 Personalización de Perfil de Usuario
+
+#### Backend - Modelos
+- **Añadido** Campo `logo` (ImageField) al modelo `Company` para logos empresariales
+- **Añadido** Campo `logo` (ImageField) al modelo `Proveedor` para logos de proveedores
+- **Migración** `0002_company_logo_proveedor_logo` aplicada exitosamente
+
+#### Backend - Serializers & API
+- **Mejorado** `CompanySerializer` - Incluye campo `logo` en la respuesta
+- **Mejorado** `ProveedorSerializer` - Incluye campo `logo` en la respuesta
+- **Mejorado** `CustomTokenObtainPairSerializer` - Incluye `avatar` y `phone` en respuesta de login JWT
+- **Corregido** Configuración de MEDIA proxy faltante para servir avatares en desarrollo
+
+#### Frontend - Sistema de Perfil
+- **Añadido** Página `/perfil` (`ProfilePage.tsx`) con 3 tabs:
+  - Información Personal: Edición de nombre, teléfono y avatar
+  - Contraseña: Cambio seguro de contraseña
+  - Preferencias: Notificaciones y configuración (placeholder)
+- **Añadido** Componente `AvatarUpload` reutilizable:
+  - Drag & drop de imágenes
+  - Preview en tiempo real
+  - Validación: JPG/PNG/WebP, máx 2MB
+  - Soporte para avatares circulares y logos cuadrados
+- **Añadido** Enlace clickeable al perfil en sidebar y top bar
+- **Mejorado** Avatares reales en MainLayout (sidebar y top bar)
+- **Mejorado** Tabla de usuarios muestra fotos reales de perfil
+
+#### Frontend - Portal de Proveedores
+- **Añadido** Visualización de logo de proveedor en dashboard
+- **Añadido** Enlace "Editar perfil" en header del portal
+
+#### Frontend - State Management
+- **Mejorado** `authStore.ts` - Añadido método `updateUser()` para actualizar perfil localmente
+- **Mejorado** `userService.ts` - Nuevos métodos:
+  - `updateMyProfile()` con soporte para FormData/multipart
+  - `getMyProfile()` para obtener datos del usuario autenticado
+  - `changePassword()` para cambio de contraseña
+- **Corregido** Interface `User` con campo `avatar` opcional
+
+#### Configuración
+- **Añadido** Proxy `/media` en `vite.config.ts` para desarrollo local
+- **Corregido** Target del proxy de `backend:8000` a `localhost:8000` para entorno sin Docker
+
+#### Imágenes y Media
+- **Configurado** Rutas de upload:
+  - `avatars/` para fotos de perfil de usuarios
+  - `company_logos/` para logos de empresas
+  - `proveedor_logos/` para logos de proveedores
 
 ---
 

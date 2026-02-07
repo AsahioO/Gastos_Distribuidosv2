@@ -10,6 +10,7 @@ export interface User {
   role: string
   role_display?: string
   permissions?: string[]
+  avatar?: string | null
   settings?: {
     theme?: 'light' | 'dark'
     [key: string]: unknown
@@ -22,6 +23,7 @@ interface AuthState {
   refreshToken: string | null
   isAuthenticated: boolean
   setAuth: (user: User, accessToken: string, refreshToken: string) => void
+  updateUser: (userData: Partial<User>) => void
   logout: () => void
 }
 
@@ -39,6 +41,10 @@ export const useAuthStore = create<AuthState>()(
           refreshToken,
           isAuthenticated: true,
         }),
+      updateUser: (userData) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, ...userData } : null,
+        })),
       logout: () =>
         set({
           user: null,
