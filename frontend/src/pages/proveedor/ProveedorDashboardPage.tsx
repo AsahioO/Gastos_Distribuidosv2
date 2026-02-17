@@ -10,9 +10,13 @@ import {
   ClockIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
+  DocumentTextIcon,
+  TruckIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline'
 import { Card } from '@/components/ui'
 import { proveedorPortalService, ProveedorDashboardData } from '@/services/proveedorPortalService'
+import { dashboardService, type ActividadReciente } from '@/services/dashboardService'
 
 const estadoColors: Record<string, string> = {
   pendiente: 'bg-yellow-100 text-yellow-800',
@@ -31,6 +35,7 @@ const ordenEstadoColors: Record<string, string> = {
 
 export default function ProveedorDashboardPage() {
   const [data, setData] = useState<ProveedorDashboardData | null>(null)
+  const [actividad, setActividad] = useState<ActividadReciente[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -39,8 +44,12 @@ export default function ProveedorDashboardPage() {
 
   const loadDashboard = async () => {
     try {
-      const response = await proveedorPortalService.getDashboard()
-      setData(response)
+      const [dashboardData, actividadData] = await Promise.all([
+        proveedorPortalService.getDashboard(),
+        dashboardService.getActividadReciente()
+      ])
+      setData(dashboardData)
+      setActividad(actividadData)
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Error al cargar el dashboard')
     } finally {
@@ -77,10 +86,22 @@ export default function ProveedorDashboardPage() {
       {/* Header con información del proveedor */}
       <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-lg shadow-lg p-6 text-white">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">{info_proveedor.nombre_comercial}</h1>
-            <p className="text-primary-100">{info_proveedor.razon_social}</p>
-            <p className="text-primary-200 text-sm mt-1">RFC: {info_proveedor.rfc}</p>
+          <div className="flex items-center gap-4">
+            {/* Logo del proveedor */}
+            <div className="w-16 h-16 rounded-xl overflow-hidden bg-white/20 flex-shrink-0 flex items-center justify-center">
+              {(data as any)?.info_proveedor?.logo ? (
+                <img src={(data as any).info_proveedor.logo} alt="Logo" className="w-full h-full object-contain" />
+              ) : (
+                <span className="text-2xl font-bold text-white/80">
+                  {info_proveedor.nombre_comercial?.charAt(0)?.toUpperCase() || 'P'}
+                </span>
+              )}
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">{info_proveedor.nombre_comercial}</h1>
+              <p className="text-primary-100">{info_proveedor.razon_social}</p>
+              <p className="text-primary-200 text-sm mt-1">RFC: {info_proveedor.rfc}</p>
+            </div>
           </div>
           <div className="text-right">
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${estadoColors[info_proveedor.estado_cuenta]}`}>
@@ -88,6 +109,12 @@ export default function ProveedorDashboardPage() {
             </span>
             <p className="text-primary-200 text-sm mt-2">{info_proveedor.email}</p>
             <p className="text-primary-200 text-sm">{info_proveedor.telefono}</p>
+            <Link to="/perfil" className="inline-flex items-center gap-1 mt-2 text-xs text-primary-200 hover:text-white transition-colors">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Editar perfil
+            </Link>
           </div>
         </div>
       </div>
@@ -99,12 +126,12 @@ export default function ProveedorDashboardPage() {
             <ExclamationTriangleIcon className={`h-5 w-5 ${info_proveedor.estado_cuenta === 'suspendido' ? 'text-red-400' : 'text-yellow-400'}`} />
             <div className="ml-3">
               <h3 className={`text-sm font-medium ${info_proveedor.estado_cuenta === 'suspendido' ? 'text-red-800' : 'text-yellow-800'}`}>
-                {info_proveedor.estado_cuenta === 'suspendido' 
+                {info_proveedor.estado_cuenta === 'suspendido'
                   ? 'Cuenta Suspendida'
                   : 'Cuenta Pendiente de Aprobación'}
               </h3>
               <p className={`text-sm mt-1 ${info_proveedor.estado_cuenta === 'suspendido' ? 'text-red-700' : 'text-yellow-700'}`}>
-                {info_proveedor.estado_cuenta === 'suspendido' 
+                {info_proveedor.estado_cuenta === 'suspendido'
                   ? 'Su cuenta ha sido suspendida. Contacte al administrador para más información.'
                   : 'Su cuenta está en proceso de aprobación. Una vez aprobada podrá cotizar y recibir órdenes.'}
               </p>
@@ -310,6 +337,41 @@ export default function ProveedorDashboardPage() {
           </Link>
         </div>
       </Card>
+
+      {/* Actividad Reciente */}
+      {actividad.length > 0 && (
+        <Card>
+          <div className="p-4 border-b border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900">Actividad Reciente</h3>
+          </div>
+          <div className="p-4 space-y-4">
+            {actividad.map((item, index) => (
+              <div key={item.id} className="flex gap-4">
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    {item.tipo === 'solicitud' && <DocumentTextIcon className="w-5 h-5 text-blue-500" />}
+                    {item.tipo === 'cotizacion' && <ChartBarIcon className="w-5 h-5 text-purple-500" />}
+                    {item.tipo === 'orden' && <ShoppingCartIcon className="w-5 h-5 text-emerald-500" />}
+                    {item.tipo === 'factura' && <CurrencyDollarIcon className="w-5 h-5 text-amber-500" />}
+                    {item.tipo === 'entrega' && <TruckIcon className="w-5 h-5 text-teal-500" />}
+                  </div>
+                  {index < actividad.length - 1 && (
+                    <div className="absolute left-1/2 top-10 bottom-0 w-px bg-gray-200 -translate-x-1/2 h-full" />
+                  )}
+                </div>
+                <div className="flex-1 pb-4">
+                  <p className="text-sm text-gray-900">{item.descripcion}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-gray-500">{item.fecha}</span>
+                    <span className="text-xs text-gray-300">•</span>
+                    <span className="text-xs text-gray-500">{item.usuario}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   )
 }

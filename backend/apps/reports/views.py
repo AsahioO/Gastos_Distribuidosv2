@@ -54,9 +54,9 @@ def get_role_filtered_querysets(user):
         cotizaciones = cotizaciones.filter(
             solicitud__in=solicitudes
         )
-        # Órdenes de sus solicitudes
+        # Órdenes de sus solicitudes (a través de cotización)
         ordenes = ordenes.filter(
-            solicitud__in=solicitudes
+            cotizacion__solicitud__in=solicitudes
         )
         # Facturas del proveedor de sus órdenes
         proveedores_ids = ordenes.values_list('proveedor_id', flat=True)
@@ -76,9 +76,9 @@ def get_role_filtered_querysets(user):
         # Facturas de los proveedores de esas órdenes
         proveedores_ids = ordenes.values_list('proveedor_id', flat=True)
         facturas = facturas.filter(proveedor_id__in=proveedores_ids)
-        # Solicitudes de esas órdenes
+        # Solicitudes de esas órdenes (a través de cotización)
         solicitudes = solicitudes.filter(
-            id__in=ordenes.values_list('solicitud_id', flat=True)
+            id__in=ordenes.values_list('cotizacion__solicitud_id', flat=True)
         ).distinct()
         # No ve cotizaciones
         cotizaciones = cotizaciones.none()
@@ -91,8 +91,8 @@ def get_role_filtered_querysets(user):
             cotizaciones = cotizaciones.filter(proveedor=proveedor)
             # Órdenes asignadas a él
             ordenes = ordenes.filter(proveedor=proveedor)
-            # Solicitudes de esas órdenes o cotizaciones
-            solicitudes_ids = list(ordenes.values_list('solicitud_id', flat=True))
+            # Solicitudes de esas órdenes (a través de cotización) o cotizaciones directas
+            solicitudes_ids = list(ordenes.values_list('cotizacion__solicitud_id', flat=True))
             solicitudes_ids += list(cotizaciones.values_list('solicitud_id', flat=True))
             solicitudes = solicitudes.filter(id__in=solicitudes_ids)
             # Facturas del proveedor

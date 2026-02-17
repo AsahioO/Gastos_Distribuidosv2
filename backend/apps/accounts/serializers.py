@@ -133,6 +133,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'role': self.user.role.name if self.user.role else None,
             'role_display': self.user.role.get_name_display() if self.user.role else None,
             'permissions': self.user.role.permissions if self.user.role else [],
+            'avatar': self.user.avatar.url if self.user.avatar else None,
+            'phone': self.user.phone,
         }
         
         return data

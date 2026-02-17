@@ -144,4 +144,20 @@ export const proveedorPortalService = {
     })
     return response.data
   },
+
+  /**
+   * Actualiza el perfil del proveedor autenticado (nombre comercial, contacto, logo)
+   */
+  updateMiPerfil: async (proveedorId: number, data: Record<string, unknown>) => {
+    const formData = new FormData()
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value instanceof File ? value : String(value))
+      }
+    })
+    const response = await api.patch(`/companies/proveedores/${proveedorId}/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  },
 }

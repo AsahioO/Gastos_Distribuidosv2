@@ -27,6 +27,8 @@ const roleColors: Record<string, string> = {
   'área': 'bg-green-100 text-green-800 border-green-200',
   'area': 'bg-green-100 text-green-800 border-green-200',
   'proveedor': 'bg-purple-100 text-purple-800 border-purple-200',
+  'tesorería': 'bg-teal-100 text-teal-800 border-teal-200',
+  'tesoreria': 'bg-teal-100 text-teal-800 border-teal-200',
 }
 
 export default function UsersPage() {
@@ -212,8 +214,14 @@ export default function UsersPage() {
       header: 'Usuario',
       render: (user: User) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
-            {(user.full_name || user.username || 'U').charAt(0).toUpperCase()}
+          <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+            {user.avatar ? (
+              <img src={user.avatar} alt={user.full_name || user.username} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
+                {(user.full_name || user.username || 'U').charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
           <span className="font-medium text-gray-900">{user.username}</span>
         </div>
@@ -288,7 +296,7 @@ export default function UsersPage() {
               placeholder="Buscar por nombre, usuario o correo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm"
             />
             {searchTerm && (
               <button

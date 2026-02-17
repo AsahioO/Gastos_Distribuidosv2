@@ -32,22 +32,22 @@ interface NavItem {
 const navigation: NavItem[] = [
   // Todos ven el Dashboard
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  
+
   // Reportes: solo admin y tesorería
   { name: 'Reportes', href: '/reportes', icon: ChartBarIcon, roles: ['admin', 'tesoreria'] },
-  
+
   // Solicitudes: área crea, adquisiciones gestiona, admin supervisa
   { name: 'Solicitudes', href: '/solicitudes', icon: DocumentTextIcon, roles: ['admin', 'adquisiciones', 'area'] },
-  
+
   // Cotizaciones: adquisiciones envía a proveedores, tesorería autoriza la mejor
   { name: 'Cotizaciones', href: '/cotizaciones', icon: ClipboardDocumentListIcon, roles: ['admin', 'adquisiciones', 'tesoreria'] },
-  
+
   // Órdenes de Compra: adquisiciones genera y envía al proveedor ganador
   { name: 'Órdenes de Compra', href: '/ordenes', icon: ShoppingCartIcon, roles: ['admin', 'adquisiciones'] },
-  
+
   // Inventario/Entregas: almacén recibe mercancía del proveedor
   { name: 'Inventario', href: '/inventario', icon: TruckIcon, roles: ['admin', 'almacen'] },
-  
+
   // Facturas/Pagos: tesorería procesa pagos a proveedores
   { name: 'Facturas', href: '/facturas', icon: ReceiptPercentIcon, roles: ['admin', 'tesoreria'] },
 ]
@@ -55,7 +55,6 @@ const navigation: NavItem[] = [
 // Navegación para proveedores
 const proveedorNavigation: NavItem[] = [
   { name: 'Mi Portal', href: '/portal', icon: HomeIcon },
-  { name: 'Dashboard', href: '/dashboard', icon: ChartBarIcon },
   { name: 'Cotizar', href: '/portal/cotizar', icon: DocumentPlusIcon },
   { name: 'Mis Cotizaciones', href: '/portal/cotizaciones', icon: ClipboardDocumentListIcon },
   { name: 'Mis Órdenes', href: '/portal/ordenes', icon: ShoppingCartIcon },
@@ -84,8 +83,8 @@ export default function MainLayout() {
   const userRole = user?.role || ''
 
   // Navegación según tipo de usuario, filtrada por rol
-  const mainNavigation = isProveedor 
-    ? proveedorNavigation 
+  const mainNavigation = isProveedor
+    ? proveedorNavigation
     : navigation.filter(item => !item.roles || item.roles.includes(userRole))
 
   const filteredAdminNav = isProveedor ? [] : adminNavigation.filter(
@@ -97,11 +96,10 @@ export default function MainLayout() {
       key={item.name}
       to={item.href}
       onClick={() => setSidebarOpen(false)}
-      className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-        location.pathname === item.href
-          ? 'bg-primary-100 text-primary-900'
-          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-      }`}
+      className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${location.pathname === item.href
+        ? 'bg-primary-100 text-primary-900'
+        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+        }`}
     >
       <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
       {item.name}
@@ -116,7 +114,7 @@ export default function MainLayout() {
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
           <div className="flex h-16 items-center justify-between px-4">
             <span className="text-xl font-bold text-primary-600">Gastos Distribuidos</span>
-            <button 
+            <button
               onClick={() => setSidebarOpen(false)}
               title="Cerrar menú"
               aria-label="Cerrar menú de navegación"
@@ -126,7 +124,7 @@ export default function MainLayout() {
           </div>
           <nav className="flex-1 space-y-1 px-2 py-4">
             {mainNavigation.map(renderNavItem)}
-            
+
             {filteredAdminNav.length > 0 && (
               <>
                 <div className="pt-4 pb-2">
@@ -157,21 +155,19 @@ export default function MainLayout() {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                  location.pathname === item.href || location.pathname.startsWith(item.href + '/')
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                    : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
-                }`}
+                className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${location.pathname === item.href || location.pathname.startsWith(item.href + '/')
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                  : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
+                  }`}
               >
-                <item.icon className={`mr-3 h-5 w-5 flex-shrink-0 transition-colors ${
-                  location.pathname === item.href || location.pathname.startsWith(item.href + '/')
-                    ? 'text-white'
-                    : 'text-slate-400 group-hover:text-white'
-                }`} />
+                <item.icon className={`mr-3 h-5 w-5 flex-shrink-0 transition-colors ${location.pathname === item.href || location.pathname.startsWith(item.href + '/')
+                  ? 'text-white'
+                  : 'text-slate-400 group-hover:text-white'
+                  }`} />
                 {item.name}
               </Link>
             ))}
-            
+
             {filteredAdminNav.length > 0 && (
               <>
                 <div className="pt-6 pb-2">
@@ -183,37 +179,41 @@ export default function MainLayout() {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                      location.pathname === item.href
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                        : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
-                    }`}
+                    className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${location.pathname === item.href
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                      : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
+                      }`}
                   >
-                    <item.icon className={`mr-3 h-5 w-5 flex-shrink-0 transition-colors ${
-                      location.pathname === item.href
-                        ? 'text-white'
-                        : 'text-slate-400 group-hover:text-white'
-                    }`} />
+                    <item.icon className={`mr-3 h-5 w-5 flex-shrink-0 transition-colors ${location.pathname === item.href
+                      ? 'text-white'
+                      : 'text-slate-400 group-hover:text-white'
+                      }`} />
                     {item.name}
                   </Link>
                 ))}
               </>
             )}
           </nav>
-          
+
           {/* User info en sidebar */}
           <div className="p-4 border-t border-slate-700/50">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
-                <span className="text-white font-medium text-sm">
-                  {user?.full_name?.charAt(0).toUpperCase() || 'U'}
-                </span>
+            <Link to="/perfil" className="flex items-center gap-3 group">
+              <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-transparent group-hover:ring-blue-500 transition-all">
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+                    <span className="text-white font-medium text-sm">
+                      {user?.full_name?.charAt(0).toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{user?.full_name || 'Usuario'}</p>
+                <p className="text-sm font-medium text-white truncate group-hover:text-blue-300 transition-colors">{user?.full_name || 'Usuario'}</p>
                 <p className="text-xs text-slate-400 truncate">{user?.role_display || user?.role}</p>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </div>
@@ -240,12 +240,25 @@ export default function MainLayout() {
 
             {/* Profile dropdown */}
             <div className="flex items-center gap-x-3 pl-3 border-l border-gray-200">
-              <div className="hidden sm:flex sm:flex-col sm:items-end">
-                <p className="text-sm font-medium text-gray-700">
-                  {user?.full_name || 'Usuario'}
-                </p>
-                <p className="text-xs text-gray-500">{user?.role_display || user?.role}</p>
-              </div>
+              <Link to="/perfil" className="flex items-center gap-x-3 hover:opacity-80 transition-opacity">
+                <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+                      <span className="text-white font-medium text-xs">
+                        {user?.full_name?.charAt(0).toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="hidden sm:flex sm:flex-col sm:items-end">
+                  <p className="text-sm font-medium text-gray-700">
+                    {user?.full_name || 'Usuario'}
+                  </p>
+                  <p className="text-xs text-gray-500">{user?.role_display || user?.role}</p>
+                </div>
+              </Link>
               <button
                 onClick={handleLogout}
                 className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -260,7 +273,7 @@ export default function MainLayout() {
         </div>
 
         {/* Page content */}
-        <main className="py-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-[calc(100vh-4rem)]">
+        <main className="py-6 bg-gray-100 min-h-[calc(100vh-4rem)] transition-colors duration-300">
           <div className="px-4 sm:px-6 lg:px-8 animate-fade-in">
             <Outlet />
           </div>

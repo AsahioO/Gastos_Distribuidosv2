@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install Python dependencies
 COPY requirements/ /app/requirements/
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements/development.txt
+    pip install --no-cache-dir -r requirements/production.txt
 
 # Copy project
 COPY . /app/
@@ -39,4 +39,4 @@ RUN mkdir -p /app/staticfiles /app/media
 EXPOSE 8000
 
 # Default command
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["sh", "-c", "python manage.py migrate && python setup_initial_data.py && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120"]

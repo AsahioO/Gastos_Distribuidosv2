@@ -8,7 +8,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, helperText, id, ...props }, ref) => {
+  ({ className, label, error, helperText, id, type = 'text', ...props }, ref) => {
     return (
       <div className="w-full">
         {label && (
@@ -19,6 +19,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           id={id}
+          type={type}
           className={clsx(
             'block w-full rounded-md shadow-sm sm:text-sm px-3 py-2',
             'border focus:outline-none focus:ring-2 focus:ring-offset-0',

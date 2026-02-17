@@ -71,5 +71,19 @@ export const proveedorService = {
   toggleActive: async (id: number, isActive: boolean): Promise<Proveedor> => {
     const response = await api.patch(`/companies/proveedores/${id}/`, { is_active: isActive })
     return response.data
-  }
+  },
+
+  /** Actualizar proveedor con logo (usa FormData para multipart) */
+  updateProveedorWithLogo: async (id: number, data: Partial<CreateProveedorData> & { logo?: File }): Promise<Proveedor> => {
+    const formData = new FormData()
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value instanceof File ? value : String(value))
+      }
+    })
+    const response = await api.patch(`/companies/proveedores/${id}/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  },
 }

@@ -37,6 +37,7 @@ import MisCotizacionesPage from '@/pages/proveedor/MisCotizacionesPage'
 import MisOrdenesPage from '@/pages/proveedor/MisOrdenesPage'
 import MisFacturasPage from '@/pages/proveedor/MisFacturasPage'
 import LandingPage from '@/pages/landing/LandingPage'
+import ProfilePage from '@/pages/profile/ProfilePage'
 
 // Protected Route component
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
@@ -87,6 +88,7 @@ function App() {
       >
         <Route path="/home" element={<HomeRedirect />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/perfil" element={<ProfilePage />} />
         <Route path="/reportes" element={<ReportesPage />} />
 
         {/* Portal del Proveedor - Fase 9 */}
