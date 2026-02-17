@@ -5,6 +5,8 @@ Script para crear datos iniciales del sistema.
 import os
 import sys
 import django
+from django.conf import settings
+from django.db import connection
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')
 
@@ -12,7 +14,21 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')
 django.setup()
 
 from apps.accounts.models import Role, User
-from apps.tenants.models import Tenant
+
+
+def can_use_tenants():
+    """Determina si el entorno actual tiene soporte de tenants activo y tabla creada."""
+    if not hasattr(settings, 'TENANT_MODEL'):
+        return False
+
+    installed_apps = getattr(settings, 'INSTALLED_APPS', [])
+    if 'apps.tenants' not in installed_apps:
+        return False
+
+    try:
+        return 'tenants_tenant' in connection.introspection.table_names()
+    except Exception:
+        return False
 
 def create_roles():
     """Crear roles del sistema."""
@@ -51,6 +67,12 @@ def create_superuser():
 
 def create_tenant():
     """Crear tenant de desarrollo."""
+    if not can_use_tenants():
+        print('  Tenants no activo en este entorno, se omite creación de tenant')
+        return
+
+    from apps.tenants.models import Tenant
+
     tenant, created = Tenant.objects.get_or_create(
         schema_name='public',
         defaults={

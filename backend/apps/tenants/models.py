@@ -9,7 +9,7 @@ from django.conf import settings as django_settings
 try:
     from django_tenants.models import TenantMixin, DomainMixin
     USE_TENANTS = hasattr(django_settings, 'TENANT_MODEL') and django_settings.TENANT_MODEL
-except ImportError:
+except Exception:
     USE_TENANTS = False
 
 if USE_TENANTS:
