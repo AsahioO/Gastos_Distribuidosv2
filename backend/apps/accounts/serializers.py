@@ -19,6 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     role_name = serializers.CharField(source='role.get_name_display', read_only=True)
     role_display = serializers.CharField(source='role.get_name_display', read_only=True)
+    avatar = serializers.SerializerMethodField()
     
     class Meta:
         model = User
@@ -28,6 +29,15 @@ class UserSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_avatar(self, obj):
+        """Return absolute URL for avatar."""
+        if obj.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.avatar.url)
+            return obj.avatar.url
+        return None
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -125,6 +135,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         
+        # Build absolute URL for avatar
+        avatar_url = None
+        if self.user.avatar:
+            request = self.context.get('request')
+            if request:
+                avatar_url = request.build_absolute_uri(self.user.avatar.url)
+            else:
+                avatar_url = self.user.avatar.url
+        
         # Add user info to response
         data['user'] = {
             'id': self.user.id,
@@ -133,7 +152,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'role': self.user.role.name if self.user.role else None,
             'role_display': self.user.role.get_name_display() if self.user.role else None,
             'permissions': self.user.role.permissions if self.user.role else [],
-            'avatar': self.user.avatar.url if self.user.avatar else None,
+            'avatar': avatar_url,
             'phone': self.user.phone,
         }
         
