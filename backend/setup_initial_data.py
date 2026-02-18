@@ -14,6 +14,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')
 django.setup()
 
 from apps.accounts.models import Role, User
+from apps.companies.models import Company
 
 
 def can_use_tenants():
@@ -65,6 +66,25 @@ def create_superuser():
     )
     print(f'  Superusuario creado: {user.username} / admin123')
 
+def create_company():
+    """Crear empresa de demo."""
+    if Company.objects.filter(rfc='DEMO010101ABC').exists():
+        print('  Empresa demo ya existe')
+        return
+    
+    admin_user = User.objects.filter(username='admin').first()
+    company = Company.objects.create(
+        rfc='DEMO010101ABC',
+        razon_social='Empresa Demo S.A. de C.V.',
+        nombre_comercial='Empresa Demo',
+        email='contacto@demo.com',
+        telefono='555-1234',
+        is_active=True,
+        created_by=admin_user
+    )
+    print(f'  Empresa creada: {company.razon_social} (ID: {company.id})')
+
+
 def create_tenant():
     """Crear tenant de desarrollo."""
     if not can_use_tenants():
@@ -95,7 +115,10 @@ if __name__ == '__main__':
     print('\n2. Creando superusuario...')
     create_superuser()
     
-    print('\n3. Creando tenant de desarrollo...')
+    print('\n3. Creando empresa demo...')
+    create_company()
+    
+    print('\n4. Creando tenant de desarrollo...')
     create_tenant()
     
     print('\n' + '=' * 50)

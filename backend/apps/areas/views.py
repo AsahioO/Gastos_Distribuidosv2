@@ -35,6 +35,9 @@ class AreaViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         logger.info(f"Creating area with data: {request.data}")
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            logger.error(f"Area validation failed: {serializer.errors}")
         return super().create(request, *args, **kwargs)
     
     def perform_create(self, serializer):
