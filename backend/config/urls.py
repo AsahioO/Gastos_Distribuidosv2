@@ -39,10 +39,9 @@ urlpatterns = [
     ])),
 ]
 
-# Serve media files in development
-if settings.DEBUG:
-    from django.conf.urls.static import static
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serve media files (needed for development and lightweight deployments like Render free tier)
+from django.conf.urls.static import static
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Debug toolbar URLs (only in DEBUG mode)
 if settings.DEBUG:

@@ -33,7 +33,7 @@ RUN pip install --upgrade pip && \
 COPY . /app/
 
 # Create directories for static and media files
-RUN mkdir -p /app/staticfiles /app/media
+RUN mkdir -p /app/staticfiles /app/media/avatars /app/media/facturas
 
 # Expose port
 EXPOSE 8000
