@@ -103,7 +103,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def me(self, request):
         """Get current authenticated user."""
-        serializer = UserSerializer(request.user)
+        serializer = UserSerializer(request.user, context={'request': request})
         return Response(serializer.data)
     
     @action(detail=False, methods=['put'])
@@ -112,7 +112,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(UserSerializer(request.user).data)
+        return Response(UserSerializer(request.user, context={'request': request}).data)
     
     @action(detail=False, methods=['post'])
     def change_password(self, request):
