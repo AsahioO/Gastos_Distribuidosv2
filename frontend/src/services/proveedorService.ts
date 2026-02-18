@@ -27,13 +27,10 @@ export interface CreateProveedorData {
   razon_social: string
   nombre_comercial?: string
   rfc: string
-  email: string
-  telefono?: string
-  direccion?: string
-  ciudad?: string
-  estado?: string
+  contacto_email: string
+  contacto_telefono?: string
   contacto_nombre?: string
-  giro?: string
+  direccion?: string
 }
 
 // Helper para manejar respuestas paginadas o arrays directos

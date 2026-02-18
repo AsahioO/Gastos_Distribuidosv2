@@ -27,8 +27,7 @@ export default function ProveedoresPage() {
       const matchesSearch = searchTerm === '' ||
         p.razon_social.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.rfc.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (p.email && p.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (p.ciudad && p.ciudad.toLowerCase().includes(searchTerm.toLowerCase()))
+        (p.contacto_email && p.contacto_email.toLowerCase().includes(searchTerm.toLowerCase()))
 
       // Filtro de estado
       const matchesStatus = statusFilter === 'all' ||
@@ -70,13 +69,10 @@ export default function ProveedoresPage() {
         razon_social: proveedor.razon_social,
         nombre_comercial: proveedor.nombre_comercial || '',
         rfc: proveedor.rfc,
-        email: proveedor.email,
-        telefono: proveedor.telefono || '',
+        contacto_email: proveedor.contacto_email || '',
+        contacto_telefono: proveedor.contacto_telefono || '',
         direccion: proveedor.direccion || '',
-        ciudad: proveedor.ciudad || '',
-        estado: proveedor.estado || '',
         contacto_nombre: proveedor.contacto_nombre || '',
-        giro: proveedor.giro || ''
       })
     } else {
       setEditingProveedor(null)
@@ -84,13 +80,10 @@ export default function ProveedoresPage() {
         razon_social: '',
         nombre_comercial: '',
         rfc: '',
-        email: '',
-        telefono: '',
+        contacto_email: '',
+        contacto_telefono: '',
         direccion: '',
-        ciudad: '',
-        estado: '',
         contacto_nombre: '',
-        giro: ''
       })
     }
     setIsModalOpen(true)
@@ -136,9 +129,8 @@ export default function ProveedoresPage() {
   const columns = [
     { key: 'razon_social', header: 'Razón Social' },
     { key: 'rfc', header: 'RFC' },
-    { key: 'email', header: 'Email' },
-    { key: 'telefono', header: 'Teléfono' },
-    { key: 'ciudad', header: 'Ciudad' },
+    { key: 'contacto_email', header: 'Email' },
+    { key: 'contacto_telefono', header: 'Teléfono' },
     {
       key: 'is_active',
       header: 'Estado',
@@ -282,29 +274,16 @@ export default function ProveedoresPage() {
             />
             <Input
               type="email"
-              label="Email *"
-              error={errors.email?.message}
-              {...register('email', {
+              label="Email de Contacto *"
+              error={errors.contacto_email?.message}
+              {...register('contacto_email', {
                 required: 'El email es requerido',
                 pattern: { value: /^\S+@\S+$/i, message: 'Email inválido' }
               })}
             />
             <Input
-              label="Teléfono"
-              {...register('telefono')}
-            />
-            <Input
-              label="Giro"
-              placeholder="Ej: Papelería, Cómputo..."
-              {...register('giro')}
-            />
-            <Input
-              label="Ciudad"
-              {...register('ciudad')}
-            />
-            <Input
-              label="Estado"
-              {...register('estado')}
+              label="Teléfono de Contacto"
+              {...register('contacto_telefono')}
             />
           </div>
 
