@@ -1,9 +1,12 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+import logging
 
 from .models import Area, PersonalArea
 from .serializers import AreaSerializer, PersonalAreaSerializer
 from apps.accounts.permissions import IsAdmin
+
+logger = logging.getLogger(__name__)
 
 
 class AreaViewSet(viewsets.ModelViewSet):
@@ -29,6 +32,10 @@ class AreaViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(is_active=True)
         
         return queryset
+    
+    def create(self, request, *args, **kwargs):
+        logger.info(f"Creating area with data: {request.data}")
+        return super().create(request, *args, **kwargs)
     
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
