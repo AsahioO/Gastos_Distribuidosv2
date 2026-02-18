@@ -36,9 +36,10 @@ export default function AreasPage() {
     setSelectedArea(null)
     setIsEditing(false)
     reset({
-      nombre: '',
-      codigo: '',
-      descripcion: '',
+      company: 1, // TODO: Obtener company del usuario o permitir seleccionar
+      name: '',
+      code: '',
+      description: '',
       presupuesto_anual: ''
     })
     setModalOpen(true)
@@ -48,9 +49,10 @@ export default function AreasPage() {
     setSelectedArea(area)
     setIsEditing(true)
     reset({
-      nombre: area.nombre,
-      codigo: area.codigo,
-      descripcion: area.descripcion,
+      company: 1, // TODO: Usar el company actual del área
+      name: area.nombre,
+      code: area.codigo,
+      description: area.descripcion,
       presupuesto_anual: area.presupuesto_anual
     })
     setModalOpen(true)
@@ -191,21 +193,21 @@ export default function AreasPage() {
             <Input
               label="Código"
               placeholder="AREA-001"
-              {...register('codigo', { required: 'El código es requerido' })}
-              error={errors.codigo?.message}
+              {...register('code', { required: 'El código es requerido' })}
+              error={errors.code?.message}
             />
             <Input
               label="Nombre"
-              placeholder="Nombre del área"
-              {...register('nombre', { required: 'El nombre es requerido' })}
-              error={errors.nombre?.message}
+              placeholder="Recursos Humanos"
+              {...register('name', { required: 'El nombre es requerido' })}
+              error={errors.name?.message}
             />
           </div>
 
           <Input
             label="Descripción"
-            placeholder="Descripción del área"
-            {...register('descripcion')}
+            placeholder="recursos humanos de la empresa"
+            {...register('description')}
           />
 
           <Input

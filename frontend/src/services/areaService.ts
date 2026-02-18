@@ -15,18 +15,20 @@ export interface Area {
 }
 
 export interface CreateAreaData {
-  nombre: string
-  codigo: string
-  descripcion?: string
-  responsable?: number
+  company: number
+  name: string
+  code: string
+  description?: string
+  manager?: number
   presupuesto_anual?: string
 }
 
 export interface UpdateAreaData {
-  nombre?: string
-  codigo?: string
-  descripcion?: string
-  responsable?: number
+  company?: number
+  name?: string
+  code?: string
+  description?: string
+  manager?: number
   presupuesto_anual?: string
   is_active?: boolean
 }
