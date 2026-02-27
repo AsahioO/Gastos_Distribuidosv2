@@ -9,6 +9,7 @@ export interface Cog {
   concepto: string
   partida_generica: string
   partida_especifica: string
+  palabras_clave: string
   is_active: boolean
 }
 

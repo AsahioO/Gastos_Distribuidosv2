@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useForm, useFieldArray } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { PlusIcon, TrashIcon, ArrowLeftIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
-import { Button, Input, Select, Modal } from '@/components/ui'
+import { Button, Input, Select, Modal, CogCombobox } from '@/components/ui'
 import { procurementService, Cog, CreateSolicitudData } from '@/services/procurementService'
 import { areaService, Area } from '@/services/areaService'
 
@@ -38,7 +38,6 @@ export default function SolicitudFormPage() {
   const [pendingFormData, setPendingFormData] = useState<SolicitudForm | null>(null)
   const [areas, setAreas] = useState<Area[]>([])
   const [cogs, setCogs] = useState<Cog[]>([])
-  const [cogSearch] = useState('')
 
   // Opciones predefinidas de unidades
   const unidadOptions = [
@@ -196,13 +195,6 @@ export default function SolicitudFormPage() {
     return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value)
   }
 
-  const filteredCogs = cogSearch
-    ? (Array.isArray(cogs) ? cogs : []).filter(c =>
-      c.codigo.toLowerCase().includes(cogSearch.toLowerCase()) ||
-      c.descripcion.toLowerCase().includes(cogSearch.toLowerCase())
-    )
-    : (Array.isArray(cogs) ? cogs : [])
-
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -351,12 +343,18 @@ export default function SolicitudFormPage() {
                       error={errors.detalles?.[index]?.unidad?.message}
                     />
 
-                    <Select
+                    <CogCombobox
                       label="COG *"
-                      options={filteredCogs.map(c => ({ value: c.id, label: `${c.codigo} - ${c.descripcion.substring(0, 50)}...` }))}
-                      placeholder="Selecciona COG"
-                      {...register(`detalles.${index}.cog`, { required: 'Requerido', valueAsNumber: true })}
+                      options={Array.isArray(cogs) ? cogs : []}
+                      value={watchDetalles[index]?.cog || null}
+                      onChange={(cogId) => setValue(`detalles.${index}.cog`, cogId || 0, { shouldValidate: true })}
                       error={errors.detalles?.[index]?.cog?.message}
+                    />
+
+                    {/* Hidden input para react-hook-form validation */}
+                    <input
+                      type="hidden"
+                      {...register(`detalles.${index}.cog`, { required: 'Requerido', validate: v => v !== 0 || 'Selecciona un COG' })}
                     />
 
                     <Input

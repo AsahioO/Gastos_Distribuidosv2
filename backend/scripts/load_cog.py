@@ -1,8 +1,21 @@
 """
-Script para cargar el catálogo COG (Clasificador por Objeto del Gasto).
-Ejecutar con: python manage.py shell < scripts/load_cog.py
-O importar desde Django shell: exec(open('scripts/load_cog.py').read())
+⚠️  DEPRECADO - Este script ha sido reemplazado por un management command.
+
+Usar en su lugar:
+    python manage.py load_cog                           # Carga desde backend/data/catalogo_cog.csv
+    python manage.py load_cog --file ruta/al/archivo.csv  # CSV personalizado
+    python manage.py load_cog --dry-run                 # Simula sin escribir
+
+Este archivo se conserva solo como referencia histórica.
+Los datos del catálogo COG ahora se mantienen en: backend/data/catalogo_cog.csv
 """
+
+import warnings
+warnings.warn(
+    "Este script está deprecado. Usa: python manage.py load_cog",
+    DeprecationWarning,
+    stacklevel=1,
+)
 
 import os
 import sys

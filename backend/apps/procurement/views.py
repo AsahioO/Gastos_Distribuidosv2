@@ -18,6 +18,7 @@ class CogViewSet(viewsets.ModelViewSet):
     queryset = Cog.objects.all()
     serializer_class = CogSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = None  # Catálogo completo, sin paginar
     
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -29,12 +30,13 @@ class CogViewSet(viewsets.ModelViewSet):
         if self.request.query_params.get('active_only'):
             queryset = queryset.filter(is_active=True)
         
-        # Search by codigo or descripcion
+        # Search by codigo, descripcion or palabras_clave
         search = self.request.query_params.get('search')
         if search:
             queryset = queryset.filter(
                 db_models.Q(codigo__icontains=search) |
-                db_models.Q(descripcion__icontains=search)
+                db_models.Q(descripcion__icontains=search) |
+                db_models.Q(palabras_clave__icontains=search)
             )
         
         return queryset

@@ -6,7 +6,7 @@ class CogSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cog
         fields = ['id', 'codigo', 'descripcion', 'capitulo', 'concepto', 
-                  'partida_generica', 'partida_especifica', 'is_active']
+                  'partida_generica', 'partida_especifica', 'palabras_clave', 'is_active']
 
 
 class DetalleMaterialSerializer(serializers.ModelSerializer):

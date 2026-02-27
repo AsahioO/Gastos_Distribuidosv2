@@ -18,6 +18,11 @@ class Cog(models.Model):
     concepto = models.CharField(max_length=10, blank=True, verbose_name='Concepto')
     partida_generica = models.CharField(max_length=10, blank=True, verbose_name='Partida Genérica')
     partida_especifica = models.CharField(max_length=10, blank=True, verbose_name='Partida Específica')
+    palabras_clave = models.TextField(
+        blank=True,
+        verbose_name='Palabras Clave',
+        help_text='Términos de búsqueda separados por coma para facilitar la localización del COG'
+    )
     is_active = models.BooleanField(default=True, verbose_name='Activo')
 
     class Meta:

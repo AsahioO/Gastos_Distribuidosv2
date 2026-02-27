@@ -13,6 +13,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')
 # Setup Django
 django.setup()
 
+from django.core.management import call_command
+
 from apps.accounts.models import Role, User
 from apps.companies.models import Company
 
@@ -120,6 +122,12 @@ if __name__ == '__main__':
     
     print('\n4. Creando tenant de desarrollo...')
     create_tenant()
+    
+    print('\n5. Cargando catálogo COG...')
+    try:
+        call_command('load_cog')
+    except Exception as e:
+        print(f'  ⚠ No se pudo cargar COG: {e}')
     
     print('\n' + '=' * 50)
     print('¡Configuración completada!')
