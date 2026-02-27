@@ -154,9 +154,14 @@ export default function FacturasPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Facturas CFDI</h1>
-        <Button onClick={() => navigate('/facturas/subir')}>
-          Subir Factura
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => navigate('/facturas/distribucion-rapida')}>
+            Dist. Rápida
+          </Button>
+          <Button onClick={() => navigate('/facturas/subir')}>
+            Subir Factura
+          </Button>
+        </div>
       </div>
 
       {error && (

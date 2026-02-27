@@ -16,6 +16,7 @@ import {
   BuildingStorefrontIcon,
   ChartBarIcon,
   DocumentPlusIcon,
+  BoltIcon,
 } from '@heroicons/react/24/outline'
 
 interface NavItem {
@@ -50,6 +51,9 @@ const navigation: NavItem[] = [
 
   // Facturas/Pagos: tesorería procesa pagos a proveedores
   { name: 'Facturas', href: '/facturas', icon: ReceiptPercentIcon, roles: ['admin', 'tesoreria'] },
+
+  // Distribución Rápida: subir XML y distribuir gastos directamente
+  { name: 'Dist. Rápida', href: '/facturas/distribucion-rapida', icon: BoltIcon, roles: ['admin', 'tesoreria'] },
 ]
 
 // Navegación para proveedores

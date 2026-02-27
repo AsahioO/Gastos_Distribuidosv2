@@ -46,7 +46,7 @@ class FacturaSerializer(serializers.ModelSerializer):
             'subtotal', 'descuento', 'iva', 'isr', 'iva_retenido', 'total',
             'forma_pago', 'metodo_pago', 'moneda', 'tipo_cambio',
             'tipo_comprobante', 'uso_cfdi', 'status', 'status_display',
-            'error_message', 'conceptos', 'distribuciones',
+            'error_message', 'is_quick_flow', 'conceptos', 'distribuciones',
             'created_at', 'updated_at'
         ]
         read_only_fields = [
@@ -89,12 +89,59 @@ class DistributeRequestSerializer(serializers.Serializer):
         if not value:
             raise serializers.ValidationError("Se requiere al menos una distribución.")
         
-        for dist in value:
+        from apps.areas.models import Area
+        
+        seen_conceptos = set()
+        for i, dist in enumerate(value):
+            # Required fields
             if 'area_id' not in dist:
-                raise serializers.ValidationError("Cada distribución requiere area_id.")
+                raise serializers.ValidationError(f"Distribución {i+1}: requiere area_id.")
             if 'concepto_id' not in dist:
-                raise serializers.ValidationError("Cada distribución requiere concepto_id.")
+                raise serializers.ValidationError(f"Distribución {i+1}: requiere concepto_id.")
             if 'monto' not in dist:
-                raise serializers.ValidationError("Cada distribución requiere monto.")
+                raise serializers.ValidationError(f"Distribución {i+1}: requiere monto.")
+            
+            # Type validation
+            try:
+                dist['area_id'] = int(dist['area_id'])
+            except (ValueError, TypeError):
+                raise serializers.ValidationError(f"Distribución {i+1}: area_id debe ser un número.")
+            
+            try:
+                dist['concepto_id'] = int(dist['concepto_id'])
+            except (ValueError, TypeError):
+                raise serializers.ValidationError(f"Distribución {i+1}: concepto_id debe ser un número.")
+            
+            try:
+                monto = float(dist['monto'])
+                if monto <= 0:
+                    raise serializers.ValidationError(f"Distribución {i+1}: monto debe ser mayor a cero.")
+            except (ValueError, TypeError):
+                raise serializers.ValidationError(f"Distribución {i+1}: monto debe ser un número válido.")
+            
+            # Check area exists
+            if not Area.objects.filter(id=dist['area_id'], is_active=True).exists():
+                raise serializers.ValidationError(f"Distribución {i+1}: el área {dist['area_id']} no existe o no está activa.")
+            
+            # Check duplicate concepts (each concept goes to one area only)
+            if dist['concepto_id'] in seen_conceptos:
+                raise serializers.ValidationError(f"Distribución {i+1}: el concepto {dist['concepto_id']} ya fue asignado.")
+            seen_conceptos.add(dist['concepto_id'])
         
         return value
+
+
+class FacturaQuickUploadSerializer(serializers.ModelSerializer):
+    """Serializer for quick flow: upload + process in one step."""
+    
+    class Meta:
+        model = Factura
+        fields = ['xml_file', 'pdf_file']
+        extra_kwargs = {
+            'pdf_file': {'required': False, 'allow_null': True},
+        }
+    
+    def create(self, validated_data):
+        validated_data['uuid_cfdi'] = None
+        validated_data['is_quick_flow'] = True
+        return super().create(validated_data)

@@ -7,6 +7,7 @@ from decimal import Decimal
 from datetime import datetime
 
 from celery import shared_task
+from django.db import transaction
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
@@ -178,22 +179,26 @@ def distribute_invoice_expenses(factura_id: int, distribution_data: list):
     try:
         factura = Factura.objects.get(id=factura_id)
         
-        for dist in distribution_data:
-            concepto = FacturaDetalle.objects.get(id=dist['concepto_id'])
-            area = Area.objects.get(id=dist['area_id'])
+        with transaction.atomic():
+            # Clean up previous distributions if re-distributing
+            DistribucionGasto.objects.filter(factura=factura).delete()
             
-            DistribucionGasto.objects.create(
-                factura=factura,
-                concepto=concepto,
-                area=area,
-                monto=Decimal(str(dist['monto'])),
-                porcentaje=Decimal(str(dist.get('porcentaje', 100))),
-                notas=dist.get('notas', ''),
-                created_by_id=dist['created_by_id']
-            )
-        
-        factura.status = Factura.EstadoChoices.DISTRIBUIDA
-        factura.save(update_fields=['status'])
+            for dist in distribution_data:
+                concepto = FacturaDetalle.objects.get(id=dist['concepto_id'])
+                area = Area.objects.get(id=dist['area_id'])
+                
+                DistribucionGasto.objects.create(
+                    factura=factura,
+                    concepto=concepto,
+                    area=area,
+                    monto=Decimal(str(dist['monto'])),
+                    porcentaje=Decimal(str(dist.get('porcentaje', 100))),
+                    notas=dist.get('notas', ''),
+                    created_by_id=dist['created_by_id']
+                )
+            
+            factura.status = Factura.EstadoChoices.DISTRIBUIDA
+            factura.save(update_fields=['status'])
         
         logger.info(f"Distributed expenses for factura {factura_id}")
         return {'success': True}

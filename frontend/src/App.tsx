@@ -29,6 +29,7 @@ import FacturasPage from '@/pages/invoices/FacturasPage'
 import FacturaUploadPage from '@/pages/invoices/FacturaUploadPage'
 import FacturaDetailPage from '@/pages/invoices/FacturaDetailPage'
 import FacturaDistributePage from '@/pages/invoices/FacturaDistributePage'
+import DistribucionRapidaPage from '@/pages/invoices/DistribucionRapidaPage'
 // Portal del Proveedor - Fase 9
 import ProveedorDashboardPage from '@/pages/proveedor/ProveedorDashboardPage'
 import SolicitudesCotizarPage from '@/pages/proveedor/SolicitudesCotizarPage'
@@ -253,6 +254,11 @@ function App() {
         <Route path="/facturas/subir" element={
           <ProtectedRoute allowedRoles={['admin', 'tesoreria']}>
             <FacturaUploadPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/facturas/distribucion-rapida" element={
+          <ProtectedRoute allowedRoles={['admin', 'tesoreria']}>
+            <DistribucionRapidaPage />
           </ProtectedRoute>
         } />
         <Route path="/facturas/:id" element={

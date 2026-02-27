@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from .models import Factura, FacturaDetalle, DistribucionGasto
 from .serializers import (
@@ -11,6 +11,7 @@ from .serializers import (
     FacturaDetalleSerializer,
     DistribucionGastoSerializer,
     DistributeRequestSerializer,
+    FacturaQuickUploadSerializer,
 )
 from .tasks import process_cfdi_xml, distribute_invoice_expenses
 from apps.accounts.permissions import IsTesoreria
@@ -19,15 +20,17 @@ from apps.accounts.permissions import IsTesoreria
 class FacturaViewSet(viewsets.ModelViewSet):
     queryset = Factura.objects.select_related('proveedor', 'uploaded_by').prefetch_related('conceptos', 'distribuciones')
     permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def get_serializer_class(self):
         if self.action == 'upload':
             return FacturaUploadSerializer
+        if self.action == 'upload_and_process':
+            return FacturaQuickUploadSerializer
         return FacturaSerializer
     
     def get_permissions(self):
-        if self.action in ['upload', 'distribute']:
+        if self.action in ['upload', 'distribute', 'upload_and_process']:
             return [IsAuthenticated(), IsTesoreria()]
         return super().get_permissions()
     
@@ -142,6 +145,41 @@ class FacturaViewSet(viewsets.ModelViewSet):
             message = 'Factura reprocesada correctamente.'
         
         return Response({'message': message})
+
+    @action(detail=False, methods=['post'], url_path='upload-and-process')
+    def upload_and_process(self, request):
+        """
+        Quick flow: Upload a CFDI XML, process it synchronously, and return
+        the fully parsed factura with conceptos ready for distribution.
+        """
+        serializer = FacturaQuickUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        factura = serializer.save(uploaded_by=request.user)
+        
+        # Always process synchronously for quick flow
+        result = process_cfdi_xml(factura.id)
+        factura.refresh_from_db()
+        
+        if factura.status == Factura.EstadoChoices.ERROR:
+            return Response(
+                {
+                    'error': factura.error_message or 'Error al procesar la factura.',
+                    'id': factura.id,
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Return full factura data with conceptos
+        factura_data = FacturaSerializer(factura).data
+        
+        return Response(
+            {
+                'message': 'Factura procesada correctamente.',
+                'factura': factura_data,
+            },
+            status=status.HTTP_201_CREATED
+        )
 
 
 class FacturaDetalleViewSet(viewsets.ReadOnlyModelViewSet):

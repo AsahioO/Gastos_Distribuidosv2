@@ -64,6 +64,7 @@ export interface Factura {
   status: 'pendiente' | 'procesando' | 'procesada' | 'error' | 'distribuida'
   status_display: string
   error_message: string
+  is_quick_flow: boolean
   conceptos: FacturaDetalle[]
   distribuciones: DistribucionGasto[]
   created_at: string
@@ -130,6 +131,21 @@ export const facturaService = {
 
   reprocessFactura: async (id: number): Promise<{ message: string }> => {
     const response = await api.post(`/invoices/${id}/reprocess/`)
+    return response.data
+  },
+
+  /**
+   * Quick flow: Upload XML + process synchronously in one step.
+   * Returns the fully parsed factura with conceptos ready for distribution.
+   */
+  uploadAndProcess: async (xmlFile: File, pdfFile?: File): Promise<{ message: string; factura: Factura }> => {
+    const formData = new FormData()
+    formData.append('xml_file', xmlFile)
+    if (pdfFile) formData.append('pdf_file', pdfFile)
+
+    const response = await api.post('/invoices/upload-and-process/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
     return response.data
   },
 

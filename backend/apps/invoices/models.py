@@ -69,6 +69,13 @@ class Factura(models.Model):
     )
     error_message = models.TextField(blank=True, verbose_name='Mensaje de error')
     
+    # Quick flow flag
+    is_quick_flow = models.BooleanField(
+        default=False,
+        verbose_name='Flujo rápido',
+        help_text='Indica si la factura fue procesada mediante el flujo rápido (sin solicitud/orden previa)'
+    )
+    
     # Audit
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
