@@ -189,6 +189,69 @@ def parse_cfdi_xml(xml_content: bytes) -> dict[str, Any]:
         raise CFDIParseError(f"Error al parsear CFDI: {e}")
 
 
+def validate_cfdi_math(data: dict) -> None:
+    """
+    Valida la coherencia matemática interna de un CFDI 4.0 parseado.
+
+    Regla 1: La suma de los importes de todos los conceptos debe ser igual
+             al subtotal del comprobante.
+    Regla 2: subtotal - descuento + TotalImpuestosTrasladados - TotalImpuestosRetenidos
+             debe ser igual al total del comprobante.
+
+    Se usa una tolerancia de  $0.10 MXN  para absorber diferencias de
+    redondeo permitidas por el SAT.
+
+    Lanza ``rest_framework.exceptions.ValidationError`` (HTTP 400) si alguna
+    regla falla o si los valores no se pueden convertir a Decimal.
+    """
+    from decimal import InvalidOperation
+    from rest_framework.exceptions import ValidationError
+
+    TOLERANCIA = Decimal('0.10')
+
+    try:
+        subtotal = Decimal(str(data.get('subtotal', '0')))
+        descuento = Decimal(str(data.get('descuento', '0')))
+        total = Decimal(str(data.get('total', '0')))
+
+        impuestos = data.get('impuestos', {})
+        total_traslados = Decimal(str(impuestos.get('total_impuestos_trasladados', '0')))
+        total_retenidos = Decimal(str(impuestos.get('total_impuestos_retenidos', '0')))
+
+        # --- Regla 1: suma de importes de conceptos == subtotal --------
+        conceptos = data.get('conceptos', [])
+        suma_importes = sum(
+            (Decimal(str(c.get('importe', '0'))) for c in conceptos),
+            Decimal('0'),
+        )
+
+        diferencia_subtotal = abs(suma_importes - subtotal)
+        if diferencia_subtotal > TOLERANCIA:
+            raise ValidationError(
+                f"Error de validación matemática del CFDI: la suma de los importes "
+                f"de los conceptos ({suma_importes}) no coincide con el subtotal "
+                f"declarado ({subtotal}). Diferencia: {diferencia_subtotal}."
+            )
+
+        # --- Regla 2: subtotal - descuento + traslados - retenidos == total
+        total_calculado = subtotal - descuento + total_traslados - total_retenidos
+        diferencia_total = abs(total_calculado - total)
+        if diferencia_total > TOLERANCIA:
+            raise ValidationError(
+                f"Error de validación matemática del CFDI: el total calculado "
+                f"(subtotal {subtotal} - descuento {descuento} + traslados "
+                f"{total_traslados} - retenidos {total_retenidos} = {total_calculado}) "
+                f"no coincide con el total declarado ({total}). "
+                f"Diferencia: {diferencia_total}."
+            )
+
+    except InvalidOperation as e:
+        raise ValidationError(
+            f"Error de validación matemática del CFDI: no se pudo convertir "
+            f"un valor numérico a Decimal. Detalle: {e}"
+        )
+
+
 def validate_cfdi_structure(data: dict) -> list[str]:
     """
     Validate CFDI parsed data structure.

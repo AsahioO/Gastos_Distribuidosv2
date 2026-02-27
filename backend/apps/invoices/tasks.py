@@ -26,7 +26,7 @@ def process_cfdi_xml(self, factura_id: int):
     5. Creates FacturaDetalle records for each concepto
     """
     from apps.invoices.models import Factura, FacturaDetalle
-    from apps.invoices.services import parse_cfdi_xml, validate_cfdi_structure, CFDIParseError
+    from apps.invoices.services import parse_cfdi_xml, validate_cfdi_structure, validate_cfdi_math, CFDIParseError
     
     try:
         factura = Factura.objects.get(id=factura_id)
@@ -45,6 +45,9 @@ def process_cfdi_xml(self, factura_id: int):
         errors = validate_cfdi_structure(data)
         if errors:
             raise CFDIParseError("; ".join(errors))
+        
+        # Validate CFDI math (subtotal vs conceptos, total vs cálculo)
+        validate_cfdi_math(data)
         
         # Check for duplicate UUID
         uuid_from_xml = data['timbre']['uuid']

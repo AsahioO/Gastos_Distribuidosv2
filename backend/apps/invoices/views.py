@@ -1,8 +1,12 @@
+from decimal import Decimal
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from django.db.models import Sum
+from django.utils import timezone
 
 from .models import Factura, FacturaDetalle, DistribucionGasto
 from .serializers import (
@@ -15,6 +19,49 @@ from .serializers import (
 )
 from .tasks import process_cfdi_xml, distribute_invoice_expenses
 from apps.accounts.permissions import IsTesoreria
+
+
+def _check_budget_warnings(distributions):
+    """
+    Verifica si alguna distribución excede el presupuesto mensual del área.
+    Retorna una lista de advertencias (puede estar vacía).
+    """
+    from apps.areas.models import Area
+
+    today = timezone.now().date()
+    first_day = today.replace(day=1)
+    warnings = []
+
+    for dist in distributions:
+        try:
+            area = Area.objects.get(id=dist['area_id'])
+            presupuesto_anual = area.presupuesto_anual or Decimal('0')
+            if presupuesto_anual <= 0:
+                continue
+            presupuesto_mensual = presupuesto_anual / 12
+
+            ya_gastado = (
+                DistribucionGasto.objects
+                .filter(area=area, created_at__gte=first_day, factura__status='distribuida')
+                .aggregate(total=Sum('monto'))['total']
+                or Decimal('0')
+            )
+
+            nuevo_monto = Decimal(str(dist['monto']))
+            total_resultante = ya_gastado + nuevo_monto
+
+            if total_resultante > presupuesto_mensual:
+                warnings.append({
+                    'area_nombre': area.name,
+                    'presupuesto_mensual': float(presupuesto_mensual),
+                    'ya_gastado': float(ya_gastado),
+                    'nuevo_monto': float(nuevo_monto),
+                    'exceso': float(total_resultante - presupuesto_mensual),
+                })
+        except Exception:
+            pass
+
+    return warnings
 
 
 class FacturaViewSet(viewsets.ModelViewSet):
@@ -103,6 +150,17 @@ class FacturaViewSet(viewsets.ModelViewSet):
         
         # Add created_by to each distribution
         distributions = serializer.validated_data['distributions']
+
+        # Verificar presupuesto (advertencia, no bloqueo)
+        force = request.data.get('force', False)
+        if not force:
+            warnings = _check_budget_warnings(distributions)
+            if warnings:
+                return Response({
+                    'needs_confirmation': True,
+                    'warnings': warnings,
+                })
+
         for dist in distributions:
             dist['created_by_id'] = request.user.id
         

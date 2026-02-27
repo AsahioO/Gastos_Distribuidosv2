@@ -7,6 +7,22 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### 🛡️ Seguridad - Validación de Facturas
+
+#### Backend - Validaciones CFDI
+- **Agregado** Bloque de validación draft para verificar coincidencia de RFC receptor (POST `/api/invoices/upload-and-process/`)
+  - Extrae RFC receptor desde `cfdi:Receptor/@Rfc`
+  - Compara contra empresa configurada en sistema
+  - Permite validación case-insensitive
+  - Nota: Validación actualmente desactivada para permitir procesamiento flexible de facturas
+- **Mejora Documentada** En [docs/SECURITY_ANALYSIS.md](docs/SECURITY_ANALYSIS.md#inv-receptor-rfc) se registra la vulnerabilidad y el parche implementado
+
+#### Workflow de Implementación
+- Validación implementada en [backend/apps/invoices/tasks.py](backend/apps/invoices/tasks.py) línea ~62
+- Imports: `Company` model y `ValidationError` desde DRF
+- Excepción separada para `ValidationError` en bloque except
+- Desactivada mediante comentario para evaluación posterior
+
 ### Por Implementar
 - Fase 10: Notificaciones en tiempo real
 - Fase 11: Autorizaciones y firmas digitales

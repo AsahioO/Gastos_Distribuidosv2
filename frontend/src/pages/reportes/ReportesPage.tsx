@@ -198,38 +198,38 @@ const ReportesPage: React.FC = () => {
 
       {/* Resumen */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white" shadow="lg">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100" shadow="lg">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-              <CurrencyDollarIcon className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-xl bg-blue-200 flex items-center justify-center">
+              <CurrencyDollarIcon className="w-6 h-6 text-blue-700" />
             </div>
             <div>
-              <p className="text-sm text-blue-100">Total Gastado</p>
-              <p className="text-2xl font-bold mt-1">{formatCurrency(totalGastado)}</p>
+              <p className="text-sm text-blue-600">Total Gastado</p>
+              <p className="text-2xl font-bold text-blue-700 mt-1">{formatCurrency(totalGastado)}</p>
             </div>
           </div>
         </Card>
 
-        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white" shadow="lg">
+        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100" shadow="lg">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-              <CalendarDaysIcon className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-xl bg-emerald-200 flex items-center justify-center">
+              <CalendarDaysIcon className="w-6 h-6 text-emerald-700" />
             </div>
             <div>
-              <p className="text-sm text-emerald-100">Presupuesto Total</p>
-              <p className="text-2xl font-bold mt-1">{formatCurrency(totalPresupuesto)}</p>
+              <p className="text-sm text-emerald-600">Presupuesto Total</p>
+              <p className="text-2xl font-bold text-emerald-700 mt-1">{formatCurrency(totalPresupuesto)}</p>
             </div>
           </div>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white" shadow="lg">
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100" shadow="lg">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-              <BuildingOfficeIcon className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-xl bg-purple-200 flex items-center justify-center">
+              <BuildingOfficeIcon className="w-6 h-6 text-purple-700" />
             </div>
             <div>
-              <p className="text-sm text-purple-100">% Utilizado</p>
-              <p className="text-2xl font-bold mt-1">{porcentajeTotal.toFixed(1)}%</p>
+              <p className="text-sm text-purple-600">% Utilizado</p>
+              <p className="text-2xl font-bold text-purple-700 mt-1">{porcentajeTotal.toFixed(1)}%</p>
             </div>
           </div>
         </Card>

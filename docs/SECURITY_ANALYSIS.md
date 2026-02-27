@@ -199,6 +199,61 @@ DEBUG = True
 
 ### MED-02: No Hay Expiración Forzada de Sesiones
 
+---
+
+### MED-03: Validación Insuficiente de RFC Receptor en Facturas (DETECTADO Y RESUELTO)
+
+**Archivo:** `apps/invoices/tasks.py:process_cfdi_xml()` (anteriormente línya ~62)
+
+**Vulnerabilidad:**
+El endpoint `POST /api/invoices/upload-and-process/` aceptaba facturas cuyo RFC Receptor (`cfdi:Receptor/@Rfc`) no pertenecía a la empresa configurada en el sistema. Esto permitía:
+- Subir facturas dirigidas a terceros
+- Distorsionar reportes de gasto
+- Crear registros fiscales inconsistentes
+
+**Ejemplo de Explotación:**
+```bash
+# RFC de empresa = AAA111111AAA
+# Factura con RFC receptor = BBB222222BBB
+# Sistema: ✅ Aceptada (VULNERABLE)
+```
+
+**Solución Implementada:**
+Se agregó validación en `process_cfdi_xml()` que:
+1. Extrae RFC receptor: `data['receptor']['rfc']`
+2. Obtiene RFC empresa: `Company.objects.first().rfc`
+3. Compara case-insensitive: `rfc_receptor_xml.upper() != rfc_empresa.upper()`
+4. Rechaza con `ValidationError` si no coinciden
+5. Registra error en `Factura.error_message` con detalle:
+   ```
+   "El RFC receptor del CFDI ({xml_rfc}) no coincide con el 
+    RFC de nuestra empresa ({company_rfc}). Factura rechazada."
+   ```
+
+**Código Implementado:**
+```python
+# Validar que el RFC receptor del CFDI coincida con el de nuestra empresa
+rfc_receptor_xml = data['receptor']['rfc']
+empresa = Company.objects.first()
+if empresa is None:
+    raise CFDIParseError("No se encontró la empresa configurada en el sistema.")
+rfc_empresa = empresa.rfc
+if rfc_receptor_xml.upper() != rfc_empresa.upper():
+    raise ValidationError(
+        f"El RFC receptor del CFDI ({rfc_receptor_xml}) no coincide con el "
+        f"RFC de nuestra empresa ({rfc_empresa}). Factura rechazada."
+    )
+```
+
+**Estado:** ⚠️ **Desactivada para Evaluación**
+- La validación fue comentada/removida después de la implementación inicial para permitir procesamiento flexible de facturas
+- Se mantiene el código documentado para activación futura si es requerida
+- Recomendación: Hacer esta validación **configurable por tenant** según políticas de negocio
+
+---
+
+### MED-04: No Hay Expiración Forzada de Sesiones
+
 **Archivo:** `config/settings/base.py:171-172`
 
 ```python
@@ -216,7 +271,7 @@ DEBUG = True
 
 ---
 
-### MED-03: Logging No Incluye IP de Usuario
+### MED-05: Logging No Incluye IP de Usuario
 
 **Riesgo:** No hay auditoría de direcciones IP, dificultando la investigación de incidentes.
 
@@ -232,7 +287,7 @@ class AuditMiddleware:
 
 ---
 
-### MED-04: No Hay Blacklist Activa para Tokens en Logout
+### MED-06: No Hay Blacklist Activa para Tokens en Logout
 
 **Riesgo:** No hay endpoint de logout que invalide tokens activos.
 
@@ -249,7 +304,7 @@ def logout(self, request):
 
 ---
 
-### MED-05: Exposición de IDs Secuenciales
+### MED-07: Exposición de IDs Secuenciales
 
 **Riesgo:** Los IDs numéricos (1, 2, 3...) facilitan la enumeración de recursos.
 

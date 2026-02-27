@@ -86,6 +86,20 @@ export interface DistribucionData {
   solicitud_id?: number
 }
 
+export interface BudgetWarning {
+  area_nombre: string
+  presupuesto_mensual: number
+  ya_gastado: number
+  nuevo_monto: number
+  exceso: number
+}
+
+export interface DistributeResponse {
+  message?: string
+  needs_confirmation?: boolean
+  warnings?: BudgetWarning[]
+}
+
 export const facturaService = {
   getFacturas: async (filters?: { status?: string; proveedor?: number }): Promise<Factura[]> => {
     const params = new URLSearchParams()
@@ -124,8 +138,8 @@ export const facturaService = {
     return response.data
   },
 
-  distributeFactura: async (id: number, distributions: DistribucionData[]): Promise<{ message: string }> => {
-    const response = await api.post(`/invoices/${id}/distribute/`, { distributions })
+  distributeFactura: async (id: number, distributions: DistribucionData[], force = false): Promise<DistributeResponse> => {
+    const response = await api.post(`/invoices/${id}/distribute/`, { distributions, force })
     return response.data
   },
 

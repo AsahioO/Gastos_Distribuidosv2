@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { facturaService, Factura, DistribucionData } from '../../services/facturaService'
+import { facturaService, Factura, DistribucionData, BudgetWarning } from '../../services/facturaService'
 import { areaService, Area } from '../../services/areaService'
 import Button from '../../components/ui/Button'
+import Modal from '../../components/ui/Modal'
 
 interface DistribucionRow {
   concepto_id: number
@@ -25,6 +26,11 @@ export default function FacturaDistributePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+
+  // Budget warning modal
+  const [showBudgetModal, setShowBudgetModal] = useState(false)
+  const [budgetWarnings, setBudgetWarnings] = useState<BudgetWarning[]>([])
+  const [pendingPayload, setPendingPayload] = useState<DistribucionData[] | null>(null)
 
   useEffect(() => {
     if (id) {
@@ -90,31 +96,46 @@ export default function FacturaDistributePage() {
       return
     }
 
+    const payload: DistribucionData[] = distribuciones.map(d => ({
+      concepto_id: d.concepto_id,
+      area_id: Number(d.area_id),
+      monto: d.monto,
+      porcentaje: d.porcentaje,
+      notas: d.notas
+    }))
+
+    await runDistribute(payload, false)
+  }
+
+  const runDistribute = async (payload: DistribucionData[], force: boolean) => {
     try {
       setSaving(true)
       setError('')
-      
-      const payload: DistribucionData[] = distribuciones.map(d => ({
-        concepto_id: d.concepto_id,
-        area_id: Number(d.area_id),
-        monto: d.monto,
-        porcentaje: d.porcentaje,
-        notas: d.notas
-      }))
-      
-      await facturaService.distributeFactura(Number(id), payload)
-      
+
+      const result = await facturaService.distributeFactura(Number(id), payload, force)
+
+      if (result.needs_confirmation && result.warnings?.length) {
+        setBudgetWarnings(result.warnings)
+        setPendingPayload(payload)
+        setShowBudgetModal(true)
+        return
+      }
+
       setSuccess('Distribución enviada. Se procesará en segundo plano.')
-      
-      setTimeout(() => {
-        navigate('/facturas')
-      }, 2000)
+      setTimeout(() => { navigate('/facturas') }, 2000)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } }
       setError(error.response?.data?.error || 'Error al distribuir')
       console.error(err)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleForceDistribute = async () => {
+    setShowBudgetModal(false)
+    if (pendingPayload) {
+      await runDistribute(pendingPayload, true)
     }
   }
 
@@ -291,6 +312,56 @@ export default function FacturaDistributePage() {
           Confirmar Distribución
         </Button>
       </div>
+
+      {/* Modal de advertencia de presupuesto */}
+      <Modal
+        isOpen={showBudgetModal}
+        onClose={() => setShowBudgetModal(false)}
+        title="Advertencia de presupuesto"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+            <svg className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+            <p className="text-sm text-amber-800">
+              Una o más áreas superarán su presupuesto mensual con esta distribución.
+            </p>
+          </div>
+
+          <ul className="space-y-3">
+            {budgetWarnings.map((w, i) => (
+              <li key={i} className="bg-gray-50 rounded-lg p-3 text-sm">
+                <p className="font-semibold text-gray-800">{w.area_nombre}</p>
+                <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-0.5 text-gray-600">
+                  <span>Presupuesto mensual:</span>
+                  <span className="text-right">${w.presupuesto_mensual.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                  <span>Ya gastado:</span>
+                  <span className="text-right">${w.ya_gastado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                  <span>Monto a distribuir:</span>
+                  <span className="text-right">${w.nuevo_monto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                  <span className="font-medium text-red-600">Exceso:</span>
+                  <span className="text-right font-medium text-red-600">${w.exceso.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="secondary" onClick={() => setShowBudgetModal(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleForceDistribute}
+              loading={saving}
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              Distribuir de todas formas
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
