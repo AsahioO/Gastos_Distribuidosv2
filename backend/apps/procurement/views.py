@@ -57,8 +57,11 @@ class SolicitudMaterialViewSet(viewsets.ModelViewSet):
         
         # Filter based on role
         if user.is_area:
-            # Areas only see their own requests
-            queryset = queryset.filter(created_by=user)
+            # Areas see their own requests and those from areas they manage
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(created_by=user) | Q(area__manager=user)
+            )
         
         # Filter by estado
         estado = self.request.query_params.get('estado')

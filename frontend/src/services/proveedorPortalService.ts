@@ -125,7 +125,7 @@ export const proveedorPortalService = {
    * Obtiene las facturas del proveedor
    */
   getMisFacturas: async () => {
-    const response = await api.get('/invoices/facturas/')
+    const response = await api.get('/invoices/')
     // El backend ya filtra por proveedor automáticamente
     if (Array.isArray(response.data)) return response.data
     if (response.data?.results) return response.data.results
@@ -137,7 +137,7 @@ export const proveedorPortalService = {
    */
   subirFactura: async (ordenId: number, formData: FormData) => {
     formData.append('orden', ordenId.toString())
-    const response = await api.post('/invoices/facturas/', formData, {
+    const response = await api.post('/invoices/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { inventoryService, CreateEntregaData } from '../../services/inventoryService'
@@ -6,6 +6,8 @@ import { orderService, OrdenCompra, DetalleOrden } from '../../services/orderSer
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
+import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import toast from 'react-hot-toast'
 
 interface EntregaFormData {
   orden: string
@@ -34,6 +36,10 @@ export default function EntregaFormPage() {
   const [error, setError] = useState('')
   const [ordenes, setOrdenes] = useState<OrdenCompra[]>([])
   const [selectedOrden, setSelectedOrden] = useState<OrdenCompra | null>(null)
+  const [evidencias, setEvidencias] = useState<File[]>([])
+  const [previews, setPreviews] = useState<string[]>([])
+  const [evidenciaError, setEvidenciaError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [searchParams] = useSearchParams()
   const preSelectedOrdenId = searchParams.get('orden')
@@ -109,7 +115,46 @@ export default function EntregaFormPage() {
     replace(detallesForm)
   }
 
+  const handleAddEvidencias = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files) return
+
+    const newFiles = Array.from(files)
+    const validFiles = newFiles.filter(f => f.type.startsWith('image/'))
+    
+    if (validFiles.length !== newFiles.length) {
+      toast.error('Solo se permiten archivos de imagen (JPG, PNG, WebP)')
+    }
+
+    setEvidencias(prev => [...prev, ...validFiles])
+    
+    // Generate previews
+    validFiles.forEach(file => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPreviews(prev => [...prev, reader.result as string])
+      }
+      reader.readAsDataURL(file)
+    })
+
+    setEvidenciaError('')
+    // Reset input so the same file can be selected again
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleRemoveEvidencia = (index: number) => {
+    setEvidencias(prev => prev.filter((_, i) => i !== index))
+    setPreviews(prev => prev.filter((_, i) => i !== index))
+  }
+
   const onSubmit = async (data: EntregaFormData) => {
+    // Validar que haya al menos una foto de evidencia
+    if (evidencias.length === 0 && !isEditing) {
+      setEvidenciaError('Debes subir al menos una foto de evidencia de la entrega')
+      toast.error('Se requiere al menos una foto de evidencia')
+      return
+    }
+
     try {
       setLoading(true)
       setError('')
@@ -135,14 +180,15 @@ export default function EntregaFormPage() {
       if (isEditing) {
         result = await inventoryService.updateEntrega(Number(id), payload)
       } else {
-        result = await inventoryService.createEntrega(payload)
+        result = await inventoryService.createEntregaWithEvidence(payload, evidencias)
       }
 
-      // Redirect to detail page to allow uploading evidence immediately
+      toast.success('Entrega registrada con evidencia fotográfica')
       navigate(`/inventario/entregas/${result.id}`)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { detail?: string } } }
       setError(error.response?.data?.detail || 'Error al guardar la entrega')
+      toast.error(error.response?.data?.detail || 'Error al guardar la entrega')
       console.error(err)
     } finally {
       setLoading(false)
@@ -303,6 +349,94 @@ export default function EntregaFormPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* Evidencia Fotográfica (Obligatoria) */}
+        {!isEditing && (
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Evidencia Fotográfica <span className="text-red-500">*</span>
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Sube al menos una foto como evidencia de la recepción de bienes
+                </p>
+              </div>
+              <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                evidencias.length > 0 
+                  ? 'bg-green-100 text-green-700' 
+                  : 'bg-red-100 text-red-700'
+              }`}>
+                {evidencias.length} {evidencias.length === 1 ? 'foto' : 'fotos'}
+              </span>
+            </div>
+
+            {evidenciaError && (
+              <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                {evidenciaError}
+              </div>
+            )}
+
+            {/* Previews de imágenes seleccionadas */}
+            {previews.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4">
+                {previews.map((preview, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={preview}
+                      alt={`Evidencia ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      title="Eliminar foto"
+                      onClick={() => handleRemoveEvidencia(index)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
+                    >
+                      <XMarkIcon className="w-4 h-4" />
+                    </button>
+                    <p className="text-xs text-gray-500 mt-1 truncate">{evidencias[index]?.name}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Zona de subida */}
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                evidenciaError
+                  ? 'border-red-300 bg-red-50 hover:border-red-400'
+                  : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+              }`}
+            >
+              <PhotoIcon className={`w-10 h-10 mx-auto mb-3 ${
+                evidenciaError ? 'text-red-400' : 'text-gray-400'
+              }`} />
+              <p className={`text-sm font-medium ${
+                evidenciaError ? 'text-red-600' : 'text-gray-600'
+              }`}>
+                Haz clic para seleccionar fotos
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                JPG, PNG o WebP — puedes seleccionar varias a la vez
+              </p>
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={handleAddEvidencias}
+              className="hidden"
+              aria-label="Seleccionar fotos de evidencia"
+            />
           </div>
         )}
 

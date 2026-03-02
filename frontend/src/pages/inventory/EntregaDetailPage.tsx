@@ -192,13 +192,7 @@ export default function EntregaDetailPage() {
               className="hidden"
               title="Seleccionar imagen"
             />
-            <Button
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              loading={uploading}
-            >
-              Subir Foto
-            </Button>
+            
           </div>
         </div>
         <div className="p-6">

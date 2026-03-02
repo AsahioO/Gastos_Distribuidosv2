@@ -135,6 +135,26 @@ export const inventoryService = {
     return response.data
   },
 
+  createEntregaWithEvidence: async (data: CreateEntregaData, imagenes: File[]): Promise<EntregaBienes> => {
+    // Paso 1: Crear la entrega
+    const response = await api.post('/inventory/entregas/', data)
+    const entrega: EntregaBienes = response.data
+    
+    // Paso 2: Subir todas las imágenes de evidencia
+    for (const imagen of imagenes) {
+      const formData = new FormData()
+      formData.append('imagen', imagen)
+      formData.append('descripcion', 'Evidencia de recepción')
+      await api.post(`/inventory/entregas/${entrega.id}/upload_evidence/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+    }
+    
+    // Paso 3: Retornar la entrega con evidencias
+    const updated = await api.get(`/inventory/entregas/${entrega.id}/`)
+    return updated.data
+  },
+
   // Salidas de Bienes
   getSalidas: async (): Promise<SalidaBienes[]> => {
     const response = await api.get('/inventory/salidas/')

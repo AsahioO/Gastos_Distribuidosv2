@@ -410,7 +410,7 @@ const DashboardPage: React.FC = () => {
             <div className="space-y-3">
               {stats?.solicitudes_pendientes ? (
                 <div
-                  onClick={() => navigate('/cotizaciones')}
+                  onClick={() => navigate('/solicitudes')}
                   className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100 cursor-pointer hover:bg-amber-100 hover:border-amber-200 transition-colors group"
                 >
                   <div className="w-2 h-2 mt-2 rounded-full bg-amber-500 animate-pulse" />

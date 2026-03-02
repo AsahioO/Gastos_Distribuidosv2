@@ -84,6 +84,15 @@ class FacturaViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         
+        # Auto-filter for proveedor users: only show their own invoices
+        user = self.request.user
+        if hasattr(user, 'is_proveedor') and user.is_proveedor:
+            proveedor = getattr(user, 'proveedor', None)
+            if proveedor:
+                queryset = queryset.filter(proveedor=proveedor)
+            else:
+                queryset = queryset.none()
+        
         status_filter = self.request.query_params.get('status')
         if status_filter:
             queryset = queryset.filter(status=status_filter)
