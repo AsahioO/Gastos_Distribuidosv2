@@ -90,11 +90,64 @@ El sistema ofrece un panel principal con información en tiempo real:
 
 Los proveedores tienen su propio acceso al sistema donde pueden:
 
+- ✅ **Gestionar su catálogo** de productos con precios
 - ✅ Ver solicitudes de cotización que les enviaron
 - ✅ Enviar sus propuestas de precio
 - ✅ Confirmar órdenes de compra
 - ✅ Subir sus facturas electrónicas
 - ✅ Consultar el estado de sus pagos
+
+### 📦 Mi Catálogo (Portal de Proveedores)
+
+Cada proveedor puede cargar y gestionar su **catálogo de productos** con precios unitarios. Esto permite que el sistema genere automáticamente cotizaciones cuando una solicitud incluye productos que coinciden con los que tienes en el catálogo.
+
+#### ¿Cómo usar Mi Catálogo?
+
+**Acceder a Mi Catálogo:**
+1. Inicia sesión en el portal de proveedores
+2. En el menu lateral, haz clic en **"Mi Catálogo"** (ícono de caja)
+3. Verás un listado de todos tus productos registrados
+
+**Agregar un producto manualmente:**
+1. Haz clic en el botón **"Agregar Producto"**
+2. Completa el formulario:
+   - **COG:** Selecciona la clasificación presupuestal del producto (ej: "Papelería")
+   - **Nombre:** El nombre exacto del producto
+   - **Descripción:** Detalles adicionales (marca, modelo, especificaciones)
+   - **Unidad:** Cómo se vende (Unidad, Resma, Caja, Kg, etc.)
+   - **Precio Unitario:** El precio sin IVA
+   - **Marca** y **Modelo:** Información técnica (opcional)
+3. Haz clic en **"Guardar"**
+
+**Cargar múltiples productos (CSV):**
+> [!TIP]
+> Si tienes muchos productos, puedes cargarlos todos a la vez usando un archivo CSV.
+
+1. Haz clic en el botón **"Cargar CSV"**
+2. Descarga la **plantilla CSV** como referencia
+3. Llena el archivo con tus productos (columnas: COG, nombre, descripción, unidad, precio, marca, modelo)
+4. Sube el archivo
+5. El sistema te mostrará cuántos se crearon/actualizaron y si hay errores
+
+**Editar o eliminar un producto:**
+- Desde la tabla de productos, usa los botones de la fila (editar o eliminar)
+- También puedes hacer clic en un producto para ver todos sus detalles
+
+#### ¿Para qué sirve mi catálogo?
+
+Cuando alguien en la empresa solicita material, el sistema **busca automáticamente** en los catálogos de todos los proveedores para encontrar coincidencias por COG. Si tu catálogo tiene los productos que solicitan:
+
+✅ Se **genera automáticamente una cotización** sin que tengas que hacer nada  
+✅ Apareces en la **vista comparativa** de cotizaciones  
+✅ Tienes **más oportunidades** de ganar la orden de compra
+
+**Ejemplo:**
+- Una empresa solicita "Papel Bond" (COG: Papelería)
+- Tu catálogo tiene "Papel Bond Blanco 80gr" bajo ese mismo COG
+- ¡El sistema crea automáticamente una cotización con tu precio!
+
+> [!IMPORTANT]
+> Mantén **tu catálogo actualizado** con los productos y precios correctos. Precios desactualizados pueden hacer que pierdas oportunidades.
 
 > [!NOTE]
 > Los proveedores solo ven la información relacionada con ellos, nunca tienen acceso a datos de otros proveedores o información interna de la empresa.

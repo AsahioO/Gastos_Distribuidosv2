@@ -371,7 +371,7 @@ pendiente → confirmada → parcial_recibida → recibida → facturada → pag
 
 ## Flujos de Datos
 
-### Flujo Completo de Compra
+### Flujo Completo de Compra (Tradicional)
 
 ```
 ┌────────────┐     ┌────────────┐     ┌────────────┐
@@ -393,6 +393,48 @@ pendiente → confirmada → parcial_recibida → recibida → facturada → pag
       │                   │ 4. Seleccionar   │
       │                   │ y crear Orden    │
       │                   │─────────────────>│
+```
+
+### Flujo de Auto-Cotización (Basado en Catálogos) ⭐ NUEVO
+
+```
+┌────────────┐     ┌────────────┐     ┌───────────────┐    ┌────────────┐
+│   Área     │     │Adquisiciones│    │  Auto-Sistema │    │ Proveedor  │
+└─────┬──────┘     └──────┬─────┘     └───────┬───────┘    └──────┬─────┘
+      │                   │                    │                   │
+      │ 1. Crear          │                    │                   │
+      │ Solicitud         │                    │                   │
+      │──────────────────>│                    │                   │
+      │                   │                    │                   │
+      │                   │ 2. Clic: "Buscar   │                   │
+      │                   │ en Catálogos"      │                   │
+      │                   │───────────────────>│                   │
+      │                   │                    │                   │
+      │                   │                    │ 3. Buscar en      │
+      │                   │                    │ catálogos de      │
+      │                   │                    │ proveedores       │
+      │                   │                    │ (COG + matching)  │
+      │                   │                    │                   │
+      │                   │                    │ 4. Crear          │
+      │                   │<───────────────────┤ cotizaciones      │
+      │                   │ Cotizaciones       │ automáticamente   │
+      │                   │ automáticas        │                   │
+      │                   │                    │                   │
+      │                   │ 5. Comparar        │                   │
+      │                   │ cotizaciones       │                   │
+      │                   │ lado a lado        │                   │
+      │                   │                    │                   │
+      │                   │ 6. Seleccionar     │                   │
+      │                   │ ganador y crear    │                   │
+      │                   │ Orden              │                   │
+      │                   │────────────────────────────────────────>│
+```
+
+**Ventajas del flujo automático:**
+- No es necesario enviar cotizaciones por email
+- Los precios se obtienen automáticamente del catálogo del proveedor
+- Se genera una vista comparativa para elegir la mejor opción
+- Más rápido y eficiente
       │                   │                  │
       │                   │                  │ 5. Confirmar
       │                   │<─────────────────│

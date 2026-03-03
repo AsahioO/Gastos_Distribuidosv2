@@ -12,6 +12,7 @@
 8. [Procesamiento CFDI](#8-procesamiento-cfdi)
 9. [Seguridad](#9-seguridad)
 10. [Despliegue](#10-despliegue)
+11. [Catálogo de Productos y Auto-Cotización](#11-catálogo-de-productos-y-auto-cotización)
 
 ---
 
@@ -828,6 +829,350 @@ AWS_STORAGE_BUCKET_NAME=gastos-media
 
 # Frontend (.env)
 VITE_API_URL=https://api.dominio.com/api
+```
+
+---
+
+## 11. Catálogo de Productos y Auto-Cotización
+
+### 11.1 Descripción General
+
+El sistema de catálogo permite a los **proveedores** registrar sus productos con precios unitarios. Cuando una solicitud de material se crea, el sistema **busca automáticamente** en los catálogos de los proveedores para encontrar coincidencias y generar cotizaciones automáticas.
+
+Este feature acelera el proceso de cotización eliminando la necesidad de enviar emails y esperando respuestas.
+
+### 11.2 Modelo de Datos Backend
+
+#### ProductoProveedor
+
+**Ubicación:** `backend/apps/companies/models.py`
+
+```python
+class ProductoProveedor(models.Model):
+    proveedor = models.ForeignKey(
+        Proveedor, 
+        on_delete=models.CASCADE,
+        related_name='productos'
+    )
+    cog = models.ForeignKey(
+        Cog,
+        on_delete=models.PROTECT,
+        related_name='productos_proveedor'
+    )
+    nombre = models.CharField(max_length=255)
+    descripcion = models.TextField(blank=True)
+    unidad = models.CharField(max_length=50)  # "Resma", "Caja", "Kg", etc.
+    precio_unitario = models.DecimalField(max_digits=15, decimal_places=2)
+    marca = models.CharField(max_length=100, blank=True)
+    modelo = models.CharField(max_length=100, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['proveedor', 'nombre', 'unidad'],
+                name='unique_producto_proveedor'
+            )
+        ]
+```
+
+**Relaciones:**
+- FK a `Proveedor` (CASCADE) — Si se elimina un proveedor, se eliminan sus productos
+- FK a `Cog` (PROTECT) — No se puede eliminar un COG si tiene productos
+
+**Restricción única:** No puede haber dos productos iguales (mismo nombre y unidad) del mismo proveedor.
+
+### 11.3 Servicios Backend
+
+#### quotations/services.py
+
+```python
+def buscar_producto_para_detalle(detalle, proveedor):
+    """
+    Busca un producto en el catálogo del proveedor que coincida con un 
+    DetalleMaterial de una solicitud.
+    
+    Algoritmo de matching:
+    1. Filtra productos del COG especificado
+    2. Calcula score textual basado en palabras clave coincidentes
+    3. Suma +2 puntos si la unidad coincide exactamente
+    4. Si no hay match exacto, devuelve el primero del COG
+    
+    Args:
+        detalle: DetalleMaterial instance
+        proveedor: Proveedor instance
+    
+    Returns:
+        ProductoProveedor o None
+    """
+```
+
+```python
+def generar_cotizaciones_automaticas(solicitud):
+    """
+    Busca proveedores cuyos catálogos tengan productos para TODOS los 
+    ítems de una solicitud y crea cotizaciones automáticas.
+    
+    Flujo:
+    1. Obtiene todos los proveedores activos con productos
+    2. Por cada proveedor, intenta encontrar un producto para cada detalle
+    3. Solo crea cotización si la cobertura es 100%
+    4. Verifica que no exista cotización previa para ese (solicitud, proveedor)
+    5. Retorna resumen de cotizaciones creadas y proveedores con cobertura parcial
+    
+    Args:
+        solicitud: SolicitudMaterial instance
+    
+    Returns:
+        dict with keys:
+        - cotizaciones_creadas: int
+        - cotizaciones_ids: [int, ...]
+        - proveedores_parciales: [dict, ...] (nombre, productos_encontrados)
+        - sin_cobertura: [str, ...] (nombres de proveedores)
+    """
+```
+
+### 11.4 ViewSets y Acciones
+
+#### ProductoProveedorViewSet (companies/views.py)
+
+**Permisos:**
+- Proveedores ven/editan solo sus productos
+- Admin y tesorería ven todos
+
+**Acciones:**
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/catalogo-productos/` | Listar productos (con filtros) |
+| POST | `/catalogo-productos/` | Crear producto |
+| PATCH | `/catalogo-productos/{id}/` | Actualizar producto |
+| DELETE | `/catalogo-productos/{id}/` | Eliminar producto |
+| POST | `/catalogo-productos/upload_csv/` | Carga masiva CSV |
+
+**Filtros disponibles:**
+- `search`: por nombre o descripción (búsqueda de texto)
+- `cog`: por COG específico
+- `proveedor`: (admin only) por proveedor
+- `active_only`: (default: true) solo activos
+
+**Upload CSV:**
+- Columnas esperadas: `cog_codigo, nombre, descripcion, unidad, precio_unitario, marca, modelo`
+- Usa `update_or_create` sobre (proveedor, nombre, unidad)
+- Retorna resumen: creados, actualizados, errores por fila
+
+#### SolicitudMaterialViewSet (procurement/views.py)
+
+**Nueva acción:** `buscar_cotizaciones_catalogo`
+
+```python
+@action(detail=True, methods=['post'])
+def buscar_cotizaciones_catalogo(self, request, pk=None):
+    """
+    POST /solicitudes/{id}/buscar_cotizaciones_catalogo/
+    
+    Requiere:
+    - Usuario: admin o adquisiciones
+    - Solicitud: estado en_cotizacion o cotizado
+    
+    Retorna:
+    {
+        "cotizaciones_creadas": 2,
+        "cotizaciones_ids": [15, 16],
+        "proveedores_parciales": [
+            {"nombre": "Proveedor X", "productos_encontrados": 2, "total_items": 3}
+        ],
+        "sin_cobertura": ["Proveedor Y"]
+    }
+    """
+```
+
+#### CotizacionMaterialViewSet (quotations/views.py)
+
+**Nueva acción:** `comparar`
+
+```python
+@action(detail=False, methods=['get'])
+def comparar(self, request, *args, **kwargs):
+    """
+    GET /cotizaciones/comparar/{solicitud_id}/
+    
+    Retorna:
+    {
+        "solicitud": {...},
+        "items": [...],  # Items de la solicitud
+        "proveedores": [...],  # Proveedores con cotizaciones
+        "comparativa": [
+            [  # Por cada item (fila)
+                {"precio_unitario": 85.50, "subtotal": 256.50, ...},  # Por cada proveedor (columna)
+                ...
+            ],
+            ...
+        ],
+        "mejores_precios": [0, 1, 0]  # Índice del proveedor con mejor precio por ítem
+    }
+    """
+```
+
+### 11.5 Frontend
+
+#### Services
+
+**catalogoProveedorService.ts** — CRUD del catálogo
+```typescript
+export const catalogoProveedorService = {
+  getProductos(filters?: Filter): Promise<PaginatedResponse<ProductoProveedor>>
+  getProducto(id: number): Promise<ProductoProveedor>
+  createProducto(data: CreateProductoData): Promise<ProductoProveedor>
+  updateProducto(id: number, data: Partial<CreateProductoData>): Promise<ProductoProveedor>
+  deleteProducto(id: number): Promise<void>
+  uploadCsv(file: File): Promise<CsvUploadResult>
+}
+```
+
+**procurementService.ts** — Búsqueda de catálogos
+```typescript
+budgetService = {
+  buscarCotizacionesCatalogo(id: number): Promise<AutoQuotationResult>
+}
+```
+
+**quotationService.ts** — Comparativa
+```typescript
+quotationService = {
+  getComparativa(solicitudId: number): Promise<ComparativaData>
+}
+```
+
+#### Páginas
+
+**CatalogoProveedorPage.tsx** (`pages/proveedor/CatalogoProveedorPage.tsx`)
+- Tabla de productos con búsqueda
+- Modal de formulario para agregar/editar
+- Modal de carga CSV con descarga de plantilla
+- Modal de confirmación para eliminar
+- Validación de precios > 0
+
+**ComparativaCotizacionesPage.tsx** (`pages/quotations/ComparativaCotizacionesPage.tsx`)
+- Tarjetas resumen de proveedores (nombre, total, estado, botón seleccionar)
+- Tabla comparativa: filas = productos, columnas = proveedores
+- Precios en verde para resaltar el mejor
+- Botones para ver detalle de cotización
+- Botón para seleccionar ganador
+
+### 11.6 Flujo de Usuario
+
+#### 1️⃣ Proveedor carga catálogo
+
+```
+Proveedor
+   ↓
+ Login → Mi Catálogo → Agregar/Cargar CSV
+   ↓
+ Sistema valida y guarda
+   ↓
+ Catálogo disponible para búsquedas automáticas
+```
+
+#### 2️⃣ Sistema busca en catálogos
+
+```
+Adquisiciones
+   ↓
+Solicitud en estado "En Cotización" → Click "Buscar en Catálogos"
+   ↓
+Sistema ejecuta generar_cotizaciones_automaticas()
+   ↓
+Búsqueda por COG + matching textual
+   ↓
+Si proveedor cubre 100% → Crea cotización automática
+   ↓
+Toast muestra resumen (creadas, parciales, sin cobertura)
+```
+
+#### 3️⃣ Comparar y seleccionar
+
+```
+Adquisiciones
+   ↓
+Click "Ver Comparativa"
+   ↓
+Tabla lado-a-lado con todos los proveedores
+   ↓
+Ve precios en verde (mejores)
+   ↓
+Clickea "Seleccionar" para elegir ganador
+   ↓
+Cotización marcada como "seleccionada"
+   ↓
+Puede generar Orden de Compra
+```
+
+### 11.7 Permiso y Roles
+
+**Catálogo propio (CRUD):**
+- ✅ Proveedor — su catálogo solamente
+- ❌ Área, Adquisiciones, Tesorería, Almacén — no acceso
+
+**Buscar en catálogos:**
+- ✅ Admin, Adquisiciones
+- ❌ Otros
+
+**Ver comparativa:**
+- ✅ Admin, Adquisiciones, Tesorería
+- ❌ Otros
+
+### 11.8 Detalles de Implementación
+
+#### Algoritmo de Matching de Productos
+
+```python
+# Búsqueda en catálogo del proveedor
+productos_cog = ProductoProveedor.objects.filter(
+    proveedor=proveedor,
+    cog=detalle.cog,
+    is_active=True
+)
+
+# Scoring textual
+def calcular_score(producto, detalle):
+    score = 0
+    keywords_detalle = set(
+        detalle.concepto.lower().split() +
+        detalle.descripcion.lower().split()
+    )
+    
+    keywords_producto = set(
+        producto.nombre.lower().split() +
+        producto.descripcion.lower().split()
+    )
+    
+    score = len(keywords_detalle & keywords_producto)
+    
+    # Bonus si unidad coincide
+    if producto.unidad == detalle.unidad:
+        score += 2
+    
+    return score
+
+# Fallback
+if not best_match:
+    return productos_cog.first()  # Cualquier producto del COG
+```
+
+#### Matriz de Comparativa
+
+```
+comparativa[item_idx][proveedor_idx] = {
+    "precio_unitario": 85.50,
+    "subtotal": item.cantidad * 85.50,
+    "concepto": "Papel Bond",
+    "tiene_precio": True
+}
+
+mejores_precios[item_idx] = proveedor_idx_con_mejor_precio
 ```
 
 ---

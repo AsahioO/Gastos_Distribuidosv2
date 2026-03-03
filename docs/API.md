@@ -185,7 +185,124 @@ POST /companies/proveedores/{id}/suspend/
 
 ---
 
-### 📦 Catálogo de Productos (COGs)
+### �️ Catálogo de Productos de Proveedor
+
+**Endpoint:** `/companies/catalogo-productos/`
+
+Permite a los proveedores gestionar su catálogo de productos con precios unitarios. El sistema usa este catálogo para generar automáticamente cotizaciones cuando se solicitan productos que coincidan con los COGs registrados.
+
+#### Listar productos del catálogo
+```http
+GET /companies/catalogo-productos/?search=papel&cog=1
+Authorization: Bearer <token>
+```
+
+**Query Parameters:**
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| search | string | Buscar por nombre o descripción |
+| cog | integer | Filtrar por COG (Código de Gasto) |
+| proveedor | integer | Filtrar por proveedor (admin) |
+| active_only | boolean | Mostrar solo productos activos (default: true) |
+
+**Respuesta (200):**
+```json
+{
+  "count": 5,
+  "results": [
+    {
+      "id": 1,
+      "proveedor_id": 3,
+      "proveedor_nombre": "Papelería ABC",
+      "cog_id": 12,
+      "cog_codigo": "COG-0101-001",
+      "cog_descripcion": "Papel y papelería",
+      "nombre": "Papel Bond Blanco 80gr",
+      "descripcion": "Hojas blancas de alta calidad",
+      "unidad": "Resma",
+      "precio_unitario": "85.50",
+      "marca": "Copamex",
+      "modelo": "A4",
+      "is_active": true,
+      "created_at": "2026-03-01T10:30:00Z",
+      "updated_at": "2026-03-01T10:30:00Z"
+    }
+  ]
+}
+```
+
+#### Crear producto
+```http
+POST /companies/catalogo-productos/
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "cog": 12,
+  "nombre": "Papel Bond Blanco 80gr",
+  "descripcion": "Hojas blancas de alta calidad",
+  "unidad": "Resma",
+  "precio_unitario": "85.50",
+  "marca": "Copamex",
+  "modelo": "A4"
+}
+```
+
+**Respuesta (201):** Objeto producto creado.
+
+#### Actualizar producto
+```http
+PATCH /companies/catalogo-productos/{id}/
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "precio_unitario": "87.00"
+}
+```
+
+#### Eliminar producto
+```http
+DELETE /companies/catalogo-productos/{id}/
+Authorization: Bearer <token>
+```
+
+#### Cargar productos desde CSV
+```http
+POST /companies/catalogo-productos/upload_csv/
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+file: <archivo CSV>
+```
+
+**Formato del CSV:**
+```csv
+cog_codigo,nombre,descripcion,unidad,precio_unitario,marca,modelo
+COG-0101-001,Papel Bond Blanco 80gr,Hojas blancas de alta calidad,Resma,85.50,Copamex,A4
+COG-0101-002,Papel Bond Blanco 90gr,Hojas blancas premium,Resma,95.00,Copamex,A4
+```
+
+**Respuesta (200):**
+```json
+{
+  "created": 2,
+  "updated": 1,
+  "errors": [
+    {
+      "row": 3,
+      "error": "COG no existe"
+    }
+  ]
+}
+```
+
+> [!NOTE]
+> Los proveedores solo pueden ver y editar sus propios productos. El admin/tesorería pueden ver todos.
+
+---
+
+### �📦 Catálogo de Productos (COGs)
 
 #### Listar productos
 ```http
