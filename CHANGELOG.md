@@ -23,12 +23,99 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - Excepción separada para `ValidationError` en bloque except
 - Desactivada mediante comentario para evaluación posterior
 
+### 📦 Catálogo de Productos y Auto-Cotización
+
+#### Backend - Modelos
+- **Agregado** Nuevo modelo `ProductoProveedor` en `apps/companies/models.py`
+  - FK a `Proveedor` (CASCADE) y `Cog` (PROTECT)
+  - Campos: nombre, descripción, unidad, precio_unitario, marca, modelo, is_active
+  - Restricción única: (proveedor, nombre, unidad)
+- **Migración** `0003_productoproveedor_and_more` aplicada exitosamente
+
+#### Backend - Servicios
+- **Agregado** Módulo `apps/quotations/services.py` con auto-cotización:
+  - `buscar_producto_para_detalle(detalle, proveedor)` - Matching inteligente por COG + scoring textual
+  - `generar_cotizaciones_automaticas(solicitud)` - Crea cotizaciones para proveedores con cobertura 100%
+- **Agregado** Acción `buscar_cotizaciones_catalogo` en `SolicitudMaterialViewSet`
+  - POST `/api/procurement/solicitudes/{id}/buscar_cotizaciones_catalogo/`
+  - Requiere: admin/adquisiciones, solicitud en en_cotización/cotizado
+- **Agregado** Acción `comparar` en `CotizacionMaterialViewSet`
+  - GET `/api/quotations/cotizaciones/comparar/{solicitud_id}/`
+  - Retorna matriz de comparación items × proveedores con mejores precios
+
+#### Backend - ViewSets & API
+- **Agregado** `ProductoProveedorViewSet` en `apps/companies/views.py`
+  - CRUD completo: GET, POST, PATCH, DELETE
+  - Acción `upload_csv` para carga masiva de productos
+  - Filtros: search, cog, proveedor (admin), active_only
+  - Serializers duales: read (con nombres) y write (nested)
+- **Agregado** Rutas en `apps/companies/urls.py`: `catalogo-productos`
+- **Agregado** Admin `ProductoProveedorAdmin` en `apps/companies/admin.py`
+
+#### Frontend - Services
+- **Agregado** `services/catalogoProveedorService.ts` - CRUD + CSV upload
+  - Métodos: getProductos, getProducto, createProducto, updateProducto, deleteProducto, uploadCsv
+  - Soporta paginación y filtros (search, cog, proveedor)
+- **Mejorado** `services/procurementService.ts`
+  - Nuevo método: `buscarCotizacionesCatalogo(id)`
+- **Mejorado** `services/quotationService.ts`
+  - Nuevas interfaces: `ComparativaData`, `ComparativaCelda`, `ComparativaItem`, `ComparativaProveedor`
+  - Nuevo método: `getComparativa(solicitudId)`
+
+#### Frontend - Páginas
+- **Agregado** `pages/proveedor/CatalogoProveedorPage.tsx` - Portal catálogo de proveedores
+  - Tabla con búsqueda, edición y eliminación
+  - Modal para agregar/editar productos con CogCombobox
+  - Modal para carga CSV con descarga de plantilla
+  - Modal de confirmación para eliminación
+  - Validación de precios > 0
+  - Acceso: `/portal/catalogo` (solo proveedores)
+- **Agregado** `pages/quotations/ComparativaCotizacionesPage.tsx` - Vista comparativa
+  - Tarjetas resumen de proveedores (nombre, total, estado, acción)
+  - Tabla comparativa items × proveedores con scroll horizontal
+  - Precios resaltados en verde (mejores) por ítem
+  - Botón "Seleccionar" para elegir cotización ganadora
+  - Links a detalle de cotización
+  - Acceso: `/cotizaciones/comparar/:solicitudId` (admin/adquisiciones/tesorería)
+
+#### Frontend - Componentes & UI
+- **Mejorado** `pages/procurement/SolicitudDetailPage.tsx`
+  - Nuevo botón "Buscar en Catálogos" (MagnifyingGlassIcon, variant secondary)
+  - Nuevo botón "Ver Comparativa" (TableCellsIcon)
+  - Ambos visibles cuando: estado en_cotización/cotizado, rol admin/adquisiciones
+  - Manejo de loading y errores con toast
+- **Mejorado** `layouts/MainLayout.tsx`
+  - Nuevo item en sidebar proveedor: "Mi Catálogo" (ArchiveBoxIcon)
+  - Link a `/portal/catalogo`
+
+#### Frontend - Routing
+- **Mejorado** `App.tsx`
+  - Nueva ruta: `/portal/catalogo` → `CatalogoProveedorPage` (ProtectedRoute: proveedor)
+  - Nueva ruta: `/cotizaciones/comparar/:solicitudId` → `ComparativaCotizacionesPage` (ProtectedRoute: admin/adquisiciones/tesorería)
+
+#### Documentación
+- **Agregado** Sección 11 en `DOCUMENTACION_TECNICA.md` - Detalles técnicos del catálogo
+- **Agregado** Subsección "Mi Catálogo" en `MANUAL_USUARIO.md` - Guía para proveedores
+- **Agregado** Sección "Catálogo de Productos de Proveedor" en `API.md` - Endpoints y ejemplos
+- **Agregado** Flujo "Auto-Cotización" en `ARCHITECTURE.md` - Diagramas de flujo comparativo
+- **Agregado** `FEATURE_CATALOGO_PROVEEDORES.md` - Resumen ejecutivo y guía de testing
+
+#### Testing
+- Proveedores pueden cargar productos manual o vía CSV
+- Sistema busca automáticamente en catálogos basado en COG + matching textual
+- Vista comparativa muestra todos los proveedores con cobertura 100%
+- Precios resaltados correctamente (verde = mejor)
+- Selección de ganador funciona correctamente
+
 ### Por Implementar
 - Fase 10: Notificaciones en tiempo real
 - Fase 11: Autorizaciones y firmas digitales
 - Fase 12: Documentos adjuntos
 - Fase 13: Configuración del sistema
 - Sistema de plantillas personalizables para generación de PDFs
+- Webhooks para sincronización de catálogos en tiempo real
+- Historial de cambios de precios en catálogos
+- Alertas cuando proveedor baja su precio
 
 ---
 
