@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Company, Proveedor
+from .models import Company, Proveedor, ProductoProveedor
 
 
 @admin.register(Company)
@@ -36,3 +36,12 @@ class ProveedorAdmin(admin.ModelAdmin):
     list_filter = ['estado', 'created_at']
     search_fields = ['razon_social', 'rfc', 'contacto_nombre', 'contacto_email']
     readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(ProductoProveedor)
+class ProductoProveedorAdmin(admin.ModelAdmin):
+    list_display = ['nombre', 'proveedor', 'cog', 'unidad', 'precio_unitario', 'is_active', 'updated_at']
+    list_filter = ['is_active', 'proveedor', 'cog']
+    search_fields = ['nombre', 'descripcion', 'marca', 'proveedor__razon_social', 'cog__codigo']
+    readonly_fields = ['created_at', 'updated_at']
+    raw_id_fields = ['proveedor', 'cog']

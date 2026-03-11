@@ -288,10 +288,17 @@ export default function CotizacionDetailPage() {
               </Button>
             )}
 
-            {canCreateOrder && (
+            {canCreateOrder && !cotizacion.tiene_orden && (
               <Button onClick={handleCreateOrder}>
                 <ShoppingCartIcon className="h-5 w-5 mr-2" />
                 Generar Orden de Compra
+              </Button>
+            )}
+
+            {cotizacion.tiene_orden && cotizacion.estado === 'seleccionada' && (
+              <Button variant="secondary" disabled>
+                <CheckCircleIcon className="h-5 w-5 mr-2" />
+                Orden ya generada
               </Button>
             )}
           </div>

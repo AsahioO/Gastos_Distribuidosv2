@@ -136,3 +136,54 @@ class Proveedor(models.Model):
 
     def __str__(self):
         return self.razon_social
+
+
+class ProductoProveedor(models.Model):
+    """
+    Catálogo de productos/servicios que ofrece un proveedor con sus precios.
+    Permite generar cotizaciones automáticas al cruzar con solicitudes de material.
+    """
+
+    proveedor = models.ForeignKey(
+        Proveedor,
+        on_delete=models.CASCADE,
+        related_name='productos',
+        verbose_name='Proveedor'
+    )
+    cog = models.ForeignKey(
+        'procurement.Cog',
+        on_delete=models.PROTECT,
+        related_name='productos_proveedor',
+        verbose_name='COG'
+    )
+
+    # Producto
+    nombre = models.CharField(max_length=500, verbose_name='Nombre del producto/servicio')
+    descripcion = models.TextField(blank=True, verbose_name='Descripción')
+    unidad = models.CharField(max_length=50, verbose_name='Unidad de medida')
+    precio_unitario = models.DecimalField(
+        max_digits=15, decimal_places=2, verbose_name='Precio unitario'
+    )
+    marca = models.CharField(max_length=255, blank=True, verbose_name='Marca')
+    modelo = models.CharField(max_length=255, blank=True, verbose_name='Modelo')
+
+    # Estado
+    is_active = models.BooleanField(default=True, verbose_name='Activo')
+
+    # Auditoría
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Fecha de actualización')
+
+    class Meta:
+        verbose_name = 'Producto de Proveedor'
+        verbose_name_plural = 'Productos de Proveedores'
+        ordering = ['nombre']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['proveedor', 'nombre', 'unidad'],
+                name='unique_producto_proveedor'
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.nombre} - {self.proveedor.razon_social} (${self.precio_unitario})"

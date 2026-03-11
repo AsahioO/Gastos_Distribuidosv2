@@ -17,6 +17,10 @@ class CotizacionMaterialSerializer(serializers.ModelSerializer):
     solicitud_numero = serializers.CharField(source='solicitud.numero', read_only=True)
     detalles = CotizacionDetalleSerializer(many=True, read_only=True)
     estado_display = serializers.CharField(source='get_estado_display', read_only=True)
+    tiene_orden = serializers.SerializerMethodField()
+
+    def get_tiene_orden(self, obj):
+        return obj.ordenes_compra.exists()
     
     class Meta:
         model = CotizacionMaterial
@@ -25,7 +29,7 @@ class CotizacionMaterialSerializer(serializers.ModelSerializer):
             'proveedor', 'proveedor_nombre', 'fecha', 'vigencia',
             'subtotal', 'iva', 'total', 'tiempo_entrega',
             'condiciones_pago', 'notas', 'estado', 'estado_display',
-            'documento', 'detalles', 'created_at', 'updated_at'
+            'documento', 'detalles', 'tiene_orden', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'numero', 'subtotal', 'iva', 'total', 'created_at', 'updated_at']
 

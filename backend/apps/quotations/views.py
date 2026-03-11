@@ -126,3 +126,119 @@ class CotizacionMaterialViewSet(viewsets.ModelViewSet):
         cotizacion.solicitud.save()
         
         return Response(OrdenCompraSerializer(orden).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['get'], url_path='comparar/(?P<solicitud_id>[^/.]+)')
+    def comparar(self, request, solicitud_id=None):
+        """
+        Vista comparativa de cotizaciones para una solicitud.
+        Retorna estructura: { solicitud, items[], proveedores[], comparativa[][] }
+        donde comparativa[item_idx][prov_idx] = { precio_unitario, subtotal, producto }
+        """
+        from apps.procurement.models import SolicitudMaterial
+
+        try:
+            solicitud = SolicitudMaterial.objects.get(id=solicitud_id)
+        except SolicitudMaterial.DoesNotExist:
+            return Response(
+                {'error': 'Solicitud no encontrada.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        detalles = list(solicitud.detalles.select_related('cog').all())
+        cotizaciones = CotizacionMaterial.objects.filter(
+            solicitud=solicitud,
+        ).exclude(
+            estado=CotizacionMaterial.EstadoChoices.RECHAZADA,
+        ).select_related('proveedor').prefetch_related('detalles__detalle_material')
+
+        if not cotizaciones.exists():
+            return Response({
+                'solicitud': {
+                    'id': solicitud.id,
+                    'numero': solicitud.numero,
+                    'descripcion': solicitud.descripcion,
+                },
+                'items': [],
+                'proveedores': [],
+                'comparativa': [],
+                'mejores_precios': [],
+            })
+
+        # Mapear ítems de la solicitud
+        items = []
+        for d in detalles:
+            items.append({
+                'id': d.id,
+                'concepto': d.concepto,
+                'cantidad': str(d.cantidad),
+                'unidad': d.unidad,
+                'cog_codigo': d.cog.codigo,
+                'precio_estimado': str(d.precio_estimado),
+            })
+
+        # Mapear proveedores
+        proveedores = []
+        for cot in cotizaciones:
+            proveedores.append({
+                'id': cot.proveedor.id,
+                'nombre': cot.proveedor.razon_social,
+                'cotizacion_id': cot.id,
+                'cotizacion_numero': cot.numero,
+                'estado': cot.estado,
+                'total': str(cot.total),
+            })
+
+        # Construir matriz comparativa
+        comparativa = []
+        mejores_precios = []
+
+        for detalle in detalles:
+            fila = []
+            precios_fila = []
+
+            for cot in cotizaciones:
+                # Buscar el detalle de cotización que corresponde a este detalle de solicitud
+                cot_detalle = cot.detalles.filter(detalle_material=detalle).first()
+
+                if cot_detalle:
+                    celda = {
+                        'precio_unitario': str(cot_detalle.precio_unitario),
+                        'subtotal': str(cot_detalle.subtotal),
+                        'concepto': cot_detalle.concepto,
+                        'tiene_precio': True,
+                    }
+                    precios_fila.append(cot_detalle.precio_unitario)
+                else:
+                    celda = {
+                        'precio_unitario': None,
+                        'subtotal': None,
+                        'concepto': None,
+                        'tiene_precio': False,
+                    }
+
+                fila.append(celda)
+
+            comparativa.append(fila)
+
+            # Determinar mejor precio de la fila
+            if precios_fila:
+                min_precio = min(precios_fila)
+                mejor_idx = next(
+                    i for i, c in enumerate(fila)
+                    if c['tiene_precio'] and c['precio_unitario'] == str(min_precio)
+                )
+                mejores_precios.append(mejor_idx)
+            else:
+                mejores_precios.append(None)
+
+        return Response({
+            'solicitud': {
+                'id': solicitud.id,
+                'numero': solicitud.numero,
+                'descripcion': solicitud.descripcion,
+            },
+            'items': items,
+            'proveedores': proveedores,
+            'comparativa': comparativa,
+            'mejores_precios': mejores_precios,
+        })

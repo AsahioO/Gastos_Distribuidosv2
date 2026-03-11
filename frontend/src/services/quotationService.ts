@@ -39,6 +39,7 @@ export interface Cotizacion {
   estado_display: string
   documento: string | null
   detalles: CotizacionDetalle[]
+  tiene_orden?: boolean
   created_at: string
   updated_at: string
 }
@@ -60,6 +61,43 @@ export interface CreateCotizacionData {
     precio_unitario: number
     subtotal?: number
   }[]
+}
+
+export interface ComparativaCelda {
+  precio_unitario: string | null
+  subtotal: string | null
+  concepto: string | null
+  tiene_precio: boolean
+}
+
+export interface ComparativaItem {
+  id: number
+  concepto: string
+  cantidad: string
+  unidad: string
+  cog_codigo: string
+  precio_estimado: string
+}
+
+export interface ComparativaProveedor {
+  id: number
+  nombre: string
+  cotizacion_id: number
+  cotizacion_numero: string
+  estado: string
+  total: string
+}
+
+export interface ComparativaData {
+  solicitud: {
+    id: number
+    numero: string
+    descripcion: string
+  }
+  items: ComparativaItem[]
+  proveedores: ComparativaProveedor[]
+  comparativa: ComparativaCelda[][]
+  mejores_precios: (number | null)[]
 }
 
 // Helper para manejar respuestas paginadas o arrays directos
@@ -115,6 +153,12 @@ export const quotationService = {
 
   getProveedor: async (id: number): Promise<Proveedor> => {
     const response = await api.get(`/companies/proveedores/${id}/`)
+    return response.data
+  },
+
+  // Comparativa de cotizaciones por solicitud
+  getComparativa: async (solicitudId: number): Promise<ComparativaData> => {
+    const response = await api.get(`/quotations/cotizaciones/comparar/${solicitudId}/`)
     return response.data
   },
 }

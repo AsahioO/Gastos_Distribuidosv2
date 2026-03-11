@@ -158,6 +158,40 @@ class SolicitudMaterialViewSet(viewsets.ModelViewSet):
         
         return Response(SolicitudMaterialSerializer(solicitud).data)
 
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def buscar_cotizaciones_catalogo(self, request, pk=None):
+        """
+        Busca en los catálogos de proveedores y genera cotizaciones automáticas.
+        Solo para adquisiciones o admin. La solicitud debe estar en_cotizacion.
+        """
+        solicitud = self.get_object()
+        user = request.user
+
+        if not (user.is_admin or user.is_adquisiciones):
+            return Response(
+                {'error': 'No tiene permisos para realizar esta acción.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if solicitud.estado not in [
+            SolicitudMaterial.EstadoChoices.EN_COTIZACION,
+            SolicitudMaterial.EstadoChoices.COTIZADO,
+        ]:
+            return Response(
+                {'error': 'La solicitud debe estar en cotización para buscar en catálogos.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        from apps.quotations.services import generar_cotizaciones_automaticas
+        resultado = generar_cotizaciones_automaticas(solicitud)
+
+        return Response({
+            'cotizaciones_creadas': len(resultado['cotizaciones_creadas']),
+            'cotizaciones_ids': [c.id for c in resultado['cotizaciones_creadas']],
+            'proveedores_parciales': resultado['proveedores_parciales'],
+            'sin_cobertura': resultado['sin_cobertura'],
+        })
+
 
 class DetalleMaterialViewSet(viewsets.ModelViewSet):
     queryset = DetalleMaterial.objects.select_related('solicitud', 'cog')

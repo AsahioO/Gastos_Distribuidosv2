@@ -17,6 +17,7 @@ import {
   ChartBarIcon,
   DocumentPlusIcon,
   BoltIcon,
+  ArchiveBoxIcon,
 } from '@heroicons/react/24/outline'
 
 interface NavItem {
@@ -59,6 +60,7 @@ const navigation: NavItem[] = [
 // Navegación para proveedores
 const proveedorNavigation: NavItem[] = [
   { name: 'Mi Portal', href: '/portal', icon: HomeIcon },
+  { name: 'Mi Catálogo', href: '/portal/catalogo', icon: ArchiveBoxIcon },
   { name: 'Cotizar', href: '/portal/cotizar', icon: DocumentPlusIcon },
   { name: 'Mis Cotizaciones', href: '/portal/cotizaciones', icon: ClipboardDocumentListIcon },
   { name: 'Mis Órdenes', href: '/portal/ordenes', icon: ShoppingCartIcon },

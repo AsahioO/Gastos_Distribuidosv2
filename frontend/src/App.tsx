@@ -14,6 +14,7 @@ import SolicitudDetailPage from '@/pages/procurement/SolicitudDetailPage'
 import CotizacionesPage from '@/pages/quotations/CotizacionesPage'
 import CotizacionFormPage from '@/pages/quotations/CotizacionFormPage'
 import CotizacionDetailPage from '@/pages/quotations/CotizacionDetailPage'
+import ComparativaCotizacionesPage from '@/pages/quotations/ComparativaCotizacionesPage'
 import OrdenesPage from '@/pages/orders/OrdenesPage'
 import OrdenFormPage from '@/pages/orders/OrdenFormPage'
 import OrdenDetailPage from '@/pages/orders/OrdenDetailPage'
@@ -37,6 +38,7 @@ import NuevaCotizacionPage from '@/pages/proveedor/NuevaCotizacionPage'
 import MisCotizacionesPage from '@/pages/proveedor/MisCotizacionesPage'
 import MisOrdenesPage from '@/pages/proveedor/MisOrdenesPage'
 import MisFacturasPage from '@/pages/proveedor/MisFacturasPage'
+import CatalogoProveedorPage from '@/pages/proveedor/CatalogoProveedorPage'
 import LandingPage from '@/pages/landing/LandingPage'
 import ProfilePage from '@/pages/profile/ProfilePage'
 
@@ -128,6 +130,11 @@ function App() {
             <MisFacturasPage />
           </ProtectedRoute>
         } />
+        <Route path="/portal/catalogo" element={
+          <ProtectedRoute allowedRoles={['proveedor']}>
+            <CatalogoProveedorPage />
+          </ProtectedRoute>
+        } />
 
         {/* Admin routes */}
         <Route path="/usuarios" element={
@@ -187,6 +194,11 @@ function App() {
         <Route path="/cotizaciones/:id/editar" element={
           <ProtectedRoute allowedRoles={['admin', 'adquisiciones']}>
             <CotizacionFormPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/cotizaciones/comparar/:solicitudId" element={
+          <ProtectedRoute allowedRoles={['admin', 'adquisiciones', 'tesoreria']}>
+            <ComparativaCotizacionesPage />
           </ProtectedRoute>
         } />
 

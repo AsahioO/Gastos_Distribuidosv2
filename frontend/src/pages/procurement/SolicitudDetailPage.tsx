@@ -7,7 +7,9 @@ import {
   PaperAirplaneIcon,
   XCircleIcon,
   PrinterIcon,
-  DocumentArrowUpIcon
+  DocumentArrowUpIcon,
+  MagnifyingGlassIcon,
+  TableCellsIcon,
 } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui'
 import { procurementService, SolicitudMaterial } from '@/services/procurementService'
@@ -33,6 +35,7 @@ export default function SolicitudDetailPage() {
   const [solicitud, setSolicitud] = useState<SolicitudMaterial | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [buscandoCatalogo, setBuscandoCatalogo] = useState(false)
 
   // Permisos según rol
   const isArea = user?.role === 'area'
@@ -95,6 +98,28 @@ export default function SolicitudDetailPage() {
       toast.error(error.response?.data?.detail || 'Error al cancelar la solicitud')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleBuscarCatalogo = async () => {
+    if (!solicitud) return
+    setBuscandoCatalogo(true)
+    try {
+      const result = await procurementService.buscarCotizacionesCatalogo(solicitud.id)
+      if (result.cotizaciones_creadas > 0) {
+        toast.success(`Se generaron ${result.cotizaciones_creadas} cotización(es) automática(s)`)
+      } else if (result.proveedores_parciales.length > 0) {
+        const parciales = result.proveedores_parciales
+          .map(p => `${p.proveedor_nombre} (${p.items_cubiertos}/${p.items_total})`)
+          .join(', ')
+        toast(`Proveedores con cobertura parcial: ${parciales}`, { icon: '⚠️', duration: 6000 })
+      } else {
+        toast('No se encontraron coincidencias en los catálogos de proveedores.', { icon: 'ℹ️' })
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Error al buscar en catálogos')
+    } finally {
+      setBuscandoCatalogo(false)
     }
   }
 
@@ -181,6 +206,22 @@ export default function SolicitudDetailPage() {
           <Button onClick={handleEnviarACotizacion} loading={submitting}>
             <DocumentArrowUpIcon className="h-4 w-4 mr-2" />
             Enviar a Cotización
+          </Button>
+        )}
+
+        {/* Buscar en catálogos de proveedores */}
+        {['en_cotizacion', 'cotizado'].includes(solicitud.estado) && (isAdquisiciones || isAdmin) && (
+          <Button onClick={handleBuscarCatalogo} loading={buscandoCatalogo} variant="secondary">
+            <MagnifyingGlassIcon className="h-4 w-4 mr-2" />
+            Buscar en Catálogos
+          </Button>
+        )}
+
+        {/* Ver comparativa de cotizaciones */}
+        {['en_cotizacion', 'cotizado'].includes(solicitud.estado) && (isAdquisiciones || isAdmin) && (
+          <Button variant="secondary" onClick={() => navigate(`/cotizaciones/comparar/${solicitud.id}`)}>
+            <TableCellsIcon className="h-4 w-4 mr-2" />
+            Ver Comparativa
           </Button>
         )}
         

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Company, Proveedor
+from .models import Company, Proveedor, ProductoProveedor
 
 
 class CompanySerializer(serializers.ModelSerializer):
@@ -44,4 +44,38 @@ class ProveedorSignupSerializer(serializers.ModelSerializer):
         value = value.upper().strip()
         if Proveedor.objects.filter(rfc=value).exists():
             raise serializers.ValidationError("Este RFC ya está registrado.")
+        return value
+
+
+class ProductoProveedorSerializer(serializers.ModelSerializer):
+    """Serializer de lectura para productos del catálogo del proveedor."""
+    proveedor_nombre = serializers.CharField(source='proveedor.razon_social', read_only=True)
+    cog_codigo = serializers.CharField(source='cog.codigo', read_only=True)
+    cog_descripcion = serializers.CharField(source='cog.descripcion', read_only=True)
+
+    class Meta:
+        model = ProductoProveedor
+        fields = [
+            'id', 'proveedor', 'proveedor_nombre',
+            'cog', 'cog_codigo', 'cog_descripcion',
+            'nombre', 'descripcion', 'unidad', 'precio_unitario',
+            'marca', 'modelo', 'is_active',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class ProductoProveedorCreateSerializer(serializers.ModelSerializer):
+    """Serializer de escritura para productos del catálogo."""
+
+    class Meta:
+        model = ProductoProveedor
+        fields = [
+            'cog', 'nombre', 'descripcion', 'unidad',
+            'precio_unitario', 'marca', 'modelo', 'is_active'
+        ]
+
+    def validate_precio_unitario(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("El precio debe ser mayor a 0.")
         return value

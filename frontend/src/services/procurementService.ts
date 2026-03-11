@@ -119,6 +119,16 @@ export const procurementService = {
     return response.data
   },
 
+  buscarCotizacionesCatalogo: async (id: number): Promise<{
+    cotizaciones_creadas: number
+    cotizaciones_ids: number[]
+    proveedores_parciales: { proveedor_id: number; proveedor_nombre: string; items_cubiertos: number; items_total: number }[]
+    sin_cobertura: boolean
+  }> => {
+    const response = await api.post(`/procurement/solicitudes/${id}/buscar_cotizaciones_catalogo/`)
+    return response.data
+  },
+
   // COG
   getCogs: async (): Promise<Cog[]> => {
     const response = await api.get('/procurement/cog/')
