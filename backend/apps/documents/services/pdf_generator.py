@@ -1,10 +1,7 @@
-"""
-PDF Generation Service using WeasyPrint.
-"""
-
 import logging
 from io import BytesIO
 from pathlib import Path
+from django.utils import timezone
 
 from django.template import loader
 from django.conf import settings
@@ -13,6 +10,41 @@ logger = logging.getLogger(__name__)
 
 # Template directory
 TEMPLATE_DIR = Path(__file__).parent.parent / 'templates' / 'documents'
+
+
+def get_base_context():
+    """Obtiene el contexto base común para todos los PDFs (membrete, logos, etc.)"""
+    from apps.companies.models import Company
+    
+    company = Company.objects.first()
+    context = {'company': company}
+    
+    if company:
+        if company.membrete and hasattr(company.membrete, 'path'):
+            context['membrete_path'] = company.membrete.path
+        if company.logo and hasattr(company.logo, 'path'):
+            context['logo_path'] = company.logo.path
+        if company.pie_pagina and hasattr(company.pie_pagina, 'path'):
+            context['pie_path'] = company.pie_pagina.path
+            
+    return context
+
+
+def get_firmantes_context(tipo_documento):
+    """Obtiene los firmantes configurados para un tipo de documento"""
+    from apps.companies.models import FirmanteDocumento
+    
+    firmantes = FirmanteDocumento.objects.filter(tipo_documento=tipo_documento).order_by('orden')
+    firmantes_data = []
+    
+    for f in firmantes:
+        firmantes_data.append({
+            'nombre_completo': f.nombre_completo,
+            'cargo': f.cargo,
+            'sello_path': f.sello_imagen.path if f.sello_imagen and hasattr(f.sello_imagen, 'path') else None
+        })
+        
+    return firmantes_data
 
 
 def generate_pdf_from_html(html_content: str) -> bytes:
@@ -28,56 +60,16 @@ def generate_pdf_from_html(html_content: str) -> bytes:
     try:
         from weasyprint import HTML, CSS
         
-        # Base CSS for PDFs
+        # Base CSS for PDFs is now mostly inside the HTML template
+        # Just simple overrides if necessary
         base_css = CSS(string='''
             @page {
                 size: letter;
-                margin: 2cm;
-            }
-            body {
-                font-family: 'Helvetica', 'Arial', sans-serif;
-                font-size: 10pt;
-                line-height: 1.4;
-            }
-            .header {
-                text-align: center;
-                margin-bottom: 20px;
-            }
-            .title {
-                font-size: 14pt;
-                font-weight: bold;
-            }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                margin: 10px 0;
-            }
-            th, td {
-                border: 1px solid #ddd;
-                padding: 8px;
-                text-align: left;
-            }
-            th {
-                background-color: #f2f2f2;
-            }
-            .footer {
-                position: fixed;
-                bottom: 0;
-                width: 100%;
-                text-align: center;
-                font-size: 8pt;
-                color: #666;
-            }
-            .signature-line {
-                margin-top: 50px;
-                border-top: 1px solid #000;
-                width: 200px;
-                text-align: center;
-                padding-top: 5px;
+                margin: 1cm;
             }
         ''')
         
-        html = HTML(string=html_content)
+        html = HTML(string=html_content, base_url=str(settings.BASE_DIR))
         pdf_buffer = BytesIO()
         html.write_pdf(pdf_buffer, stylesheets=[base_css])
         
@@ -108,30 +100,52 @@ def render_template(template_name: str, context: dict) -> str:
 
 def generate_solicitud_pdf(solicitud) -> bytes:
     """Generate PDF for a SolicitudMaterial."""
-    context = {
+    context = get_base_context()
+    
+    # Contexto específico
+    context.update({
         'solicitud': solicitud,
         'detalles': solicitud.detalles.all(),
-    }
+        'area': solicitud.area,
+        'fecha_solicitud': solicitud.fecha_solicitud,
+        'lugar': 'Presidencia Municipal' # Consider making this dynamic later based on company
+    })
+    
+    # Firmantes
+    context['firmantes'] = get_firmantes_context('solicitud_material')
+    
     html = render_template('solicitud_material.html', context)
     return generate_pdf_from_html(html)
 
 
 def generate_orden_compra_pdf(orden) -> bytes:
     """Generate PDF for an OrdenCompra."""
-    context = {
+    context = get_base_context()
+    
+    context.update({
         'orden': orden,
         'detalles': orden.detalles.all(),
         'proveedor': orden.proveedor,
-    }
+    })
+    
+    # Firmantes
+    context['firmantes'] = get_firmantes_context('orden_compra')
+    
     html = render_template('orden_compra.html', context)
     return generate_pdf_from_html(html)
 
 
 def generate_autorizacion_pdf(autorizacion) -> bytes:
     """Generate PDF for an AutorizacionPresupuestal."""
-    context = {
+    context = get_base_context()
+    
+    context.update({
         'autorizacion': autorizacion,
         'solicitud': autorizacion.solicitud_autorizacion,
-    }
+    })
+    
+    # Firmantes
+    context['firmantes'] = get_firmantes_context('autorizacion')
+    
     html = render_template('autorizacion.html', context)
     return generate_pdf_from_html(html)

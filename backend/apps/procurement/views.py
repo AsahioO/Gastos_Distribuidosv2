@@ -130,6 +130,26 @@ class SolicitudMaterialViewSet(viewsets.ModelViewSet):
         solicitud.save()
         
         return Response(SolicitudMaterialSerializer(solicitud).data)
+        
+    @action(detail=True, methods=['get'])
+    def generar_pdf(self, request, pk=None):
+        """Genera el PDF de la solicitud de material."""
+        from django.http import HttpResponse
+        from apps.documents.services.pdf_generator import generate_solicitud_pdf
+        
+        solicitud = self.get_object()
+        
+        try:
+            pdf_bytes = generate_solicitud_pdf(solicitud)
+            
+            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="solicitud_{solicitud.numero}.pdf"'
+            return response
+        except Exception as e:
+            return Response(
+                {'error': f'Error generando PDF: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=True, methods=['post'])
     def send_to_quotation(self, request, pk=None):

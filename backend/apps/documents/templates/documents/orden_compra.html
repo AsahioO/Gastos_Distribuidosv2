@@ -1,0 +1,122 @@
+{% extends "documents/_base_documento.html" %}
+
+{% block area_administrativa %}
+    ADQUISICIONES
+{% endblock %}
+
+{% block asunto %}
+    ORDEN DE COMPRA: {{ orden.numero }}
+{% endblock %}
+
+{% block lugar_fecha %}
+    {{ orden.fecha_emision|date:'d/m/Y' }}
+{% endblock %}
+
+{% block destinatario_izq %}
+    <div class="nombre-destinatario">A: {{ orden.proveedor.razon_social }}</div>
+    <div>
+        {% if orden.proveedor.contacto_nombre %}
+            Atención: {{ orden.proveedor.contacto_nombre }}<br>
+        {% endif %}
+        {{ orden.proveedor.direccion }}
+    </div>
+{% endblock %}
+
+{% block destinatario_der %}
+    <div><strong>FECHA ENTREGA ESPERADA:</strong></div>
+    <div>{% if orden.fecha_entrega_esperada %}{{ orden.fecha_entrega_esperada|date:'d/m/Y' }}{% else %}—{% endif %}</div>
+{% endblock %}
+
+{% block cuerpo %}
+    {% if orden.cotizacion.solicitud %}
+        <p style="margin-bottom: 15px;">
+            <strong>Solicitud origen:</strong> {{ orden.cotizacion.solicitud.numero }}
+        </p>
+    {% endif %}
+
+    <div style="font-weight: bold; font-size: 9.5pt; margin-bottom: 5px;">
+        MATERIALES Y/O SERVICIOS SOLICITADOS:
+    </div>
+{% endblock %}
+
+{% block tabla_datos %}
+    <table class="datos-table">
+        <thead>
+            <tr>
+                <th style="width: 5%; text-align: center;">#</th>
+                <th style="width: 40%;">CONCEPTO</th>
+                <th style="width: 10%; text-align: center;">CANTIDAD</th>
+                <th style="width: 15%;">UNIDAD</th>
+                <th style="width: 15%; text-align: right;">P. UNITARIO</th>
+                <th style="width: 15%; text-align: right;">SUBTOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in detalles %}
+                <tr>
+                    <td class="center">{{ forloop.counter }}</td>
+                    <td>
+                        <strong>{{ detalle.concepto }}</strong>
+                        {% if detalle.descripcion %}<br><span style="font-size: 8pt; color: #555;">{{ detalle.descripcion }}</span>{% endif %}
+                    </td>
+                    <td class="center">{{ detalle.cantidad }}</td>
+                    <td class="center">{{ detalle.unidad }}</td>
+                    <td class="right">${{ detalle.precio_unitario }}</td>
+                    <td class="right"><strong>${{ detalle.subtotal }}</strong></td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6" class="center">No hay partidas en esta orden.</td>
+                </tr>
+            {% endfor %}
+            
+            <tr>
+                <td colspan="5" class="right" style="border-bottom: none; border-left: none;">SUBTOTAL:</td>
+                <td class="right">${{ orden.subtotal }}</td>
+            </tr>
+            <tr>
+                <td colspan="5" class="right" style="border-bottom: none; border-left: none; border-top: none;">IVA (16%):</td>
+                <td class="right">${{ orden.iva }}</td>
+            </tr>
+            <tr>
+                <td colspan="5" class="right" style="border-bottom: none; border-left: none; border-top: none; font-weight: bold; font-size: 11pt;">TOTAL:</td>
+                <td class="right" style="font-weight: bold; font-size: 11pt;">${{ orden.total }}</td>
+            </tr>
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block pie_contenido %}
+    <div style="margin-top: 15px;">
+        <table class="datos-table" style="width: 100%;">
+            <tbody>
+                {% if orden.condiciones_pago %}
+                <tr>
+                    <td style="width: 30%; font-weight: bold;">CONDICIONES DE PAGO:</td>
+                    <td style="width: 70%;">{{ orden.condiciones_pago }}</td>
+                </tr>
+                {% endif %}
+                
+                {% if orden.lugar_entrega %}
+                <tr>
+                    <td style="font-weight: bold;">LUGAR DE ENTREGA:</td>
+                    <td>{{ orden.lugar_entrega }}</td>
+                </tr>
+                {% endif %}
+                
+                {% if orden.notas %}
+                <tr>
+                    <td style="font-weight: bold;">NOTAS:</td>
+                    <td>{{ orden.notas }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; font-size: 9pt;">
+        <div style="font-weight: bold; margin-bottom: 5px;">DATOS PARA FACTURACIÓN:</div>
+        <div>RFC: {{ company.rfc }} | Razón Social: {{ company.razon_social }}</div>
+        <div>Domicilio: {{ company.direccion_completa }}</div>
+    </div>
+{% endblock %}

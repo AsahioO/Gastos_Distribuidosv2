@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Company, Proveedor, ProductoProveedor
+from .models import Company, Proveedor, ProductoProveedor, FirmanteDocumento
 
 
 class CompanySerializer(serializers.ModelSerializer):
@@ -79,3 +79,27 @@ class ProductoProveedorCreateSerializer(serializers.ModelSerializer):
         if value <= 0:
             raise serializers.ValidationError("El precio debe ser mayor a 0.")
         return value
+
+
+class FirmanteDocumentoSerializer(serializers.ModelSerializer):
+    usuario_nombre = serializers.CharField(
+        source='user.full_name',
+        read_only=True
+    )
+    tipo_documento_display = serializers.CharField(
+        source='get_tipo_documento_display',
+        read_only=True
+    )
+    nombre_completo_display = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = FirmanteDocumento
+        fields = [
+            'id', 'company', 'tipo_documento', 'tipo_documento_display',
+            'cargo', 'nombre', 'usuario_nombre', 'nombre_completo_display',
+            'user', 'sello_imagen', 'orden', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_nombre_completo_display(self, obj):
+        return obj.nombre_completo

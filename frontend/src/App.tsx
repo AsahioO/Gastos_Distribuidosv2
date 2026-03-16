@@ -11,6 +11,7 @@ import ProveedoresPage from '@/pages/admin/ProveedoresPage'
 import SolicitudesPage from '@/pages/procurement/SolicitudesPage'
 import SolicitudFormPage from '@/pages/procurement/SolicitudFormPage'
 import SolicitudDetailPage from '@/pages/procurement/SolicitudDetailPage'
+import EmpresaConfigPage from '@/pages/admin/EmpresaConfigPage'
 import CotizacionesPage from '@/pages/quotations/CotizacionesPage'
 import CotizacionFormPage from '@/pages/quotations/CotizacionFormPage'
 import CotizacionDetailPage from '@/pages/quotations/CotizacionDetailPage'
@@ -150,6 +151,11 @@ function App() {
         <Route path="/proveedores" element={
           <ProtectedRoute allowedRoles={['admin', 'adquisiciones']}>
             <ProveedoresPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/config-pdf" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <EmpresaConfigPage />
           </ProtectedRoute>
         } />
 

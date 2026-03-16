@@ -24,6 +24,9 @@ interface SolicitudForm {
   justificacion: string
   urgente: boolean
   fecha_requerida: string
+  eje_rector: string
+  programa_presupuestario: string
+  actividad: string
   detalles: DetalleForm[]
 }
 
@@ -66,6 +69,9 @@ export default function SolicitudFormPage() {
       justificacion: '',
       urgente: false,
       fecha_requerida: '',
+      eje_rector: '',
+      programa_presupuestario: '',
+      actividad: '',
       detalles: [{ concepto: '', descripcion: '', cantidad: 1, unidad: 'Pieza', cog: 0, precio_estimado: 0, notas: '' }]
     }
   })
@@ -96,6 +102,9 @@ export default function SolicitudFormPage() {
           setValue('justificacion', solicitud.justificacion)
           setValue('urgente', solicitud.urgente)
           setValue('fecha_requerida', solicitud.fecha_requerida || '')
+          setValue('eje_rector', solicitud.eje_rector || '')
+          setValue('programa_presupuestario', solicitud.programa_presupuestario || '')
+          setValue('actividad', solicitud.actividad || '')
           setValue('detalles', solicitud.detalles.map(d => ({
             concepto: d.concepto,
             descripcion: d.descripcion,
@@ -126,6 +135,9 @@ export default function SolicitudFormPage() {
       const payload: CreateSolicitudData = {
         ...data,
         fecha_requerida: data.fecha_requerida || null,
+        eje_rector: data.eje_rector || null,
+        programa_presupuestario: data.programa_presupuestario || null,
+        actividad: data.actividad || null,
         detalles: data.detalles.map(d => ({
           concepto: d.concepto,
           descripcion: d.descripcion,
@@ -276,6 +288,25 @@ export default function SolicitudFormPage() {
               />
               <span className="ml-2 text-sm text-gray-700">Marcar como urgente</span>
             </label>
+          </div>
+
+          <h3 className="text-md font-medium text-gray-900 mt-6 mb-4 border-t pt-4">Clasificación Presupuestaria (Opcional)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Input
+              label="Eje Rector"
+              placeholder="Ej. Eje 1. Desarrollo..."
+              {...register('eje_rector')}
+            />
+            <Input
+              label="Programa Presupuestario"
+              placeholder="Ej. Programa Nacional..."
+              {...register('programa_presupuestario')}
+            />
+            <Input
+              label="Actividad"
+              placeholder="Ej. Actividad 1.1..."
+              {...register('actividad')}
+            />
           </div>
         </div>
 

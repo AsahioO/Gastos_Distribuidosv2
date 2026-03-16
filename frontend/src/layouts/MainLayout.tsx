@@ -18,6 +18,7 @@ import {
   DocumentPlusIcon,
   BoltIcon,
   ArchiveBoxIcon,
+  Cog6ToothIcon
 } from '@heroicons/react/24/outline'
 
 interface NavItem {
@@ -71,6 +72,7 @@ const adminNavigation: NavItem[] = [
   { name: 'Usuarios', href: '/usuarios', icon: UsersIcon, roles: ['admin'] },
   { name: 'Áreas', href: '/areas', icon: BuildingOfficeIcon, roles: ['admin', 'tesoreria'] },
   { name: 'Proveedores', href: '/proveedores', icon: BuildingStorefrontIcon, roles: ['admin', 'adquisiciones'] },
+  { name: 'Config. Empresa', href: '/config-pdf', icon: Cog6ToothIcon, roles: ['admin'] },
 ]
 
 export default function MainLayout() {

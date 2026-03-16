@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import Company, Proveedor, ProductoProveedor
+from .models import Company, Proveedor, ProductoProveedor, FirmanteDocumento
+
+
+class FirmanteDocumentoInline(admin.TabularInline):
+    model = FirmanteDocumento
+    extra = 1
+    fields = ['tipo_documento', 'cargo', 'nombre', 'user', 'sello_imagen', 'orden']
+    ordering = ['tipo_documento', 'orden']
 
 
 @admin.register(Company)
@@ -12,6 +19,9 @@ class CompanyAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Información General', {
             'fields': ('rfc', 'razon_social', 'nombre_comercial')
+        }),
+        ('Branding', {
+            'fields': ('logo', 'membrete', 'pie_pagina')
         }),
         ('Dirección', {
             'fields': ('calle', 'numero_exterior', 'numero_interior', 'colonia', 
@@ -28,6 +38,7 @@ class CompanyAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+    inlines = [FirmanteDocumentoInline]
 
 
 @admin.register(Proveedor)

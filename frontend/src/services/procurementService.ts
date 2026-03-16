@@ -43,6 +43,9 @@ export interface SolicitudMaterial {
   total_estimado: string
   urgente: boolean
   fecha_requerida: string | null
+  eje_rector?: string | null
+  programa_presupuestario?: string | null
+  actividad?: string | null
   created_by: number
   created_by_name: string
   detalles: DetalleMaterial[]
@@ -65,6 +68,9 @@ export interface CreateSolicitudData {
   justificacion: string
   urgente: boolean
   fecha_requerida?: string | null
+  eje_rector?: string | null
+  programa_presupuestario?: string | null
+  actividad?: string | null
   detalles: Omit<DetalleMaterial, 'id' | 'cog_codigo' | 'cog_descripcion' | 'subtotal_estimado'>[]
 }
 

@@ -34,7 +34,8 @@ class SolicitudMaterialSerializer(serializers.ModelSerializer):
         model = SolicitudMaterial
         fields = [
             'id', 'numero', 'area', 'area_name', 'fecha_solicitud',
-            'descripcion', 'justificacion', 'estado', 'estado_display',
+            'descripcion', 'justificacion', 'eje_rector',
+            'programa_presupuestario', 'actividad', 'estado', 'estado_display',
             'total_estimado', 'urgente', 'fecha_requerida',
             'created_by', 'created_by_name', 'detalles',
             'created_at', 'updated_at'
@@ -49,6 +50,7 @@ class SolicitudMaterialCreateSerializer(serializers.ModelSerializer):
         model = SolicitudMaterial
         fields = [
             'area', 'fecha_solicitud', 'descripcion', 'justificacion',
+            'eje_rector', 'programa_presupuestario', 'actividad',
             'urgente', 'fecha_requerida', 'detalles'
         ]
     

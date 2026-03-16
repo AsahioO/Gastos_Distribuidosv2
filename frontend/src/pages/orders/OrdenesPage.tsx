@@ -9,6 +9,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { Button, Table } from '@/components/ui'
 import { orderService, OrdenCompra } from '@/services/orderService'
+import { documentService } from '@/services/documentService'
 import { useAuthStore } from '@/stores/authStore'
 
 const estadoColors: Record<string, string> = {
@@ -26,6 +27,7 @@ export default function OrdenesPage() {
   const [ordenes, setOrdenes] = useState<OrdenCompra[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('todos')
+  const [downloadingId, setDownloadingId] = useState<number | null>(null)
 
   const loadData = async () => {
     setLoading(true)
@@ -60,6 +62,19 @@ export default function OrdenesPage() {
       loadData()
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Error al enviar la orden')
+    }
+  }
+
+  const handleDescargarPdf = async (e: React.MouseEvent, orden: OrdenCompra) => {
+    e.stopPropagation()
+    setDownloadingId(orden.id)
+    try {
+      await documentService.downloadOrdenCompraPdf(orden.id, orden.numero)
+      toast.success('PDF descargado correctamente')
+    } catch (error) {
+      toast.error('Error al generar el PDF')
+    } finally {
+      setDownloadingId(null)
     }
   }
 
@@ -140,11 +155,19 @@ export default function OrdenesPage() {
           )}
           
           <button
-            onClick={(e) => { e.stopPropagation(); window.print() }}
-            className="p-1 text-gray-500 hover:text-gray-700"
-            title="Imprimir"
+            onClick={(e) => handleDescargarPdf(e, o)}
+            disabled={downloadingId === o.id}
+            className={`p-1 ${downloadingId === o.id ? 'text-gray-400 cursor-not-allowed' : 'text-gray-500 hover:text-blue-600'}`}
+            title="Descargar PDF"
           >
-            <PrinterIcon className="h-5 w-5" />
+            {downloadingId === o.id ? (
+              <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : (
+              <PrinterIcon className="h-5 w-5" />
+            )}
           </button>
         </div>
       )

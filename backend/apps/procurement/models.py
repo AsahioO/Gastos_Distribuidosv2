@@ -64,6 +64,21 @@ class SolicitudMaterial(models.Model):
     fecha_solicitud = models.DateField(verbose_name='Fecha de solicitud')
     descripcion = models.TextField(blank=True, verbose_name='Descripción general')
     justificacion = models.TextField(blank=True, verbose_name='Justificación')
+    eje_rector = models.TextField(
+        blank=True,
+        verbose_name='Eje Rector',
+        help_text='Ej: Bienestar Social, Ambiente Sano, etc.'
+    )
+    programa_presupuestario = models.TextField(
+        blank=True,
+        verbose_name='Programa Presupuestario',
+        help_text='Ej: Apoyar y subsidiar con recursos económicos a grupos vulnerables'
+    )
+    actividad = models.TextField(
+        blank=True,
+        verbose_name='Actividad o Acción',
+        help_text='Ej: Apoyar económicamente o en especie a solicitudes procedentes'
+    )
     
     # Status
     estado = models.CharField(

@@ -37,6 +37,20 @@ class Company(models.Model):
         verbose_name='Logo'
     )
     
+    membrete = models.ImageField(
+        upload_to='company_membretes/',
+        blank=True,
+        null=True,
+        verbose_name='Membrete Oficial'
+    )
+    
+    pie_pagina = models.ImageField(
+        upload_to='company_pies/',
+        blank=True,
+        null=True,
+        verbose_name='Pie de Página'
+    )
+    
     # Status
     is_active = models.BooleanField(default=True, verbose_name='Activa')
     
@@ -102,6 +116,13 @@ class Proveedor(models.Model):
         blank=True,
         null=True,
         verbose_name='Logo'
+    )
+    
+    membrete = models.ImageField(
+        upload_to='proveedor_membretes/',
+        blank=True,
+        null=True,
+        verbose_name='Membrete Oficial'
     )
     
     # Status
@@ -187,3 +208,83 @@ class ProductoProveedor(models.Model):
 
     def __str__(self):
         return f"{self.nombre} - {self.proveedor.razon_social} (${self.precio_unitario})"
+
+
+class FirmanteDocumento(models.Model):
+    """Configuración de firmantes por tipo de documento y empresa."""
+    
+    class TipoDocumentoChoices(models.TextChoices):
+        SOLICITUD = 'solicitud', 'Solicitud de Materiales'
+        COTIZACION = 'cotizacion', 'Cotización'
+        SOLICITUD_AUTORIZACION = 'solicitud_autorizacion', 'Solicitud de Autorización'
+        AUTORIZACION = 'autorizacion', 'Autorización Presupuestal'
+        ORDEN_COMPRA = 'orden_compra', 'Orden de Compra'
+        ENTREGA = 'entrega', 'Entrega/Recepción'
+        SALIDA = 'salida', 'Salida de Almacén'
+        SOLICITUD_GASTO = 'solicitud_gasto', 'Solicitud del Gasto'
+        SOLICITUD_PAGO = 'solicitud_pago', 'Solicitud de Pago'
+    
+    company = models.ForeignKey(
+        'companies.Company',
+        on_delete=models.CASCADE,
+        related_name='firmantes',
+        verbose_name='Empresa'
+    )
+    
+    tipo_documento = models.CharField(
+        max_length=30,
+        choices=TipoDocumentoChoices.choices,
+        verbose_name='Tipo de Documento'
+    )
+    
+    cargo = models.CharField(
+        max_length=255,
+        verbose_name='Cargo/Puesto',
+        help_text='Ej: Sindicatura, Secretario Particular, Tesorero(a) Municipal'
+    )
+    
+    nombre = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name='Nombre (fijo)',
+        help_text='Si se deja vacío se usa el nombre del usuario vinculado'
+    )
+    
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='firmante_como',
+        verbose_name='Usuario'
+    )
+    
+    sello_imagen = models.ImageField(
+        upload_to='sellos_firmantes/',
+        blank=True,
+        null=True,
+        verbose_name='Imagen del Sello'
+    )
+    
+    orden = models.PositiveIntegerField(
+        default=1,
+        verbose_name='Orden',
+        help_text='Posición de izquierda a derecha (1, 2, 3...)'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Firmante de Documento'
+        verbose_name_plural = 'Firmantes de Documentos'
+        ordering = ['tipo_documento', 'orden']
+        unique_together = ['company', 'tipo_documento', 'orden']
+    
+    def __str__(self):
+        nombre_display = self.nombre or (self.user.full_name if self.user else '(sin asignar)')
+        return f"{self.company.razon_social} - {self.get_tipo_documento_display()} - {nombre_display}"
+    
+    @property
+    def nombre_completo(self):
+        return self.nombre or (self.user.full_name if self.user else '')

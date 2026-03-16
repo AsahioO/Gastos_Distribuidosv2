@@ -7,10 +7,12 @@ import {
   PaperAirplaneIcon,
   CheckCircleIcon,
   PrinterIcon,
-  XMarkIcon
+  XMarkIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui'
 import { orderService, OrdenCompra } from '@/services/orderService'
+import { documentService } from '@/services/documentService'
 import { useAuthStore } from '@/stores/authStore'
 
 const estadoColors: Record<string, string> = {
@@ -29,6 +31,8 @@ export default function OrdenDetailPage() {
 
   const [orden, setOrden] = useState<OrdenCompra | null>(null)
   const [loading, setLoading] = useState(true)
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const [downloadingAutPdf, setDownloadingAutPdf] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -93,6 +97,32 @@ export default function OrdenDetailPage() {
       loadOrden(id!)
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Error al cancelar')
+    }
+  }
+
+  const handleDescargarPdf = async () => {
+    if (!orden) return
+    setDownloadingPdf(true)
+    try {
+      await documentService.downloadOrdenCompraPdf(orden.id, orden.numero)
+      toast.success('PDF descargado correctamente')
+    } catch (error) {
+      toast.error('Error al generar el PDF')
+    } finally {
+      setDownloadingPdf(false)
+    }
+  }
+
+  const handleDescargarAutorizacionPdf = async () => {
+    if (!orden || !orden.autorizacion) return
+    setDownloadingAutPdf(true)
+    try {
+      await documentService.downloadAutorizacionPdf(orden.autorizacion, `Ref_${orden.numero}`)
+      toast.success('PDF de autorización descargado correctamente')
+    } catch (error) {
+      toast.error('Error al generar el PDF de autorización')
+    } finally {
+      setDownloadingAutPdf(false)
     }
   }
 
@@ -313,9 +343,16 @@ export default function OrdenDetailPage() {
 
           {/* Acciones */}
           <div className="flex justify-end space-x-3 pt-4 border-t">
-            <Button variant="secondary" onClick={() => window.print()}>
+            {orden.autorizacion && (
+              <Button variant="secondary" onClick={handleDescargarAutorizacionPdf} loading={downloadingAutPdf}>
+                <DocumentTextIcon className="h-5 w-5 mr-2" />
+                Descargar Autorización
+              </Button>
+            )}
+
+            <Button variant="secondary" onClick={handleDescargarPdf} loading={downloadingPdf}>
               <PrinterIcon className="h-5 w-5 mr-2" />
-              Imprimir
+              Descargar PDF
             </Button>
 
             {canEdit && (

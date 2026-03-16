@@ -74,6 +74,39 @@ class SolicitudAutorizacionViewSet(viewsets.ModelViewSet):
         
         return Response(SolicitudAutorizacionSerializer(solicitud).data)
 
+    @action(detail=True, methods=['get'])
+    def generar_pdf(self, request, pk=None):
+        """Genera el PDF de la autorización presupuestal (si está aprobada)."""
+        from django.http import HttpResponse
+        from apps.documents.services.pdf_generator import generate_autorizacion_pdf
+        
+        solicitud = self.get_object()
+        
+        if solicitud.estado != SolicitudAutorizacion.EstadoChoices.APROBADA:
+            return Response(
+                {'error': 'Solo se puede generar PDF para solicitudes aprobadas.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        autorizacion = solicitud.autorizacion_presupuestal.first()
+        if not autorizacion:
+            return Response(
+                {'error': 'No se encontró la autorización presupuestal correspondiente.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        try:
+            pdf_bytes = generate_autorizacion_pdf(autorizacion)
+            
+            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="autorizacion_{solicitud.numero}.pdf"'
+            return response
+        except Exception as e:
+            return Response(
+                {'error': f'Error generando PDF: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 class OrdenCompraViewSet(viewsets.ModelViewSet):
     queryset = OrdenCompra.objects.select_related(
@@ -152,3 +185,23 @@ class OrdenCompraViewSet(viewsets.ModelViewSet):
         orden.save()
         
         return Response(OrdenCompraSerializer(orden).data)
+
+    @action(detail=True, methods=['get'])
+    def generar_pdf(self, request, pk=None):
+        """Genera el PDF de la orden de compra."""
+        from django.http import HttpResponse
+        from apps.documents.services.pdf_generator import generate_orden_compra_pdf
+        
+        orden = self.get_object()
+        
+        try:
+            pdf_bytes = generate_orden_compra_pdf(orden)
+            
+            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="orden_{orden.numero}.pdf"'
+            return response
+        except Exception as e:
+            return Response(
+                {'error': f'Error generando PDF: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

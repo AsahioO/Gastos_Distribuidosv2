@@ -9,10 +9,12 @@ import {
   PaperAirplaneIcon,
   XCircleIcon,
   DocumentArrowUpIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  PrinterIcon
 } from '@heroicons/react/24/outline'
 import { Button, Table, Modal, PageHeader } from '@/components/ui'
 import { procurementService, SolicitudMaterial } from '@/services/procurementService'
+import { documentService } from '@/services/documentService'
 import { useAuthStore } from '@/stores/authStore'
 
 const estadoColors: Record<string, string> = {
@@ -36,6 +38,7 @@ export default function SolicitudesPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [selectedSolicitud, setSelectedSolicitud] = useState<SolicitudMaterial | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [downloadingId, setDownloadingId] = useState<number | null>(null)
 
   // Determinar permisos según rol
   const isArea = user?.role === 'area'
@@ -121,6 +124,19 @@ export default function SolicitudesPage() {
     }
   }
 
+  const handleDescargarPdf = async (e: React.MouseEvent, solicitud: SolicitudMaterial) => {
+    e.stopPropagation()
+    setDownloadingId(solicitud.id)
+    try {
+      await documentService.downloadSolicitudPdf(solicitud.id, solicitud.numero)
+      toast.success('PDF descargado correctamente')
+    } catch (error) {
+      toast.error('Error al generar el PDF')
+    } finally {
+      setDownloadingId(null)
+    }
+  }
+
   const formatCurrency = (value: string) => {
     const num = parseFloat(value)
     if (isNaN(num)) return '$0.00'
@@ -190,6 +206,22 @@ export default function SolicitudesPage() {
             title="Ver detalle"
           >
             <EyeIcon className="h-5 w-5" />
+          </button>
+
+          <button
+            onClick={(e) => handleDescargarPdf(e, s)}
+            disabled={downloadingId === s.id}
+            className={`p-1 ${downloadingId === s.id ? 'text-gray-400 cursor-not-allowed' : 'text-gray-500 hover:text-blue-600'}`}
+            title="Descargar PDF"
+          >
+            {downloadingId === s.id ? (
+              <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : (
+              <PrinterIcon className="h-5 w-5" />
+            )}
           </button>
 
           {/* Solo Área o Admin pueden editar/enviar borradores */}

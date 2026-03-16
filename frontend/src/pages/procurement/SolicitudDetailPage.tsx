@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui'
 import { procurementService, SolicitudMaterial } from '@/services/procurementService'
+import { documentService } from '@/services/documentService'
 import { useAuthStore } from '@/stores/authStore'
 
 const estadoColors: Record<string, string> = {
@@ -36,6 +37,7 @@ export default function SolicitudDetailPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [buscandoCatalogo, setBuscandoCatalogo] = useState(false)
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
 
   // Permisos según rol
   const isArea = user?.role === 'area'
@@ -120,6 +122,19 @@ export default function SolicitudDetailPage() {
       toast.error(error.response?.data?.error || 'Error al buscar en catálogos')
     } finally {
       setBuscandoCatalogo(false)
+    }
+  }
+
+  const handleDescargarPdf = async () => {
+    if (!solicitud) return
+    setDownloadingPdf(true)
+    try {
+      await documentService.downloadSolicitudPdf(solicitud.id, solicitud.numero)
+      toast.success('PDF descargado correctamente')
+    } catch (error) {
+      toast.error('Error al generar el PDF')
+    } finally {
+      setDownloadingPdf(false)
     }
   }
 
@@ -233,9 +248,9 @@ export default function SolicitudDetailPage() {
           </Button>
         )}
         
-        <Button variant="secondary">
+        <Button variant="secondary" onClick={handleDescargarPdf} loading={downloadingPdf}>
           <PrinterIcon className="h-4 w-4 mr-2" />
-          Imprimir
+          Descargar PDF
         </Button>
       </div>
 
@@ -269,6 +284,24 @@ export default function SolicitudDetailPage() {
           <div className="md:col-span-2 lg:col-span-3">
             <dt className="text-sm font-medium text-gray-500">Justificación</dt>
             <dd className="mt-1 text-sm text-gray-900">{solicitud.justificacion || '-'}</dd>
+          </div>
+
+          <div className="md:col-span-2 lg:col-span-3 mt-4 border-t pt-4">
+            <h3 className="text-sm font-semibold text-gray-900 mb-4">Clasificación Presupuestaria</h3>
+            <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <dt className="text-xs font-medium text-gray-500">Eje Rector</dt>
+                <dd className="mt-1 text-sm text-gray-900">{solicitud.eje_rector || '-'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium text-gray-500">Programa Presupuestario</dt>
+                <dd className="mt-1 text-sm text-gray-900">{solicitud.programa_presupuestario || '-'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium text-gray-500">Actividad</dt>
+                <dd className="mt-1 text-sm text-gray-900">{solicitud.actividad || '-'}</dd>
+              </div>
+            </dl>
           </div>
         </dl>
       </div>
