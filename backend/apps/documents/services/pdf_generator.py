@@ -138,14 +138,65 @@ def generate_orden_compra_pdf(orden) -> bytes:
 def generate_autorizacion_pdf(autorizacion) -> bytes:
     """Generate PDF for an AutorizacionPresupuestal."""
     context = get_base_context()
-    
+
     context.update({
         'autorizacion': autorizacion,
         'solicitud': autorizacion.solicitud_autorizacion,
     })
-    
+
     # Firmantes
     context['firmantes'] = get_firmantes_context('autorizacion')
-    
+
     html = render_template('autorizacion.html', context)
+    return generate_pdf_from_html(html)
+
+
+def generate_cotizacion_pdf(cotizacion) -> bytes:
+    """Generate PDF for a Cotizacion."""
+    context = get_base_context()
+
+    context.update({
+        'cotizacion': cotizacion,
+        'proveedor': cotizacion.proveedor,
+        'detalles': cotizacion.detalles.all(),
+        'lugar': 'Presidencia Municipal',
+    })
+
+    context['firmantes'] = get_firmantes_context('cotizacion')
+
+    html = render_template('cotizacion.html', context)
+    return generate_pdf_from_html(html)
+
+
+def generate_entrega_pdf(entrega) -> bytes:
+    """Generate PDF for an EntregaBienes."""
+    context = get_base_context()
+
+    context.update({
+        'entrega': entrega,
+        'orden': entrega.orden,
+        'detalles': entrega.detalles.all(),
+        'lugar': 'Presidencia Municipal',
+    })
+
+    context['firmantes'] = get_firmantes_context('entrega_bienes')
+
+    html = render_template('entrega_bienes.html', context)
+    return generate_pdf_from_html(html)
+
+
+def generate_salida_pdf(salida) -> bytes:
+    """Generate PDF for a SalidaAlmacen."""
+    context = get_base_context()
+
+    context.update({
+        'salida': salida,
+        'area': salida.area,
+        'detalles': salida.detalles.all(),
+        'lugar': 'Presidencia Municipal',
+    })
+
+    context['firmantes'] = get_firmantes_context('salida_almacen')
+
+    html = render_template('salida_almacen.html', context)
     return generate_pdf_from_html(html)

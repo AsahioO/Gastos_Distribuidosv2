@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { inventoryService, SalidaBienes } from '../../services/inventoryService'
+import { documentService } from '../../services/documentService'
 import Button from '../../components/ui/Button'
 
 export default function SalidaDetailPage() {
@@ -11,6 +13,7 @@ export default function SalidaDetailPage() {
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState('')
+  const [generatingPdf, setGeneratingPdf] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -28,6 +31,23 @@ export default function SalidaDetailPage() {
       console.error(err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleGenerarPdf = async () => {
+    if (!salida) return
+    setGeneratingPdf(true)
+    try {
+      const documentId = await documentService.generateSalidaPdf(salida.id)
+      if (documentId) {
+        await documentService.downloadPdf(documentId, `Salida_${salida.numero}.pdf`)
+      } else {
+        toast.success('PDF en proceso. El documento estará disponible en breve.')
+      }
+    } catch (err) {
+      toast.error('Error al generar el PDF')
+    } finally {
+      setGeneratingPdf(false)
     }
   }
 
@@ -74,14 +94,17 @@ export default function SalidaDetailPage() {
         </div>
         <div className="flex gap-2">
           {!salida.confirmada && (
-            <Button 
-              onClick={handleConfirm} 
+            <Button
+              onClick={handleConfirm}
               loading={actionLoading}
               className="bg-green-600 hover:bg-green-700"
             >
               Confirmar Recepción
             </Button>
           )}
+          <Button variant="secondary" onClick={handleGenerarPdf} loading={generatingPdf}>
+            Generar PDF
+          </Button>
           <Button variant="secondary" onClick={() => navigate('/inventario/salidas')}>
             Volver
           </Button>

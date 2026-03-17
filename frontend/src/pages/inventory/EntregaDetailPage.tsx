@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { inventoryService, EntregaBienes, EvidenciaEntrega } from '../../services/inventoryService'
+import { documentService } from '../../services/documentService'
 import Button from '../../components/ui/Button'
 
 export default function EntregaDetailPage() {
@@ -12,6 +14,7 @@ export default function EntregaDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [generatingPdf, setGeneratingPdf] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -29,6 +32,23 @@ export default function EntregaDetailPage() {
       console.error(err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleGenerarPdf = async () => {
+    if (!entrega) return
+    setGeneratingPdf(true)
+    try {
+      const documentId = await documentService.generateEntregaPdf(entrega.id)
+      if (documentId) {
+        await documentService.downloadPdf(documentId, `Entrega_${entrega.numero}.pdf`)
+      } else {
+        toast.success('PDF en proceso. El documento estará disponible en breve.')
+      }
+    } catch (err) {
+      toast.error('Error al generar el PDF')
+    } finally {
+      setGeneratingPdf(false)
     }
   }
 
@@ -74,6 +94,9 @@ export default function EntregaDetailPage() {
           <p className="text-gray-600">Entrega de Bienes</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="secondary" onClick={handleGenerarPdf} loading={generatingPdf}>
+            Generar PDF
+          </Button>
           <Button variant="secondary" onClick={() => navigate('/inventario/entregas')}>
             Volver
           </Button>

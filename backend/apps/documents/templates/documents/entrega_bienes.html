@@ -1,0 +1,75 @@
+{% extends "documents/_base_documento.html" %}
+
+{% block area_administrativa %}
+    ALMACÉN MUNICIPAL
+{% endblock %}
+
+{% block asunto %}
+    ACTA DE ENTREGA-RECEPCIÓN DE BIENES
+{% endblock %}
+
+{% block lugar_fecha %}
+    {{ lugar }}, {{ entrega.fecha_entrega|date:'j \d\e F \d\e Y'|upper }}
+{% endblock %}
+
+{% block destinatario_izq %}
+    <div class="nombre-destinatario">{{ entrega.recibido_por.get_full_name|upper }}</div>
+    <div>ALMACENISTA MUNICIPAL</div>
+    <div>PRESENTE</div>
+{% endblock %}
+
+{% block destinatario_der %}
+    <div><strong>FOLIO:</strong> {{ entrega.numero }}</div>
+    <div><strong>FECHA DE RECEPCIÓN:</strong> {{ entrega.fecha_recepcion|date:'j \d\e F \d\e Y'|upper }}</div>
+    <div><strong>PROVEEDOR:</strong> {{ orden.proveedor.razon_social|upper }}</div>
+    <div><strong>ORDEN DE COMPRA:</strong> {{ orden.numero }}</div>
+{% endblock %}
+
+{% block cuerpo %}
+    <p class="oficio-texto">
+        POR MEDIO DEL PRESENTE DOCUMENTO SE HACE CONSTAR LA RECEPCIÓN DE LOS BIENES Y/O MATERIALES
+        DESCRITOS A CONTINUACIÓN, LOS CUALES FUERON ENTREGADOS POR EL PROVEEDOR CORRESPONDIENTE
+        EN LAS INSTALACIONES DE ESTE H. AYUNTAMIENTO MUNICIPAL, QUEDANDO BAJO RESGUARDO DEL ALMACÉN.
+    </p>
+
+    <div style="font-weight: bold; font-size: 9.5pt; margin-top: 15px; margin-bottom: 5px;">
+        RELACIÓN DE BIENES RECIBIDOS:
+    </div>
+{% endblock %}
+
+{% block tabla_datos %}
+    <table class="datos-table">
+        <thead>
+            <tr>
+                <th style="width: 40%;">CONCEPTO</th>
+                <th style="width: 15%;">CANTIDAD ORDENADA</th>
+                <th style="width: 15%;">CANTIDAD RECIBIDA</th>
+                <th style="width: 30%;">OBSERVACIONES</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in detalles %}
+                <tr>
+                    <td>
+                        <strong>{{ detalle.detalle_orden.concepto }}</strong>
+                    </td>
+                    <td class="center">{{ detalle.detalle_orden.cantidad }}</td>
+                    <td class="center">{{ detalle.cantidad_recibida }}</td>
+                    <td>{{ detalle.notas|default:detalle.observaciones_condicion|default:"-" }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4" class="center">No hay bienes registrados en esta entrega.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block pie_contenido %}
+    <p class="oficio-texto" style="margin-top: 20px;">
+        LOS BIENES DESCRITOS EN EL PRESENTE DOCUMENTO HAN SIDO REVISADOS Y ACEPTADOS DE CONFORMIDAD
+        POR PARTE DEL ALMACÉN MUNICIPAL. CUALQUIER DISCREPANCIA DEBERÁ SER NOTIFICADA AL ÁREA DE
+        ADQUISICIONES EN UN PLAZO NO MAYOR A CINCO DÍAS HÁBILES.
+    </p>
+{% endblock %}

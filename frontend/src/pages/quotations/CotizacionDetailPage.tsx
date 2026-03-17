@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { 
-  ArrowLeftIcon, 
-  PencilIcon, 
+import {
+  ArrowLeftIcon,
+  PencilIcon,
   CheckCircleIcon,
   DocumentTextIcon,
-  ShoppingCartIcon
+  ShoppingCartIcon,
+  PrinterIcon,
 } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui'
 import { quotationService, Cotizacion } from '@/services/quotationService'
+import { documentService } from '@/services/documentService'
 import { useAuthStore } from '@/stores/authStore'
 
 const estadoColors: Record<string, string> = {
@@ -26,6 +28,7 @@ export default function CotizacionDetailPage() {
   
   const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null)
   const [loading, setLoading] = useState(true)
+  const [generatingPdf, setGeneratingPdf] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -61,6 +64,23 @@ export default function CotizacionDetailPage() {
       loadCotizacion(id!)
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Error al autorizar')
+    }
+  }
+
+  const handleGenerarPdf = async () => {
+    if (!cotizacion) return
+    setGeneratingPdf(true)
+    try {
+      const documentId = await documentService.generateCotizacionPdf(cotizacion.id)
+      if (documentId) {
+        await documentService.downloadPdf(documentId, `Cotizacion_${cotizacion.numero}.pdf`)
+      } else {
+        toast.success('PDF en proceso. El documento estará disponible en breve.')
+      }
+    } catch (error) {
+      toast.error('Error al generar el PDF')
+    } finally {
+      setGeneratingPdf(false)
     }
   }
 
@@ -274,6 +294,11 @@ export default function CotizacionDetailPage() {
 
           {/* Acciones */}
           <div className="flex justify-end space-x-3 pt-4 border-t">
+            <Button variant="secondary" onClick={handleGenerarPdf} loading={generatingPdf}>
+              <PrinterIcon className="h-5 w-5 mr-2" />
+              Generar PDF
+            </Button>
+
             {canEdit && (
               <Button variant="secondary" onClick={handleEdit}>
                 <PencilIcon className="h-5 w-5 mr-2" />

@@ -26,8 +26,11 @@ class GenerateDocumentSerializer(serializers.Serializer):
     """Serializer for document generation request."""
     
     document_type = serializers.ChoiceField(choices=[
-        ('solicitud', 'Solicitud de Material'),
-        ('orden_compra', 'Orden de Compra'),
-        ('autorizacion', 'Autorización'),
-    ])
+    ('solicitud', 'Solicitud de Material'),
+    ('orden_compra', 'Orden de Compra'),
+    ('autorizacion', 'Autorización'),
+    ('cotizacion', 'Cotización'),
+    ('entrega_bienes', 'Entrega de Bienes'),
+    ('salida_almacen', 'Salida de Almacén'),
+])
     object_id = serializers.IntegerField()

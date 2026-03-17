@@ -45,4 +45,58 @@ export const documentService = {
     link.remove()
     window.URL.revokeObjectURL(url)
   },
+
+  generateCotizacionPdf: async (id: number): Promise<number | null> => {
+    const response = await api.post('/documents/pdf/generate/', {
+      document_type: 'cotizacion',
+      object_id: id,
+    })
+    return response.data.document_id ?? null
+  },
+
+  downloadPdf: async (documentId: number, filename: string): Promise<void> => {
+    const response = await api.get(`/documents/pdf/${documentId}/download/`, {
+      responseType: 'blob',
+    })
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', filename)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  },
+
+  generateEntregaPdf: async (id: number): Promise<number | null> => {
+    const response = await api.post('/documents/pdf/generate/', {
+      document_type: 'entrega_bienes',
+      object_id: id,
+    })
+    return response.data.document_id ?? null
+  },
+
+  generateSalidaPdf: async (id: number): Promise<number | null> => {
+    const response = await api.post('/documents/pdf/generate/', {
+      document_type: 'salida_almacen',
+      object_id: id,
+    })
+    return response.data.document_id ?? null
+  },
+
+  generateOrdenCompraPdf: async (id: number): Promise<number | null> => {
+    const response = await api.post('/documents/pdf/generate/', {
+      document_type: 'orden_compra',
+      object_id: id,
+    })
+    return response.data.document_id ?? null
+  },
+
+  generateAutorizacionPdf: async (id: number): Promise<number | null> => {
+    const response = await api.post('/documents/pdf/generate/', {
+      document_type: 'autorizacion',
+      object_id: id,
+    })
+    return response.data.document_id ?? null
+  },
 }

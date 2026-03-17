@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
-
+from django.conf import settings
 from .models import PDFDocument, Media
 from .serializers import PDFDocumentSerializer, MediaSerializer, GenerateDocumentSerializer
 from .tasks import generate_document_pdf
@@ -41,16 +41,23 @@ class PDFDocumentViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = GenerateDocumentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        # Queue async task
-        generate_document_pdf.delay(
-            document_type=serializer.validated_data['document_type'],
-            object_id=serializer.validated_data['object_id'],
-            user_id=request.user.id
-        )
-        
-        return Response({
-            'message': 'La generación del documento se realizará en segundo plano.'
-        }, status=status.HTTP_202_ACCEPTED)
+        # Call directly in development (no broker), async in production
+        kwargs = {
+            'document_type': serializer.validated_data['document_type'],
+            'object_id': serializer.validated_data['object_id'],
+            'user_id': request.user.id,
+        }
+        if getattr(settings, 'CELERY_TASK_ALWAYS_EAGER', False):
+            result = generate_document_pdf(**kwargs)
+            return Response({
+                'message': 'Documento generado.',
+                'document_id': result['document_id'],
+            }, status=status.HTTP_201_CREATED)
+        else:
+            generate_document_pdf.delay(**kwargs)
+            return Response({
+                'message': 'La generación del documento se realizará en segundo plano.'
+            }, status=status.HTTP_202_ACCEPTED)
 
 
 class MediaViewSet(viewsets.ModelViewSet):

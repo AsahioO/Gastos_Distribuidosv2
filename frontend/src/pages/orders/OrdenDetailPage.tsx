@@ -104,8 +104,12 @@ export default function OrdenDetailPage() {
     if (!orden) return
     setDownloadingPdf(true)
     try {
-      await documentService.downloadOrdenCompraPdf(orden.id, orden.numero)
-      toast.success('PDF descargado correctamente')
+      const documentId = await documentService.generateOrdenCompraPdf(orden.id)
+      if (documentId) {
+        await documentService.downloadPdf(documentId, `OrdenCompra_${orden.numero}.pdf`)
+      } else {
+        toast.success('PDF en proceso. El documento estará disponible en breve.')
+      }
     } catch (error) {
       toast.error('Error al generar el PDF')
     } finally {
@@ -117,8 +121,12 @@ export default function OrdenDetailPage() {
     if (!orden || !orden.autorizacion) return
     setDownloadingAutPdf(true)
     try {
-      await documentService.downloadAutorizacionPdf(orden.autorizacion, `Ref_${orden.numero}`)
-      toast.success('PDF de autorización descargado correctamente')
+      const documentId = await documentService.generateAutorizacionPdf(orden.autorizacion)
+      if (documentId) {
+        await documentService.downloadPdf(documentId, `Autorizacion_${orden.numero}.pdf`)
+      } else {
+        toast.success('PDF en proceso. El documento estará disponible en breve.')
+      }
     } catch (error) {
       toast.error('Error al generar el PDF de autorización')
     } finally {

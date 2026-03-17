@@ -4,6 +4,9 @@ from .pdf_generator import (
     generate_solicitud_pdf,
     generate_orden_compra_pdf,
     generate_autorizacion_pdf,
+    generate_cotizacion_pdf,
+    generate_entrega_pdf,
+    generate_salida_pdf,
 )
 
 __all__ = [
@@ -12,4 +15,7 @@ __all__ = [
     'generate_solicitud_pdf',
     'generate_orden_compra_pdf',
     'generate_autorizacion_pdf',
+    'generate_cotizacion_pdf',
+    'generate_entrega_pdf',
+    'generate_salida_pdf',
 ]

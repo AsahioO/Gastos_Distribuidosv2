@@ -89,6 +89,7 @@ DATABASES = {
     }
 }
 
+
 # No database routers for SQLite
 DATABASE_ROUTERS = []
 
@@ -166,3 +167,9 @@ LOGGING = {
         'level': 'DEBUG',
     },
 }
+
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
+
+CELERY_BROKER_URL = 'memory://'
+CELERY_RESULT_BACKEND = 'cache+memory://'
