@@ -1,0 +1,119 @@
+{% extends "documents/_base_documento.html" %}
+
+{% block area_administrativa %}
+    {{ solicitud.area.name|default:"ÁREA SOLICITANTE" }}
+{% endblock %}
+
+{% block asunto %}
+    SOLICITUD DE AUTORIZACIÓN DE SUFICIENCIA PRESUPUESTARIA
+{% endblock %}
+
+{% block lugar_fecha %}
+    PRESIDENCIA MUNICIPAL, {{ solicitud_aut.fecha_solicitud|date:'j \d\e F \d\e Y'|upper }}
+{% endblock %}
+
+{% block destinatario_izq %}
+    <div class="nombre-destinatario">DIRECCIÓN DE EGRESOS</div>
+    <div>TESORERÍA MUNICIPAL</div>
+    <div>PRESENTE</div>
+{% endblock %}
+
+{% block destinatario_der %}
+    <div><strong>NÚMERO:</strong></div>
+    <div>{{ solicitud_aut.numero }}</div>
+
+    <div style="margin-top: 10px;"><strong>SOLICITANTE:</strong></div>
+    <div>{{ solicitud_aut.solicitante.get_full_name }}</div>
+{% endblock %}
+
+{% block cuerpo %}
+    <p class="oficio-texto">
+        POR MEDIO DEL PRESENTE, ME PERMITO SOLICITAR A USTED DE LA MANERA MÁS ATENTA,
+        LA AUTORIZACIÓN DE SUFICIENCIA PRESUPUESTARIA PARA DAR CONTINUIDAD AL PROCESO
+        DE ADQUISICIÓN DE LOS MATERIALES Y/O SERVICIOS QUE SE DESCRIBEN A CONTINUACIÓN,
+        LOS CUALES SON INDISPENSABLES PARA EL CUMPLIMIENTO DE LAS FUNCIONES Y ACTIVIDADES
+        ENCOMENDADAS AL ÁREA A MI CARGO.
+    </p>
+
+    <div style="margin-top: 15px; margin-bottom: 5px; font-weight: bold; font-size: 9pt;">
+        CLASIFICACIÓN PRESUPUESTARIA:
+    </div>
+
+    <table class="datos-table" style="margin-top: 5px; margin-bottom: 15px;">
+        <tbody>
+            <tr>
+                <td style="width: 35%; font-weight: bold;">EJE RECTOR:</td>
+                <td style="width: 65%;">{{ solicitud.eje_rector|default:"-" }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">PROGRAMA PRESUPUESTARIO:</td>
+                <td>{{ solicitud.programa_presupuestario|default:"-" }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">ÁREA SOLICITANTE:</td>
+                <td>{{ solicitud.area.name|default:"-" }}</td>
+            </tr>
+            {% if cotizacion %}
+            <tr>
+                <td style="font-weight: bold;">COTIZACIÓN DE REFERENCIA:</td>
+                <td>{{ cotizacion.numero }} — Total: ${{ cotizacion.total }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <table class="datos-table" style="margin-top: 10px; margin-bottom: 15px;">
+        <tbody>
+            <tr>
+                <td style="width: 35%; font-weight: bold;">MONTO SOLICITADO:</td>
+                <td style="width: 65%; font-size: 11pt;"><strong>${{ solicitud_aut.monto_solicitado }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% if solicitud_aut.justificacion %}
+    <div style="margin-top: 10px; margin-bottom: 15px;">
+        <div style="font-weight: bold; font-size: 9pt; margin-bottom: 5px;">JUSTIFICACIÓN:</div>
+        <p class="oficio-texto">{{ solicitud_aut.justificacion }}</p>
+    </div>
+    {% endif %}
+
+    <div style="font-weight: bold; font-size: 9.5pt; margin-bottom: 5px;">
+        MATERIALES Y/O SERVICIOS SOLICITADOS:
+    </div>
+{% endblock %}
+
+{% block tabla_datos %}
+    <table class="datos-table">
+        <thead>
+            <tr>
+                <th style="width: 10%;">CANTIDAD</th>
+                <th style="width: 15%;">UNIDAD</th>
+                <th style="width: 75%;">CONCEPTO</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in detalles %}
+                <tr>
+                    <td class="center">{{ detalle.cantidad }}</td>
+                    <td class="center">{{ detalle.unidad }}</td>
+                    <td>
+                        <strong>{{ detalle.concepto }}</strong>
+                        {% if detalle.descripcion %}<br><span style="font-size: 8pt; color: #555;">{{ detalle.descripcion }}</span>{% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3" class="center">No hay materiales registrados.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block pie_contenido %}
+    <p class="oficio-texto" style="margin-top: 20px;">
+        SIN OTRO PARTICULAR DE MOMENTO Y EN ESPERA DE LA AUTORIZACIÓN CORRESPONDIENTE,
+        APROVECHO LA OCASIÓN PARA ENVIARLE UN CORDIAL SALUDO.
+    </p>
+{% endblock %}

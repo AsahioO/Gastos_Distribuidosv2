@@ -99,4 +99,12 @@ export const documentService = {
     })
     return response.data.document_id ?? null
   },
+
+  generateSolicitudAutorizacionPdf: async (id: number): Promise<number | null> => {
+    const response = await api.post('/documents/pdf/generate/', {
+      document_type: 'solicitud_autorizacion',
+      object_id: id,
+    })
+    return response.data.document_id ?? null
+  },
 }

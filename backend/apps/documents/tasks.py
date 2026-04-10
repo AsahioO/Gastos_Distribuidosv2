@@ -30,6 +30,7 @@ def generate_document_pdf(self, document_type: str, object_id: int, user_id: int
         generate_cotizacion_pdf,
         generate_entrega_pdf,
         generate_salida_pdf,
+        generate_solicitud_autorizacion_pdf,
     )
     
     try:
@@ -73,6 +74,13 @@ def generate_document_pdf(self, document_type: str, object_id: int, user_id: int
             obj = SalidaBienes.objects.get(id=object_id)
             pdf_bytes = generate_salida_pdf(obj)
             nombre = f"Salida_{obj.numero}.pdf"
+            content_type = ContentType.objects.get_for_model(obj)
+
+        elif document_type == 'solicitud_autorizacion':
+            from apps.orders.models import SolicitudAutorizacion
+            obj = SolicitudAutorizacion.objects.get(id=object_id)
+            pdf_bytes = generate_solicitud_autorizacion_pdf(obj)
+            nombre = f"SolicitudAut_{obj.numero}.pdf"
             content_type = ContentType.objects.get_for_model(obj)
 
         else:

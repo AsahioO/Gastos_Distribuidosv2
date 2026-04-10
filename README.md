@@ -44,6 +44,7 @@ Sistema multi-tenant para gestión de adquisiciones, compras y distribución de 
 - **Avatares**: Subida de fotos de perfil (JPG/PNG/WebP, máx 2MB) con drag & drop
 - **Logos Empresariales**: Proveedores y empresas pueden subir sus logos
 - **Cambio de Contraseña**: Gestión segura de credenciales
+- **Verificación de INE**: Usuarios que crean solicitudes deben registrar y verificar su INE con un administrador
 - **Preferencias**: Configuración de notificaciones y tema (próximamente)
 
 ### Portal de Proveedores

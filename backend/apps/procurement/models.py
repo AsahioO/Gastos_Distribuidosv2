@@ -40,6 +40,8 @@ class SolicitudMaterial(models.Model):
     """
     
     class EstadoChoices(models.TextChoices):
+        PENDIENTE_VERIFICACION = 'pendiente_verificacion', 'Pendiente de Verificación INE'
+        INE_RECHAZADA = 'ine_rechazada', 'INE Rechazada'
         BORRADOR = 'borrador', 'Borrador'
         ENVIADO = 'enviado', 'Enviado'
         EN_COTIZACION = 'en_cotizacion', 'En Cotización'
@@ -82,7 +84,7 @@ class SolicitudMaterial(models.Model):
     
     # Status
     estado = models.CharField(
-        max_length=20,
+        max_length=30,
         choices=EstadoChoices.choices,
         default=EstadoChoices.BORRADOR,
         verbose_name='Estado'

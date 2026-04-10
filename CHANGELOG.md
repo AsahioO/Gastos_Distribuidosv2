@@ -7,6 +7,77 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### 🪪 Verificación de INE para Solicitudes de Material
+
+#### Backend - Modelos
+- **Agregado** 4 campos al modelo `User` en `apps/accounts/models.py`:
+  - `ine_foto` — `ImageField(upload_to='ine/', blank=True, null=True)`: Foto de la INE del usuario
+  - `ine_verificada` — `BooleanField(default=False)`: Si la INE fue aprobada por un administrador
+  - `ine_rechazada` — `BooleanField(default=False)`: Si la INE fue rechazada
+  - `ine_rechazo_motivo` — `TextField(blank=True)`: Motivo del rechazo
+- **Agregado** 2 nuevos estados a `SolicitudMaterial.EstadoChoices` en `apps/procurement/models.py`:
+  - `PENDIENTE_VERIFICACION = 'pendiente_verificacion'`: Solicitud en espera de validación de INE
+  - `INE_RECHAZADA = 'ine_rechazada'`: INE rechazada, solicitud bloqueada
+- **Modificado** `max_length` del campo `estado` de 20 → 30 para acomodar `pendiente_verificacion`
+- **Migraciones** aplicadas: `accounts/0002_user_ine_foto_user_ine_rechazada_and_more`, `procurement/0004_alter_solicitudmaterial_estado`
+
+#### Backend - Serializers
+- **Modificado** `UserSerializer` (`apps/accounts/serializers.py`): expone `ine_foto` (URL), `ine_verificada`, `ine_rechazada`, `ine_rechazo_motivo`
+- **Modificado** `CustomTokenObtainPairSerializer.validate()`: incluye los 4 campos INE en la respuesta del login
+- **Modificado** `SolicitudMaterialSerializer`: agrega `ine_foto` (URL del creador) e `ine_rechazo_motivo` del usuario creador via `SerializerMethodField`
+
+#### Backend - ViewSets & API
+- **Modificado** `SolicitudMaterialViewSet.create()` (`apps/procurement/views.py`):
+  - Parsers ampliados a `MultiPartParser, FormParser, JSONParser` para soportar multipart/form-data
+  - Si `user.ine_foto` es nulo, requiere que se suba la INE junto con la solicitud
+  - Establece `estado=PENDIENTE_VERIFICACION` cuando el usuario no tiene INE registrada
+  - Parsea el JSON del cuerpo desde el campo `data` en payloads multipart
+- **Agregado** `@action verificar_ine` en `SolicitudMaterialViewSet`:
+  - `POST /procurement/solicitudes/{id}/verificar_ine/`
+  - Solo admin — aprueba o rechaza la INE del creador
+  - Si aprueba: `ine_verificada=True`, estado pasa a `borrador`
+  - Si rechaza: `ine_rechazada=True`, `ine_rechazo_motivo` guardado, estado pasa a `ine_rechazada`
+- **Agregado** `@action resubir_ine` en `SolicitudMaterialViewSet`:
+  - `POST /procurement/solicitudes/{id}/resubir_ine/`
+  - Usuario puede re-subir su INE tras rechazo; estado regresa a `pendiente_verificacion`
+- **Agregado** `@action upload_ine` en `UserViewSet` (`apps/accounts/views.py`):
+  - `POST /auth/users/upload_ine/`
+  - Endpoint independiente para subir/actualizar foto de INE sin necesidad de crear una solicitud
+  - Resetea `ine_rechazada`, `ine_rechazo_motivo` y marca `ine_verificada=False` para nueva verificación
+
+#### Frontend - Tipos e Interfaces
+- **Modificado** `stores/authStore.ts`: interfaz `User` extendida con `ine_foto`, `ine_verificada`, `ine_rechazada`, `ine_rechazo_motivo`
+- **Modificado** `services/procurementService.ts`: interfaz `SolicitudMaterial` extendida con `ine_foto` e `ine_rechazo_motivo`
+
+#### Frontend - Servicios
+- **Modificado** `services/procurementService.ts`:
+  - `createSolicitud()` acepta `ineFoto?: File` opcional; envía `multipart/form-data` cuando se incluye foto
+  - `verificarIne(id, data)` — POST `/procurement/solicitudes/{id}/verificar_ine/`
+  - `resubirIne(id, ineFoto)` — POST `/procurement/solicitudes/{id}/resubir_ine/` (multipart)
+- **Modificado** `services/userService.ts`:
+  - `uploadIne(ineFoto: File)` — POST `/auth/users/upload_ine/` (multipart)
+
+#### Frontend - Páginas
+- **Modificado** `pages/procurement/SolicitudFormPage.tsx`:
+  - Modal de subida de INE con preview antes de crear la solicitud
+  - Intercepta `onSubmit` y `handleSendDirectly` cuando `user.ine_foto` es nulo
+  - Tras upload exitoso: actualiza store de Zustand con los campos INE actualizados
+- **Modificado** `pages/procurement/SolicitudDetailPage.tsx`:
+  - Banner ámbar + UI de aprobación/rechazo para admin cuando estado es `pendiente_verificacion`
+  - Banner rojo + botón de re-upload cuando estado es `ine_rechazada`
+  - Modal de rechazo con textarea para motivo
+  - Modal de re-subida con preview de imagen
+- **Modificado** `pages/procurement/SolicitudesPage.tsx`:
+  - Colores de estado agregados: `pendiente_verificacion` (ámbar), `ine_rechazada` (rojo)
+  - Tarjeta contextual de gestión de INE (visible para roles `area` y `admin`) con 4 estados:
+    - **Sin INE**: botón "Subir INE"
+    - **INE rechazada**: motivo del rechazo + botón "Resubir INE"
+    - **INE en verificación**: aviso informativo + botón "Actualizar INE"
+    - **INE verificada**: confirmación verde + botón "Actualizar INE"
+  - Modal de subida/actualización de INE con preview y vista de foto actual
+
+---
+
 ### 🛡️ Seguridad - Validación de Facturas
 
 #### Backend - Validaciones CFDI

@@ -10,13 +10,18 @@ import {
   DocumentArrowUpIcon,
   MagnifyingGlassIcon,
   TableCellsIcon,
+  IdentificationIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
 } from '@heroicons/react/24/outline'
-import { Button } from '@/components/ui'
+import { Button, Modal } from '@/components/ui'
 import { procurementService, SolicitudMaterial } from '@/services/procurementService'
 import { documentService } from '@/services/documentService'
 import { useAuthStore } from '@/stores/authStore'
 
 const estadoColors: Record<string, string> = {
+  pendiente_verificacion: 'bg-amber-100 text-amber-800',
+  ine_rechazada: 'bg-red-100 text-red-800',
   borrador: 'bg-gray-100 text-gray-800',
   enviado: 'bg-blue-100 text-blue-800',
   en_cotizacion: 'bg-yellow-100 text-yellow-800',
@@ -38,6 +43,11 @@ export default function SolicitudDetailPage() {
   const [submitting, setSubmitting] = useState(false)
   const [buscandoCatalogo, setBuscandoCatalogo] = useState(false)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const [showResubirIneModal, setShowResubirIneModal] = useState(false)
+  const [showRechazarIneModal, setShowRechazarIneModal] = useState(false)
+  const [ineFile, setIneFile] = useState<File | null>(null)
+  const [inePreview, setInePreview] = useState<string | null>(null)
+  const [rechazoMotivo, setRechazoMotivo] = useState('')
 
   // Permisos según rol
   const isArea = user?.role === 'area'
@@ -135,6 +145,66 @@ export default function SolicitudDetailPage() {
       toast.error('Error al generar el PDF')
     } finally {
       setDownloadingPdf(false)
+    }
+  }
+
+  const handleAprobarIne = async () => {
+    if (!solicitud) return
+    setSubmitting(true)
+    try {
+      const updated = await procurementService.verificarIne(solicitud.id, true)
+      setSolicitud(updated)
+      toast.success('INE aprobada. La solicitud pasa a estado Borrador.')
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Error al aprobar la INE')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleRechazarIne = async () => {
+    if (!solicitud || !rechazoMotivo.trim()) {
+      toast.error('Debes indicar el motivo del rechazo')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const updated = await procurementService.verificarIne(solicitud.id, false, rechazoMotivo)
+      setSolicitud(updated)
+      setShowRechazarIneModal(false)
+      setRechazoMotivo('')
+      toast.success('INE rechazada. El usuario deberá subir una nueva.')
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Error al rechazar la INE')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleResubirIne = async () => {
+    if (!solicitud || !ineFile) return
+    setSubmitting(true)
+    try {
+      const updated = await procurementService.resubirIne(solicitud.id, ineFile)
+      setSolicitud(updated)
+      setShowResubirIneModal(false)
+      setIneFile(null)
+      setInePreview(null)
+      toast.success('INE reenviada. Espera la verificación del administrador.')
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Error al resubir la INE')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleIneFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setIneFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => setInePreview(reader.result as string)
+      reader.readAsDataURL(file)
     }
   }
 
@@ -254,6 +324,62 @@ export default function SolicitudDetailPage() {
         </Button>
       </div>
 
+      {/* Banner: Pendiente de verificación INE */}
+      {solicitud.estado === 'pendiente_verificacion' && (
+        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <IdentificationIcon className="h-6 w-6 text-amber-600 mr-3 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-amber-800">Solicitud en espera de verificación de INE</h3>
+              <p className="mt-1 text-sm text-amber-700">
+                Un administrador debe verificar tu identificación antes de que esta solicitud pueda ser procesada.
+              </p>
+              
+              {/* Admin: show INE photo and approve/reject buttons */}
+              {isAdmin && solicitud.ine_foto && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Foto de INE del solicitante:</p>
+                  <img src={solicitud.ine_foto} alt="INE del solicitante" className="max-h-64 rounded-lg border border-gray-200 mb-4" />
+                  <div className="flex space-x-3">
+                    <Button size="sm" onClick={handleAprobarIne} loading={submitting}>
+                      <CheckCircleIcon className="h-4 w-4 mr-1" />
+                      Aprobar INE
+                    </Button>
+                    <Button size="sm" variant="danger" onClick={() => setShowRechazarIneModal(true)}>
+                      <XCircleIcon className="h-4 w-4 mr-1" />
+                      Rechazar INE
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Banner: INE Rechazada */}
+      {solicitud.estado === 'ine_rechazada' && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <ExclamationCircleIcon className="h-6 w-6 text-red-600 mr-3 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-red-800">Tu INE fue rechazada</h3>
+              {solicitud.ine_rechazo_motivo && (
+                <p className="mt-1 text-sm text-red-700">
+                  <span className="font-medium">Motivo:</span> {solicitud.ine_rechazo_motivo}
+                </p>
+              )}
+              {solicitud.created_by === user?.id && (
+                <Button size="sm" className="mt-3" onClick={() => setShowResubirIneModal(true)}>
+                  <IdentificationIcon className="h-4 w-4 mr-1" />
+                  Volver a subir INE
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Datos generales */}
       <div className="bg-white shadow rounded-lg p-6 mb-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Datos Generales</h2>
@@ -358,6 +484,88 @@ export default function SolicitudDetailPage() {
           </table>
         </div>
       </div>
+
+      {/* Modal: Rechazar INE */}
+      <Modal
+        isOpen={showRechazarIneModal}
+        onClose={() => { setShowRechazarIneModal(false); setRechazoMotivo('') }}
+        title="Rechazar INE"
+        size="md"
+      >
+        <div className="py-4">
+          <p className="text-sm text-gray-600 mb-4">
+            Indica el motivo del rechazo. El usuario podrá volver a subir su INE.
+          </p>
+          <textarea
+            value={rechazoMotivo}
+            onChange={(e) => setRechazoMotivo(e.target.value)}
+            rows={3}
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+            placeholder="Ej: La imagen no es legible, sube una foto más clara..."
+          />
+          <div className="flex justify-end space-x-3 mt-4">
+            <Button variant="secondary" onClick={() => { setShowRechazarIneModal(false); setRechazoMotivo('') }}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={handleRechazarIne} loading={submitting} disabled={!rechazoMotivo.trim()}>
+              Confirmar Rechazo
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal: Resubir INE */}
+      <Modal
+        isOpen={showResubirIneModal}
+        onClose={() => { setShowResubirIneModal(false); setIneFile(null); setInePreview(null) }}
+        title="Volver a subir INE"
+        size="md"
+      >
+        <div className="py-4">
+          <p className="text-sm text-gray-600 mb-4">
+            Sube una nueva foto de tu INE. Asegúrate de que la imagen sea clara y legible.
+          </p>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            {inePreview ? (
+              <div className="space-y-3">
+                <img src={inePreview} alt="Vista previa INE" className="mx-auto max-h-48 rounded-lg" />
+                <p className="text-sm text-green-600 font-medium">Imagen seleccionada</p>
+                <button
+                  type="button"
+                  onClick={() => { setIneFile(null); setInePreview(null) }}
+                  className="text-sm text-red-600 hover:text-red-800 underline"
+                >
+                  Cambiar imagen
+                </button>
+              </div>
+            ) : (
+              <div>
+                <IdentificationIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <label className="mt-2 cursor-pointer">
+                  <span className="text-sm font-medium text-primary-600 hover:text-primary-500">
+                    Seleccionar foto de INE
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleIneFileChange}
+                    className="hidden"
+                  />
+                </label>
+                <p className="mt-1 text-xs text-gray-500">PNG, JPG o JPEG hasta 5MB</p>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end space-x-3 mt-4">
+            <Button variant="secondary" onClick={() => { setShowResubirIneModal(false); setIneFile(null); setInePreview(null) }}>
+              Cancelar
+            </Button>
+            <Button onClick={handleResubirIne} loading={submitting} disabled={!ineFile}>
+              Enviar INE
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

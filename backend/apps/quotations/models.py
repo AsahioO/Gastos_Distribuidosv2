@@ -84,7 +84,7 @@ class CotizacionMaterial(models.Model):
 
 
 class CotizacionDetalle(models.Model):
-    """Line item in a quotation."""
+
     
     cotizacion = models.ForeignKey(
         CotizacionMaterial,
@@ -101,13 +101,13 @@ class CotizacionDetalle(models.Model):
         verbose_name='Detalle de solicitud'
     )
     
-    # Item info (can differ from request)
+    
     concepto = models.CharField(max_length=500, verbose_name='Concepto')
     descripcion = models.TextField(blank=True, verbose_name='Descripción')
     cantidad = models.DecimalField(max_digits=15, decimal_places=4, verbose_name='Cantidad')
     unidad = models.CharField(max_length=50, verbose_name='Unidad')
     
-    # Pricing
+    
     precio_unitario = models.DecimalField(max_digits=15, decimal_places=2, verbose_name='Precio unitario')
     subtotal = models.DecimalField(max_digits=15, decimal_places=2, verbose_name='Subtotal')
 

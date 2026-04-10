@@ -32,5 +32,6 @@ class GenerateDocumentSerializer(serializers.Serializer):
     ('cotizacion', 'Cotización'),
     ('entrega_bienes', 'Entrega de Bienes'),
     ('salida_almacen', 'Salida de Almacén'),
+    ('solicitud_autorizacion', 'Solicitud de Autorización'),
 ])
     object_id = serializers.IntegerField()

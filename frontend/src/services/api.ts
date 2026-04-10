@@ -22,31 +22,46 @@ api.interceptors.request.use(
   }
 )
 
+// Singleton refresh promise to prevent race conditions when multiple
+// requests fail with 401 simultaneously.
+let pendingRefresh: Promise<string> | null = null
+
 // Response interceptor to handle token refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Skip refresh for auth endpoints to avoid loops
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/token')
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true
 
       const { refreshToken, logout, setAuth } = useAuthStore.getState()
 
       if (refreshToken) {
         try {
-          const response = await axios.post('/api/auth/token/refresh/', {
-            refresh: refreshToken,
-          })
-
-          const { access } = response.data
-          const { user } = useAuthStore.getState()
-          
-          if (user) {
-            setAuth(user, access, refreshToken)
+          // Reuse an in-flight refresh request instead of creating a new one
+          if (!pendingRefresh) {
+            pendingRefresh = axios
+              .post('/api/auth/token/refresh/', { refresh: refreshToken })
+              .then((res) => {
+                const { access, refresh: newRefresh } = res.data
+                const { user } = useAuthStore.getState()
+                if (user) {
+                  // Save the NEW refresh token returned by rotation
+                  setAuth(user, access, newRefresh || refreshToken)
+                }
+                return access
+              })
+              .finally(() => {
+                pendingRefresh = null
+              })
           }
 
-          originalRequest.headers.Authorization = `Bearer ${access}`
+          const newAccess = await pendingRefresh
+          originalRequest.headers.Authorization = `Bearer ${newAccess}`
           return api(originalRequest)
         } catch (refreshError) {
           logout()

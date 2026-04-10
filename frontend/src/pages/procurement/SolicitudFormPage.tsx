@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm, useFieldArray } from 'react-hook-form'
 import toast from 'react-hot-toast'
-import { PlusIcon, TrashIcon, ArrowLeftIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, TrashIcon, ArrowLeftIcon, ExclamationTriangleIcon, IdentificationIcon } from '@heroicons/react/24/outline'
 import { Button, Input, Select, Modal, CogCombobox } from '@/components/ui'
 import { procurementService, Cog, CreateSolicitudData } from '@/services/procurementService'
 import { areaService, Area } from '@/services/areaService'
+import { useAuthStore } from '@/stores/authStore'
 
 interface DetalleForm {
   concepto: string
@@ -38,9 +39,14 @@ export default function SolicitudFormPage() {
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [showIneModal, setShowIneModal] = useState(false)
+  const [ineFoto, setIneFoto] = useState<File | null>(null)
+  const [inePreview, setInePreview] = useState<string | null>(null)
   const [pendingFormData, setPendingFormData] = useState<SolicitudForm | null>(null)
+  const [pendingSendDirectly, setPendingSendDirectly] = useState(false)
   const [areas, setAreas] = useState<Area[]>([])
   const [cogs, setCogs] = useState<Cog[]>([])
+  const { user, updateUser } = useAuthStore()
 
   // Opciones predefinidas de unidades
   const unidadOptions = [
@@ -130,6 +136,14 @@ export default function SolicitudFormPage() {
       return
     }
 
+    // If user has no INE photo on file and not editing, show INE modal
+    if (!isEditing && !user?.ine_foto && !ineFoto) {
+      setPendingFormData(data)
+      setPendingSendDirectly(sendDirectly)
+      setShowIneModal(true)
+      return
+    }
+
     setSubmitting(true)
     try {
       const payload: CreateSolicitudData = {
@@ -153,10 +167,15 @@ export default function SolicitudFormPage() {
         await procurementService.updateSolicitud(parseInt(id), payload)
         toast.success('Solicitud actualizada correctamente')
       } else {
-        const created = await procurementService.createSolicitud(payload)
+        const created = await procurementService.createSolicitud(payload, ineFoto || undefined)
 
-        // Si se eligió enviar directamente, cambiar estado a "enviado"
-        if (sendDirectly) {
+        if (!user?.ine_foto && ineFoto) {
+          // User just uploaded INE - update local store
+          updateUser({ ine_rechazada: false, ine_rechazo_motivo: '' })
+          toast.success('Solicitud creada. Tu INE será verificada por un administrador.')
+        } else if (!user?.ine_verificada) {
+          toast.success('Solicitud creada. Tu INE será verificada por un administrador.')
+        } else if (sendDirectly) {
           await procurementService.enviarSolicitud(created.id)
           toast.success('Solicitud creada y enviada correctamente')
         } else {
@@ -173,7 +192,11 @@ export default function SolicitudFormPage() {
     } finally {
       setSubmitting(false)
       setShowConfirmModal(false)
+      setShowIneModal(false)
       setPendingFormData(null)
+      setPendingSendDirectly(false)
+      setIneFoto(null)
+      setInePreview(null)
     }
   }
 
@@ -184,6 +207,13 @@ export default function SolicitudFormPage() {
 
   // Manejador para abrir modal de confirmación de envío directo
   const handleSendDirectly = (data: SolicitudForm) => {
+    // If user has no INE on file, the INE modal will handle the flow
+    if (!user?.ine_foto) {
+      setPendingFormData(data)
+      setPendingSendDirectly(true)
+      setShowIneModal(true)
+      return
+    }
     setPendingFormData(data)
     setShowConfirmModal(true)
   }
@@ -192,6 +222,29 @@ export default function SolicitudFormPage() {
   const confirmSendDirectly = () => {
     if (pendingFormData) {
       onSubmit(pendingFormData, true)
+    }
+  }
+
+  // Handle INE file selection
+  const handleIneFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setIneFoto(file)
+      const reader = new FileReader()
+      reader.onloadend = () => setInePreview(reader.result as string)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Confirm INE upload and proceed with solicitud creation
+  const confirmIneUpload = () => {
+    if (!ineFoto) {
+      toast.error('Debes seleccionar una foto de tu INE')
+      return
+    }
+    setShowIneModal(false)
+    if (pendingFormData) {
+      onSubmit(pendingFormData, pendingSendDirectly)
     }
   }
 
@@ -484,6 +537,74 @@ export default function SolicitudFormPage() {
               loading={submitting}
             >
               Sí, Enviar Solicitud
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal de verificación INE */}
+      <Modal
+        isOpen={showIneModal}
+        onClose={() => { setShowIneModal(false); setPendingFormData(null); setPendingSendDirectly(false) }}
+        title="Verificación de Identidad (INE)"
+        size="md"
+      >
+        <div className="py-4">
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4">
+            <IdentificationIcon className="h-10 w-10 text-blue-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2 text-center">
+            Es la primera vez que creas una solicitud
+          </h3>
+          <p className="text-sm text-gray-600 mb-4 text-center">
+            Adjunta una foto de tu INE para continuar. Un administrador verificará tu identidad antes de procesar la solicitud.
+          </p>
+          
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            {inePreview ? (
+              <div className="space-y-3">
+                <img src={inePreview} alt="Vista previa INE" className="mx-auto max-h-48 rounded-lg" />
+                <p className="text-sm text-green-600 font-medium">Imagen seleccionada</p>
+                <button
+                  type="button"
+                  onClick={() => { setIneFoto(null); setInePreview(null) }}
+                  className="text-sm text-red-600 hover:text-red-800 underline"
+                >
+                  Cambiar imagen
+                </button>
+              </div>
+            ) : (
+              <div>
+                <IdentificationIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <label className="mt-2 cursor-pointer">
+                  <span className="text-sm font-medium text-primary-600 hover:text-primary-500">
+                    Seleccionar foto de INE
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleIneFileChange}
+                    className="hidden"
+                  />
+                </label>
+                <p className="mt-1 text-xs text-gray-500">PNG, JPG o JPEG hasta 5MB</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex justify-center space-x-3 mt-6">
+            <Button
+              variant="secondary"
+              onClick={() => { setShowIneModal(false); setPendingFormData(null); setPendingSendDirectly(false) }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmIneUpload}
+              disabled={!ineFoto}
+              loading={submitting}
+            >
+              Continuar con la solicitud
             </Button>
           </div>
         </div>

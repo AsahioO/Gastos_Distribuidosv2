@@ -112,6 +112,12 @@ CREATE TABLE users_user (
     role            VARCHAR(20) NOT NULL DEFAULT 'area',
     area_id         BIGINT REFERENCES areas_area(id),
     phone           VARCHAR(20),
+
+    -- Verificación de identidad (INE)
+    ine_foto            VARCHAR(255),          -- Ruta del archivo (media/ine/)
+    ine_verificada      BOOLEAN DEFAULT FALSE,
+    ine_rechazada       BOOLEAN DEFAULT FALSE,
+    ine_rechazo_motivo  TEXT DEFAULT '',
     
     CONSTRAINT valid_role CHECK (role IN (
         'admin', 'tesoreria', 'adquisiciones', 
@@ -131,6 +137,10 @@ CREATE INDEX idx_users_area ON users_user(area_id);
 | `role` | Enum | Rol del usuario |
 | `area_id` | FK → Area | Área asignada (opcional) |
 | `phone` | String | Teléfono de contacto |
+| `ine_foto` | ImageField | Foto de INE subida por el usuario |
+| `ine_verificada` | Boolean | Si un admin aprobó la INE |
+| `ine_rechazada` | Boolean | Si un admin rechazó la INE |
+| `ine_rechazo_motivo` | Text | Motivo del rechazo de INE |
 
 ### Roles Disponibles
 
@@ -272,7 +282,7 @@ CREATE TABLE compras_solicitud (
     fecha_requerida DATE,
     
     -- Estado
-    estado          VARCHAR(20) NOT NULL DEFAULT 'borrador',
+    estado          VARCHAR(30) NOT NULL DEFAULT 'borrador',
     prioridad       VARCHAR(10) DEFAULT 'normal',
     
     -- Auditoría
@@ -280,6 +290,7 @@ CREATE TABLE compras_solicitud (
     updated_at      TIMESTAMP DEFAULT NOW(),
     
     CONSTRAINT valid_estado CHECK (estado IN (
+        'pendiente_verificacion', 'ine_rechazada',
         'borrador', 'enviada', 'en_cotizacion', 'cotizada',
         'autorizada', 'rechazada', 'ordenada', 'recibida', 'pagada'
     )),
@@ -298,13 +309,13 @@ CREATE INDEX idx_solicitud_fecha ON compras_solicitud(created_at);
 #### Estados de Solicitud
 
 ```
-borrador ─────> enviada ─────> en_cotizacion ─────> cotizada
-                                                      │
-                                                      ▼
-                                        ┌─────── autorizada ───────┐
-                                        │                         │
-                                        ▼                         ▼
-                                   rechazada               ordenada ─> recibida ─> pagada
+[sin INE] ──subir INE──> pendiente_verificacion ──aprobar──> borrador ─────> enviada ─────> en_cotizacion ─────> cotizada
+                                 │                                                                                    │
+                         rechazar│                                                                                    ▼
+                                 ▼                                                              ┌─────── autorizada ──────┐
+                          ine_rechazada                                                         │                        │
+                         (usuario resubir)                                                      ▼                        ▼
+                                                                                          rechazada              ordenada ─> recibida ─> pagada
 ```
 
 ### SolicitudItem

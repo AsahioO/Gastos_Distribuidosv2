@@ -29,6 +29,8 @@ class SolicitudMaterialSerializer(serializers.ModelSerializer):
     created_by_name = serializers.CharField(source='created_by.full_name', read_only=True)
     detalles = DetalleMaterialSerializer(many=True, read_only=True)
     estado_display = serializers.CharField(source='get_estado_display', read_only=True)
+    ine_foto = serializers.SerializerMethodField()
+    ine_rechazo_motivo = serializers.CharField(source='created_by.ine_rechazo_motivo', read_only=True)
     
     class Meta:
         model = SolicitudMaterial
@@ -38,9 +40,18 @@ class SolicitudMaterialSerializer(serializers.ModelSerializer):
             'programa_presupuestario', 'actividad', 'estado', 'estado_display',
             'total_estimado', 'urgente', 'fecha_requerida',
             'created_by', 'created_by_name', 'detalles',
+            'ine_foto', 'ine_rechazo_motivo',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'numero', 'total_estimado', 'created_by', 'created_at', 'updated_at']
+    
+    def get_ine_foto(self, obj):
+        if obj.created_by and obj.created_by.ine_foto:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.created_by.ine_foto.url)
+            return obj.created_by.ine_foto.url
+        return None
 
 
 class SolicitudMaterialCreateSerializer(serializers.ModelSerializer):
@@ -56,6 +67,12 @@ class SolicitudMaterialCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         detalles_data = validated_data.pop('detalles')
+        user = validated_data.get('created_by')
+        
+        # If user doesn't have verified INE, set estado to pendiente_verificacion
+        if user and not user.ine_verificada:
+            validated_data['estado'] = SolicitudMaterial.EstadoChoices.PENDIENTE_VERIFICACION
+        
         solicitud = SolicitudMaterial.objects.create(**validated_data)
         
         for detalle_data in detalles_data:

@@ -106,6 +106,31 @@ PATCH /accounts/users/{id}/
 GET /accounts/users/me/
 ```
 
+#### Subir o actualizar INE
+```http
+POST /auth/users/upload_ine/
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+ine_foto: <archivo imagen>
+```
+
+**Respuesta (200):**
+```json
+{
+  "id": 1,
+  "email": "usuario@ejemplo.com",
+  "full_name": "Nombre Completo",
+  "ine_foto": "https://api.example.com/media/ine/usuario_ine.jpg",
+  "ine_verificada": false,
+  "ine_rechazada": false,
+  "ine_rechazo_motivo": ""
+}
+```
+
+> [!NOTE]
+> Al subir una nueva INE se resetea el estado de verificación. Un administrador debe aprobarla de nuevo. Los campos INE también se incluyen en la respuesta del login (`POST /auth/token/`).
+
 ---
 
 ### 🏢 Áreas
@@ -349,6 +374,8 @@ GET /procurement/solicitudes/
 | fecha_hasta | date | Fecha final |
 
 **Estados disponibles:**
+- `pendiente_verificacion` — INE subida, esperando aprobación de admin
+- `ine_rechazada` — INE rechazada, usuario debe resubir
 - `borrador`
 - `enviado`
 - `en_cotizacion`
@@ -361,8 +388,20 @@ GET /procurement/solicitudes/
 #### Crear solicitud
 ```http
 POST /procurement/solicitudes/
-Content-Type: application/json
+Content-Type: multipart/form-data   (si el usuario no tiene INE registrada)
+Content-Type: application/json      (si el usuario ya tiene INE)
+```
 
+Cuando el usuario **no tiene INE registrada**, el payload debe ser `multipart/form-data`:
+
+```
+data: <JSON stringificado con los campos de la solicitud>
+ine_foto: <archivo imagen de la INE>
+```
+
+Cuando el usuario ya tiene INE, se puede enviar JSON normal:
+
+```json
 {
   "area": 1,
   "descripcion": "Material de oficina mensual",
@@ -379,6 +418,10 @@ Content-Type: application/json
     }
   ]
 }
+```
+
+> [!NOTE]
+> Si el usuario no tiene INE registrada, la solicitud se crea con estado `pendiente_verificacion` y permanece bloqueada hasta que un administrador apruebe la INE.
 ```
 
 #### Obtener solicitud
@@ -415,6 +458,61 @@ POST /procurement/solicitudes/{id}/submit/
 #### Cancelar solicitud
 ```http
 POST /procurement/solicitudes/{id}/cancel/
+```
+
+#### Verificar INE (admin)
+```http
+POST /procurement/solicitudes/{id}/verificar_ine/
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "accion": "aprobar"
+}
+```
+
+O para rechazar:
+```json
+{
+  "accion": "rechazar",
+  "motivo": "La foto de la INE está borrosa, suba una imagen más clara."
+}
+```
+
+**Respuesta aprobación (200):**
+```json
+{
+  "detail": "INE verificada correctamente.",
+  "estado": "borrador"
+}
+```
+
+**Respuesta rechazo (200):**
+```json
+{
+  "detail": "INE rechazada.",
+  "estado": "ine_rechazada"
+}
+```
+
+> [!NOTE]
+> Solo usuarios con rol `admin` pueden usar este endpoint. Al aprobar, la solicitud pasa a estado `borrador` y el usuario puede operarla normalmente.
+
+#### Re-subir INE tras rechazo
+```http
+POST /procurement/solicitudes/{id}/resubir_ine/
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+ine_foto: <archivo imagen>
+```
+
+**Respuesta (200):**
+```json
+{
+  "detail": "INE re-subida correctamente. Pendiente de verificación.",
+  "estado": "pendiente_verificacion"
+}
 ```
 
 ---

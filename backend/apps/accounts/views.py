@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .models import User, Role
@@ -139,3 +140,24 @@ class UserViewSet(viewsets.ModelViewSet):
         user.is_active = not user.is_active
         user.save()
         return Response({'is_active': user.is_active})
+    
+    @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
+    def upload_ine(self, request):
+        """Upload or update INE photo for the current user."""
+        ine_foto = request.FILES.get('ine_foto')
+        if not ine_foto:
+            return Response(
+                {'detail': 'Debes adjuntar una foto de tu INE.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user = request.user
+        user.ine_foto = ine_foto
+        user.ine_rechazada = False
+        user.ine_rechazo_motivo = ''
+        # Reset verification so admin re-verifies the new upload
+        user.ine_verificada = False
+        user.save(update_fields=['ine_foto', 'ine_rechazada', 'ine_rechazo_motivo', 'ine_verificada'])
+        
+        serializer = UserSerializer(user, context={'request': request})
+        return Response(serializer.data)

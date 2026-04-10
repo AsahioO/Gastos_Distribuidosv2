@@ -21,14 +21,26 @@ class UserSerializer(serializers.ModelSerializer):
     role_display = serializers.CharField(source='role.get_name_display', read_only=True)
     avatar = serializers.SerializerMethodField()
     
+    ine_foto = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
         fields = [
             'id', 'email', 'username', 'full_name', 'phone',
             'role', 'role_name', 'role_display', 'avatar', 'is_active',
+            'ine_foto', 'ine_verificada', 'ine_rechazada', 'ine_rechazo_motivo',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_ine_foto(self, obj):
+        """Return absolute URL for INE photo."""
+        if obj.ine_foto:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.ine_foto.url)
+            return obj.ine_foto.url
+        return None
     
     def get_avatar(self, obj):
         """Return absolute URL for avatar."""
@@ -144,6 +156,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             else:
                 avatar_url = self.user.avatar.url
         
+        # Build absolute URL for INE photo
+        ine_foto_url = None
+        if self.user.ine_foto:
+            request = self.context.get('request')
+            if request:
+                ine_foto_url = request.build_absolute_uri(self.user.ine_foto.url)
+            else:
+                ine_foto_url = self.user.ine_foto.url
+        
         # Add user info to response
         data['user'] = {
             'id': self.user.id,
@@ -154,6 +175,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'permissions': self.user.role.permissions if self.user.role else [],
             'avatar': avatar_url,
             'phone': self.user.phone,
+            'ine_verificada': self.user.ine_verificada,
+            'ine_rechazada': self.user.ine_rechazada,
+            'ine_rechazo_motivo': self.user.ine_rechazo_motivo,
+            'ine_foto': ine_foto_url,
         }
         
         return data

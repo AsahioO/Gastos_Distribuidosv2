@@ -33,6 +33,7 @@ export default function OrdenDetailPage() {
   const [loading, setLoading] = useState(true)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
   const [downloadingAutPdf, setDownloadingAutPdf] = useState(false)
+  const [downloadingSolAutPdf, setDownloadingSolAutPdf] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -131,6 +132,23 @@ export default function OrdenDetailPage() {
       toast.error('Error al generar el PDF de autorización')
     } finally {
       setDownloadingAutPdf(false)
+    }
+  }
+
+  const handleDescargarSolAutPdf = async () => {
+    if (!orden || !orden.autorizacion) return
+    setDownloadingSolAutPdf(true)
+    try {
+      const documentId = await documentService.generateSolicitudAutorizacionPdf(orden.autorizacion)
+      if (documentId) {
+        await documentService.downloadPdf(documentId, `SolicitudAut_${orden.numero}.pdf`)
+      } else {
+        toast.success('PDF en proceso. El documento estará disponible en breve.')
+      }
+    } catch (error) {
+      toast.error('Error al generar el PDF de solicitud de autorización')
+    } finally {
+      setDownloadingSolAutPdf(false)
     }
   }
 
@@ -351,6 +369,13 @@ export default function OrdenDetailPage() {
 
           {/* Acciones */}
           <div className="flex justify-end space-x-3 pt-4 border-t">
+            {orden.autorizacion && (
+              <Button variant="secondary" onClick={handleDescargarSolAutPdf} loading={downloadingSolAutPdf}>
+                <DocumentTextIcon className="h-5 w-5 mr-2" />
+                Solicitud de Autorización
+              </Button>
+            )}
+
             {orden.autorizacion && (
               <Button variant="secondary" onClick={handleDescargarAutorizacionPdf} loading={downloadingAutPdf}>
                 <DocumentTextIcon className="h-5 w-5 mr-2" />

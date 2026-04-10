@@ -100,6 +100,17 @@ class User(AbstractUser):
         verbose_name='Avatar'
     )
     
+    # INE verification
+    ine_foto = models.ImageField(
+        upload_to='ine/',
+        blank=True,
+        null=True,
+        verbose_name='Foto de INE'
+    )
+    ine_verificada = models.BooleanField(default=False, verbose_name='INE verificada')
+    ine_rechazada = models.BooleanField(default=False, verbose_name='INE rechazada')
+    ine_rechazo_motivo = models.TextField(blank=True, verbose_name='Motivo de rechazo de INE')
+    
     # Audit
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Fecha de actualización')

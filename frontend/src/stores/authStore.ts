@@ -11,6 +11,10 @@ export interface User {
   role_display?: string
   permissions?: string[]
   avatar?: string | null
+  ine_verificada?: boolean
+  ine_rechazada?: boolean
+  ine_rechazo_motivo?: string
+  ine_foto?: string | null
   settings?: {
     theme?: 'light' | 'dark'
     [key: string]: unknown

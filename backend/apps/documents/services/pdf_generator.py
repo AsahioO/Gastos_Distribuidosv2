@@ -200,3 +200,20 @@ def generate_salida_pdf(salida) -> bytes:
 
     html = render_template('salida_almacen.html', context)
     return generate_pdf_from_html(html)
+
+
+def generate_solicitud_autorizacion_pdf(solicitud_aut) -> bytes:
+    """Generate PDF for a SolicitudAutorizacion."""
+    context = get_base_context()
+
+    context.update({
+        'solicitud_aut': solicitud_aut,
+        'solicitud': solicitud_aut.solicitud,
+        'detalles': solicitud_aut.solicitud.detalles.all(),
+        'cotizacion': solicitud_aut.cotizacion,
+    })
+
+    context['firmantes'] = get_firmantes_context('solicitud_autorizacion')
+
+    html = render_template('solicitud_autorizacion.html', context)
+    return generate_pdf_from_html(html)

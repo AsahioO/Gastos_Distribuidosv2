@@ -49,6 +49,8 @@ export interface SolicitudMaterial {
   created_by: number
   created_by_name: string
   detalles: DetalleMaterial[]
+  ine_foto?: string | null
+  ine_rechazo_motivo?: string
   materiales?: {
     descripcion: string
     unidad_medida: string
@@ -95,7 +97,16 @@ export const procurementService = {
     return response.data
   },
 
-  createSolicitud: async (data: CreateSolicitudData): Promise<SolicitudMaterial> => {
+  createSolicitud: async (data: CreateSolicitudData, ineFoto?: File): Promise<SolicitudMaterial> => {
+    if (ineFoto) {
+      const formData = new FormData()
+      formData.append('data', JSON.stringify(data))
+      formData.append('ine_foto', ineFoto)
+      const response = await api.post('/procurement/solicitudes/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      return response.data
+    }
     const response = await api.post('/procurement/solicitudes/', data)
     return response.data
   },
@@ -132,6 +143,21 @@ export const procurementService = {
     sin_cobertura: boolean
   }> => {
     const response = await api.post(`/procurement/solicitudes/${id}/buscar_cotizaciones_catalogo/`)
+    return response.data
+  },
+
+  // INE verification
+  verificarIne: async (id: number, aprobado: boolean, motivo?: string): Promise<SolicitudMaterial> => {
+    const response = await api.post(`/procurement/solicitudes/${id}/verificar_ine/`, { aprobado, motivo })
+    return response.data
+  },
+
+  resubirIne: async (id: number, ineFoto: File): Promise<SolicitudMaterial> => {
+    const formData = new FormData()
+    formData.append('ine_foto', ineFoto)
+    const response = await api.post(`/procurement/solicitudes/${id}/resubir_ine/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
     return response.data
   },
 

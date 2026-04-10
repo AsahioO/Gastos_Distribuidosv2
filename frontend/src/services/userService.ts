@@ -95,4 +95,14 @@ export const userService = {
     const response = await api.post('/auth/users/change_password/', data)
     return response.data
   },
+
+  /** Subir o actualizar foto de INE del usuario autenticado */
+  uploadIne: async (ineFoto: File): Promise<User> => {
+    const formData = new FormData()
+    formData.append('ine_foto', ineFoto)
+    const response = await api.post('/auth/users/upload_ine/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  },
 }
