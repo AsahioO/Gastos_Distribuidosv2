@@ -17,6 +17,7 @@ import {
 import { Button, Modal } from '@/components/ui'
 import { procurementService, SolicitudMaterial } from '@/services/procurementService'
 import { documentService } from '@/services/documentService'
+import { orderService } from '@/services/orderService'
 import { useAuthStore } from '@/stores/authStore'
 
 const estadoColors: Record<string, string> = {
@@ -43,6 +44,7 @@ export default function SolicitudDetailPage() {
   const [submitting, setSubmitting] = useState(false)
   const [buscandoCatalogo, setBuscandoCatalogo] = useState(false)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const [downloadingAutPdf, setDownloadingAutPdf] = useState(false)
   const [showResubirIneModal, setShowResubirIneModal] = useState(false)
   const [showRechazarIneModal, setShowRechazarIneModal] = useState(false)
   const [ineFile, setIneFile] = useState<File | null>(null)
@@ -145,6 +147,29 @@ export default function SolicitudDetailPage() {
       toast.error('Error al generar el PDF')
     } finally {
       setDownloadingPdf(false)
+    }
+  }
+
+  const handleDescargarSolAutPdf = async () => {
+    if (!solicitud) return
+    setDownloadingAutPdf(true)
+    try {
+      const autorizaciones = await orderService.getAutorizaciones()
+      const aut = autorizaciones.find(a => a.solicitud === solicitud.id)
+      if (!aut) {
+        toast.error('No se encontró una solicitud de autorización para esta solicitud')
+        return
+      }
+      const documentId = await documentService.generateSolicitudAutorizacionPdf(aut.id)
+      if (documentId) {
+        await documentService.downloadPdf(documentId, `SolicitudAut_${aut.numero}.pdf`)
+      } else {
+        toast.success('PDF en proceso. El documento estará disponible en breve.')
+      }
+    } catch (error) {
+      toast.error('Error al generar el PDF de solicitud de autorización')
+    } finally {
+      setDownloadingAutPdf(false)
     }
   }
 
@@ -318,6 +343,13 @@ export default function SolicitudDetailPage() {
           </Button>
         )}
         
+        {['en_autorizacion', 'autorizado', 'en_orden', 'parcial', 'entregado'].includes(solicitud.estado) && (
+          <Button variant="secondary" onClick={handleDescargarSolAutPdf} loading={downloadingAutPdf}>
+            <DocumentArrowUpIcon className="h-4 w-4 mr-2" />
+            Solicitud de Autorización
+          </Button>
+        )}
+
         <Button variant="secondary" onClick={handleDescargarPdf} loading={downloadingPdf}>
           <PrinterIcon className="h-4 w-4 mr-2" />
           Descargar PDF
