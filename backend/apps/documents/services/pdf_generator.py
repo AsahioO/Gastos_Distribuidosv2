@@ -8,6 +8,22 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
+
+def merge_pdfs_in_memory(pdf_bytes_list: list[bytes]) -> bytes:
+    """Merge multiple in-memory PDFs (as bytes) into a single PDF (bytes)."""
+    import io
+    from pypdf import PdfReader, PdfWriter
+
+    writer = PdfWriter()
+    for pdf_bytes in pdf_bytes_list:
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        for page in reader.pages:
+            writer.add_page(page)
+    output = io.BytesIO()
+    writer.write(output)
+    return output.getvalue()
+
+
 # Template directory
 TEMPLATE_DIR = Path(__file__).parent.parent / 'templates' / 'documents'
 
@@ -217,3 +233,149 @@ def generate_solicitud_autorizacion_pdf(solicitud_aut) -> bytes:
 
     html = render_template('solicitud_autorizacion.html', context)
     return generate_pdf_from_html(html)
+
+
+def _safe_user_by_role(role_name):
+    """Best-effort lookup of a user by role name. Returns None on any error."""
+    try:
+        from apps.accounts.models import User
+        return User.objects.filter(role__name=role_name).first()
+    except Exception:
+        return None
+
+
+def generate_solicitud_gasto_pdf(solicitud_gasto_id, tenant) -> bytes:
+    """Generate PDF for a SolicitudGasto."""
+    from decimal import Decimal
+    from collections import defaultdict
+    from apps.treasury.models import SolicitudGasto
+
+    solicitud_gasto = SolicitudGasto.objects.select_related(
+        'factura__proveedor', 'solicitante', 'tenant'
+    ).prefetch_related('items__area').get(
+        id=solicitud_gasto_id, tenant=tenant
+    )
+
+    subtotales_por_area = defaultdict(Decimal)
+    for item in solicitud_gasto.items.all():
+        subtotales_por_area[item.area_id] += item.costo_total
+
+    context = get_base_context()
+    context.update({
+        'solicitud_gasto': solicitud_gasto,
+        'lugar': context.get('company').municipio if context.get('company') else '',
+        'presidente_municipal': _safe_user_by_role('PRESIDENTE'),
+        'sindico_municipal': _safe_user_by_role('SINDICO'),
+        'subtotales_por_area': dict(subtotales_por_area),
+        'lema_anual': (tenant.settings or {}).get('lema_anual', ''),
+    })
+
+    context['firmantes'] = get_firmantes_context('solicitud_gasto')
+
+    html = render_template('solicitud_gasto.html', context)
+    return generate_pdf_from_html(html)
+
+
+def generate_solicitud_pago_pdf(solicitud_pago_id, tenant) -> bytes:
+    """Generate PDF for a SolicitudPago."""
+    from apps.treasury.models import SolicitudPago
+
+    solicitud_pago = SolicitudPago.objects.select_related(
+        'solicitud_gasto__factura',
+        'solicitud_gasto__factura__proveedor',
+        'solicitud_gasto__solicitante'
+    ).prefetch_related('items__area').get(
+        id=solicitud_pago_id, tenant=tenant
+    )
+
+    context = get_base_context()
+    context.update({
+        'solicitud_pago': solicitud_pago,
+        'lugar': context.get('company').municipio if context.get('company') else '',
+        'tesorera': _safe_user_by_role('TESORERA'),
+        'presidente_municipal': _safe_user_by_role('PRESIDENTE'),
+        'lema_anual': (tenant.settings or {}).get('lema_anual', ''),
+    })
+
+    context['firmantes'] = get_firmantes_context('solicitud_pago')
+
+    html = render_template('solicitud_pago.html', context)
+    return generate_pdf_from_html(html)
+
+
+def generate_distribucion_gasto_pdf(factura_id, tenant) -> bytes:
+    """Generate PDF for the DistribucionGasto of a Factura."""
+    from decimal import Decimal
+    from collections import defaultdict
+    from apps.invoices.models import Factura, DistribucionGasto
+
+    factura = Factura.objects.select_related('proveedor').get(id=factura_id)
+
+    distribuciones = (
+        DistribucionGasto.objects
+        .filter(factura=factura)
+        .select_related('area', 'concepto')
+        .order_by('area__name', 'id')
+    )
+
+    subtotales_por_area = defaultdict(Decimal)
+    for d in distribuciones:
+        subtotales_por_area[d.area_id] += d.monto
+
+    context = get_base_context()
+    context.update({
+        'factura': factura,
+        'distribuciones': distribuciones,
+        'subtotales_por_area': dict(subtotales_por_area),
+        'lugar': context.get('company').municipio if context.get('company') else '',
+        'lema_anual': (tenant.settings or {}).get('lema_anual', '') if tenant else '',
+    })
+
+    context['firmantes'] = get_firmantes_context('distribucion_gasto')
+
+    html = render_template('distribucion_gasto.html', context)
+    return generate_pdf_from_html(html)
+
+
+def generate_expediente_gasto_pdf(solicitud_gasto_id, tenant) -> bytes:
+    """
+    Generate a combined PDF:
+      1. Solicitud de Gasto
+      2. Distribucion de Gasto (from the linked factura)
+      3. Solicitud de Pago (if exists)
+    Returns bytes.
+    """
+    from apps.treasury.models import SolicitudGasto
+
+    solicitud_gasto = SolicitudGasto.objects.select_related(
+        'factura__proveedor', 'solicitante'
+    ).prefetch_related('items__area').get(
+        id=solicitud_gasto_id, tenant=tenant
+    )
+
+    gasto_bytes = generate_solicitud_gasto_pdf(solicitud_gasto_id, tenant)
+    pdf_parts = [gasto_bytes]
+
+    # Distribucion de gasto (from the linked factura)
+    if solicitud_gasto.factura_id:
+        try:
+            dist_bytes = generate_distribucion_gasto_pdf(
+                solicitud_gasto.factura_id, tenant
+            )
+            pdf_parts.append(dist_bytes)
+        except Exception:
+            logger.exception(
+                "No se pudo generar distribucion_gasto para factura %s",
+                solicitud_gasto.factura_id,
+            )
+
+    if hasattr(solicitud_gasto, 'solicitud_pago'):
+        pago_bytes = generate_solicitud_pago_pdf(
+            solicitud_gasto.solicitud_pago.id, tenant
+        )
+        pdf_parts.append(pago_bytes)
+
+    if len(pdf_parts) == 1:
+        return gasto_bytes
+
+    return merge_pdfs_in_memory(pdf_parts)

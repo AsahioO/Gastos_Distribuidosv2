@@ -7,7 +7,8 @@ class TenantSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Tenant
-        fields = ['id', 'schema_name', 'name', 'rfc', 'is_active', 'created_at', 'updated_at']
+        fields = ['id', 'schema_name', 'name', 'rfc', 'settings',
+                  'is_active', 'created_at', 'updated_at']
         read_only_fields = ['id', 'schema_name', 'created_at', 'updated_at']
 
 

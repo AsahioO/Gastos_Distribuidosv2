@@ -36,17 +36,20 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     
     # Local apps
+    'apps.tenants',
     'apps.accounts',
     'apps.companies',
     'apps.areas',
     'apps.procurement',
     'apps.quotations',
     'apps.orders',
+    'apps.treasury',
     'apps.invoices',
     'apps.inventory',
     'apps.documents',
     'apps.notifications',
     'apps.reports',
+    'apps.budget',
 ]
 
 MIDDLEWARE = [

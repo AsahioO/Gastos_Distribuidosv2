@@ -96,23 +96,31 @@ class SolicitudMaterialViewSet(viewsets.ModelViewSet):
             solicitud_data = request.data
             ine_foto = None
         
-        # If user has no INE photo on file, require it in the request
-        if not user.ine_foto:
-            if not ine_foto:
-                return Response(
-                    {'detail': 'Debes adjuntar una foto de tu INE para crear una solicitud.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            # Save INE to user
-            user.ine_foto = ine_foto
-            user.ine_rechazada = False
-            user.ine_rechazo_motivo = ''
-            user.save(update_fields=['ine_foto', 'ine_rechazada', 'ine_rechazo_motivo'])
+        # Admin and adquisiciones skip INE requirement
+        if not user.is_admin and not user.is_adquisiciones:
+            # If user has no INE photo on file, require it in the request
+            if not user.ine_foto:
+                if not ine_foto:
+                    return Response(
+                        {'detail': 'Debes adjuntar una foto de tu INE para crear una solicitud.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                # Save INE to user
+                user.ine_foto = ine_foto
+                user.ine_rechazada = False
+                user.ine_rechazo_motivo = ''
+                user.save(update_fields=['ine_foto', 'ine_rechazada', 'ine_rechazo_motivo'])
         
         serializer = self.get_serializer(data=solicitud_data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save(created_by=user)
-        
+
+        # If user's INE is not yet verified, flag solicitud for INE verification
+        # Admin and adquisiciones are exempt from INE verification
+        if not user.is_admin and not user.is_adquisiciones and not user.ine_verificada:
+            instance.estado = SolicitudMaterial.EstadoChoices.PENDIENTE_VERIFICACION
+            instance.save(update_fields=['estado'])
+
         # Return with full serializer that includes ID and all fields
         output_serializer = SolicitudMaterialSerializer(instance, context={'request': request})
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)

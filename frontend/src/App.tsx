@@ -32,6 +32,9 @@ import FacturaUploadPage from '@/pages/invoices/FacturaUploadPage'
 import FacturaDetailPage from '@/pages/invoices/FacturaDetailPage'
 import FacturaDistributePage from '@/pages/invoices/FacturaDistributePage'
 import DistribucionRapidaPage from '@/pages/invoices/DistribucionRapidaPage'
+// Budget pages
+import PlantillasPage from '@/pages/budget/PlantillasPage'
+import PlantillaDetailPage from '@/pages/budget/PlantillaDetailPage'
 // Portal del Proveedor - Fase 9
 import ProveedorDashboardPage from '@/pages/proveedor/ProveedorDashboardPage'
 import SolicitudesCotizarPage from '@/pages/proveedor/SolicitudesCotizarPage'
@@ -287,6 +290,18 @@ function App() {
         <Route path="/facturas/:id/distribuir" element={
           <ProtectedRoute allowedRoles={['admin', 'tesoreria']}>
             <FacturaDistributePage />
+          </ProtectedRoute>
+        } />
+
+        {/* Budget routes - Claves Presupuestarias */}
+        <Route path="/budget/plantillas" element={
+          <ProtectedRoute allowedRoles={['admin', 'tesoreria']}>
+            <PlantillasPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/budget/plantillas/:id" element={
+          <ProtectedRoute allowedRoles={['admin', 'tesoreria']}>
+            <PlantillaDetailPage />
           </ProtectedRoute>
         } />
       </Route>

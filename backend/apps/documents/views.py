@@ -1,9 +1,11 @@
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.views import APIView
 from django.conf import settings
 from .models import PDFDocument, Media
 from .serializers import PDFDocumentSerializer, MediaSerializer, GenerateDocumentSerializer
@@ -74,3 +76,43 @@ class MediaViewSet(viewsets.ModelViewSet):
             content_type=file.content_type if file else '',
             size=file.size if file else 0
         )
+
+
+class SolicitudGastoPDFView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        from apps.treasury.models import SolicitudGasto
+        from .services.pdf_generator import generate_solicitud_gasto_pdf
+
+        solicitud = get_object_or_404(SolicitudGasto, pk=pk)
+        try:
+            pdf_bytes = generate_solicitud_gasto_pdf(solicitud.id, solicitud.tenant)
+            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="solicitud_gasto_{solicitud.numero}.pdf"'
+            return response
+        except Exception as e:
+            return Response(
+                {'error': f'Error generando PDF: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class SolicitudPagoPDFView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        from apps.treasury.models import SolicitudPago
+        from .services.pdf_generator import generate_solicitud_pago_pdf
+
+        solicitud = get_object_or_404(SolicitudPago, pk=pk)
+        try:
+            pdf_bytes = generate_solicitud_pago_pdf(solicitud.id, solicitud.tenant)
+            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="solicitud_pago_{solicitud.numero}.pdf"'
+            return response
+        except Exception as e:
+            return Response(
+                {'error': f'Error generando PDF: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

@@ -11,7 +11,8 @@ class CompanySerializer(serializers.ModelSerializer):
             'id', 'rfc', 'razon_social', 'nombre_comercial',
             'calle', 'numero_exterior', 'numero_interior', 'colonia',
             'municipio', 'estado', 'codigo_postal', 'direccion_completa',
-            'telefono', 'email', 'logo', 'is_active', 'created_at', 'updated_at'
+            'telefono', 'email', 'logo', 'membrete', 'pie_pagina',
+            'is_active', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 

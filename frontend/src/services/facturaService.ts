@@ -35,6 +35,12 @@ export interface DistribucionGasto {
   created_at: string
 }
 
+export interface SolicitudGastoSummary {
+  id: number
+  numero: string
+  solicitud_pago_id: number | null
+}
+
 export interface Factura {
   id: number
   proveedor: number
@@ -67,6 +73,7 @@ export interface Factura {
   is_quick_flow: boolean
   conceptos: FacturaDetalle[]
   distribuciones: DistribucionGasto[]
+  solicitudes_gasto: SolicitudGastoSummary[]
   created_at: string
   updated_at: string
 }

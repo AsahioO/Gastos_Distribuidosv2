@@ -49,3 +49,55 @@ export const companyService = {
     return response.data
   },
 }
+
+export interface Firmante {
+  id: number
+  company: number
+  tipo_documento: string
+  tipo_documento_display: string
+  cargo: string
+  nombre: string
+  user: number | null
+  usuario_nombre: string
+  nombre_completo_display: string
+  sello_imagen: string | null
+  orden: number
+  created_at: string
+  updated_at: string
+}
+
+export const FIRMANTE_TIPO_CHOICES: Array<{ value: string; label: string }> = [
+  { value: 'solicitud', label: 'Solicitud de Materiales' },
+  { value: 'cotizacion', label: 'Cotización' },
+  { value: 'solicitud_autorizacion', label: 'Solicitud de Autorización' },
+  { value: 'autorizacion', label: 'Autorización Presupuestal' },
+  { value: 'orden_compra', label: 'Orden de Compra' },
+  { value: 'entrega', label: 'Entrega/Recepción' },
+  { value: 'salida', label: 'Salida de Almacén' },
+  { value: 'solicitud_gasto', label: 'Solicitud del Gasto' },
+  { value: 'solicitud_pago', label: 'Solicitud de Pago' },
+  { value: 'distribucion_gasto', label: 'Distribución del Gasto' },
+]
+
+export const firmanteService = {
+  list: async (companyId?: number): Promise<Firmante[]> => {
+    const params = companyId ? { company: companyId } : {}
+    const response = await api.get('/companies/firmantes/', { params })
+    return extractData(response.data)
+  },
+  create: async (data: FormData): Promise<Firmante> => {
+    const response = await api.post('/companies/firmantes/', data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  },
+  update: async (id: number, data: FormData): Promise<Firmante> => {
+    const response = await api.patch(`/companies/firmantes/${id}/`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  },
+  remove: async (id: number): Promise<void> => {
+    await api.delete(`/companies/firmantes/${id}/`)
+  },
+}

@@ -223,6 +223,7 @@ class FirmanteDocumento(models.Model):
         SALIDA = 'salida', 'Salida de Almacén'
         SOLICITUD_GASTO = 'solicitud_gasto', 'Solicitud del Gasto'
         SOLICITUD_PAGO = 'solicitud_pago', 'Solicitud de Pago'
+        DISTRIBUCION_GASTO = 'distribucion_gasto', 'Distribución del Gasto'
     
     company = models.ForeignKey(
         'companies.Company',

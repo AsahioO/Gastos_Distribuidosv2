@@ -30,12 +30,27 @@ class FacturaSerializer(serializers.ModelSerializer):
     proveedor_nombre = serializers.SerializerMethodField()
     conceptos = FacturaDetalleSerializer(many=True, read_only=True)
     distribuciones = DistribucionGastoSerializer(many=True, read_only=True)
+    solicitudes_gasto = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     
     def get_proveedor_nombre(self, obj):
         if obj.proveedor:
             return obj.proveedor.razon_social
         return obj.nombre_emisor or 'Pendiente de procesar'
+    
+    def get_solicitudes_gasto(self, obj):
+        result = []
+        for sg in obj.solicitudes_gasto.all():
+            try:
+                sp_id = sg.solicitud_pago.id
+            except Exception:
+                sp_id = None
+            result.append({
+                'id': sg.id,
+                'numero': sg.numero,
+                'solicitud_pago_id': sp_id,
+            })
+        return result
     
     class Meta:
         model = Factura
@@ -47,6 +62,7 @@ class FacturaSerializer(serializers.ModelSerializer):
             'forma_pago', 'metodo_pago', 'moneda', 'tipo_cambio',
             'tipo_comprobante', 'uso_cfdi', 'status', 'status_display',
             'error_message', 'is_quick_flow', 'conceptos', 'distribuciones',
+            'solicitudes_gasto',
             'created_at', 'updated_at'
         ]
         read_only_fields = [
@@ -55,6 +71,7 @@ class FacturaSerializer(serializers.ModelSerializer):
             'subtotal', 'descuento', 'iva', 'isr', 'iva_retenido', 'total',
             'forma_pago', 'metodo_pago', 'moneda', 'tipo_cambio',
             'tipo_comprobante', 'uso_cfdi', 'status', 'error_message',
+            'solicitudes_gasto',
             'created_at', 'updated_at'
         ]
 

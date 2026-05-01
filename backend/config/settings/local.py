@@ -48,10 +48,12 @@ INSTALLED_APPS = [
     'apps.procurement',
     'apps.quotations',
     'apps.orders',
+    'apps.treasury',
     'apps.inventory',
     'apps.invoices',
     'apps.documents',
     'apps.notifications',
+    'apps.budget',
 ]
 
 MIDDLEWARE = [

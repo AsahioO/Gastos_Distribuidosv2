@@ -67,11 +67,6 @@ class SolicitudMaterialCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         detalles_data = validated_data.pop('detalles')
-        user = validated_data.get('created_by')
-        
-        # If user doesn't have verified INE, set estado to pendiente_verificacion
-        if user and not user.ine_verificada:
-            validated_data['estado'] = SolicitudMaterial.EstadoChoices.PENDIENTE_VERIFICACION
         
         solicitud = SolicitudMaterial.objects.create(**validated_data)
         

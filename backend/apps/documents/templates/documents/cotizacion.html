@@ -15,6 +15,7 @@
 {% block destinatario_izq %}
     <div class="nombre-destinatario">{{ proveedor.nombre|upper }}</div>
     <div>{{ proveedor.razon_social|default:""|upper }}</div>
+    <div>RFC: {{ proveedor.rfc }}</div>
     <div>PROVEEDOR</div>
     <div>PRESENTE</div>
 {% endblock %}
@@ -46,8 +47,7 @@
                 <th style="width: 10%;">CANTIDAD</th>
                 <th style="width: 10%;">UNIDAD</th>
                 <th style="width: 15%;">PRECIO UNITARIO</th>
-                <th style="width: 15%;">SUBTOTAL</th>
-                <th style="width: 15%;">TOTAL</th>
+                <th style="width: 20%;">SUBTOTAL</th>
             </tr>
         </thead>
         <tbody>
@@ -61,17 +61,24 @@
                     <td class="center">{{ detalle.unidad }}</td>
                     <td class="right">${{ detalle.precio_unitario|floatformat:2 }}</td>
                     <td class="right">${{ detalle.subtotal|floatformat:2 }}</td>
-                    <td class="right">${{ detalle.subtotal|floatformat:2 }}</td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="6" class="center">No hay conceptos registrados en esta cotización.</td>
+                    <td colspan="5" class="center">No hay conceptos registrados en esta cotización.</td>
                 </tr>
             {% endfor %}
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="5" class="right" style="font-weight: bold;">TOTAL GENERAL:</td>
+                <td colspan="4" class="right">SUBTOTAL:</td>
+                <td class="right">${{ cotizacion.subtotal|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="right">IVA 16%:</td>
+                <td class="right">${{ cotizacion.iva|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="right" style="font-weight: bold;">TOTAL:</td>
                 <td class="right" style="font-weight: bold;">${{ cotizacion.total|floatformat:2 }}</td>
             </tr>
         </tfoot>

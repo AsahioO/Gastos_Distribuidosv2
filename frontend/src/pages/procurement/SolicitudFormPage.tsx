@@ -47,6 +47,7 @@ export default function SolicitudFormPage() {
   const [areas, setAreas] = useState<Area[]>([])
   const [cogs, setCogs] = useState<Cog[]>([])
   const { user, updateUser } = useAuthStore()
+  const ineExempt = user?.role === 'admin' || user?.role === 'adquisiciones'
 
   // Opciones predefinidas de unidades
   const unidadOptions = [
@@ -136,8 +137,8 @@ export default function SolicitudFormPage() {
       return
     }
 
-    // If user has no INE photo on file and not editing, show INE modal
-    if (!isEditing && !user?.ine_foto && !ineFoto) {
+    // If user has no INE photo on file and not editing, show INE modal (admin/adquisiciones exempt)
+    if (!ineExempt && !isEditing && !user?.ine_foto && !ineFoto) {
       setPendingFormData(data)
       setPendingSendDirectly(sendDirectly)
       setShowIneModal(true)
@@ -169,11 +170,11 @@ export default function SolicitudFormPage() {
       } else {
         const created = await procurementService.createSolicitud(payload, ineFoto || undefined)
 
-        if (!user?.ine_foto && ineFoto) {
+        if (!ineExempt && !user?.ine_foto && ineFoto) {
           // User just uploaded INE - update local store
           updateUser({ ine_rechazada: false, ine_rechazo_motivo: '' })
           toast.success('Solicitud creada. Tu INE será verificada por un administrador.')
-        } else if (!user?.ine_verificada) {
+        } else if (!ineExempt && !user?.ine_verificada) {
           toast.success('Solicitud creada. Tu INE será verificada por un administrador.')
         } else if (sendDirectly) {
           await procurementService.enviarSolicitud(created.id)
@@ -208,7 +209,7 @@ export default function SolicitudFormPage() {
   // Manejador para abrir modal de confirmación de envío directo
   const handleSendDirectly = (data: SolicitudForm) => {
     // If user has no INE on file, the INE modal will handle the flow
-    if (!user?.ine_foto) {
+    if (!ineExempt && !user?.ine_foto) {
       setPendingFormData(data)
       setPendingSendDirectly(true)
       setShowIneModal(true)

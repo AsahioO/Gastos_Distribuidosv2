@@ -107,4 +107,32 @@ export const documentService = {
     })
     return response.data.document_id ?? null
   },
+
+  downloadSolicitudGastoPdf: async (id: number, numero: string): Promise<void> => {
+    const response = await api.get(`/documents/solicitud-gasto/${id}/pdf/`, {
+      responseType: 'blob',
+    })
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `solicitud_gasto_${numero}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  },
+
+  downloadSolicitudPagoPdf: async (id: number, numero: string): Promise<void> => {
+    const response = await api.get(`/documents/solicitud-pago/${id}/pdf/`, {
+      responseType: 'blob',
+    })
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `solicitud_pago_${numero}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  },
 }

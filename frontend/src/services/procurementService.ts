@@ -87,8 +87,9 @@ const extractData = <T>(data: T[] | { results: T[] }): T[] => {
 
 export const procurementService = {
   // Solicitudes
-  getSolicitudes: async (): Promise<SolicitudMaterial[]> => {
-    const response = await api.get('/procurement/solicitudes/')
+  getSolicitudes: async (estado?: string): Promise<SolicitudMaterial[]> => {
+    const params = estado && estado !== 'todos' ? { estado } : {}
+    const response = await api.get('/procurement/solicitudes/', { params })
     return extractData(response.data)
   },
 

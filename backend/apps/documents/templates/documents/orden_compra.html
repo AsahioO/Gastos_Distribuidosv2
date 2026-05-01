@@ -9,114 +9,89 @@
 {% endblock %}
 
 {% block lugar_fecha %}
-    {{ orden.fecha_emision|date:'d/m/Y' }}
+    {{ lugar }}, a {{ orden.fecha_emision|date:'d/m/Y' }}
 {% endblock %}
 
 {% block destinatario_izq %}
-    <div class="nombre-destinatario">A: {{ orden.proveedor.razon_social }}</div>
-    <div>
-        {% if orden.proveedor.contacto_nombre %}
-            Atención: {{ orden.proveedor.contacto_nombre }}<br>
-        {% endif %}
-        {{ orden.proveedor.direccion }}
-    </div>
+    <div class="nombre-destinatario">{{ orden.proveedor.razon_social|upper }}</div>
+    <div>PRESENTE.</div>
 {% endblock %}
+
+{% block folio_doc %}No. {{ orden.numero }}{% endblock %}
 
 {% block destinatario_der %}
     <div><strong>FECHA ENTREGA ESPERADA:</strong></div>
-    <div>{% if orden.fecha_entrega_esperada %}{{ orden.fecha_entrega_esperada|date:'d/m/Y' }}{% else %}—{% endif %}</div>
+    <div>
+        {% if orden.fecha_entrega_esperada %}
+            {{ orden.fecha_entrega_esperada|date:'d/m/Y' }}
+        {% else %}
+            —
+        {% endif %}
+    </div>
 {% endblock %}
 
 {% block cuerpo %}
-    {% if orden.cotizacion.solicitud %}
-        <p style="margin-bottom: 15px;">
-            <strong>Solicitud origen:</strong> {{ orden.cotizacion.solicitud.numero }}
-        </p>
-    {% endif %}
-
-    <div style="font-weight: bold; font-size: 9.5pt; margin-bottom: 5px;">
-        MATERIALES Y/O SERVICIOS SOLICITADOS:
-    </div>
+    <p class="oficio-texto">
+        Por este conducto y con base a su cotización de fecha
+        {{ orden.cotizacion.fecha|date:'d/m/Y' }}, le solicito nos suministre los
+        siguientes materiales, bienes y/o servicios.
+    </p>
 {% endblock %}
 
 {% block tabla_datos %}
     <table class="datos-table">
         <thead>
             <tr>
-                <th style="width: 5%; text-align: center;">#</th>
-                <th style="width: 40%;">CONCEPTO</th>
-                <th style="width: 10%; text-align: center;">CANTIDAD</th>
-                <th style="width: 15%;">UNIDAD</th>
-                <th style="width: 15%; text-align: right;">P. UNITARIO</th>
-                <th style="width: 15%; text-align: right;">SUBTOTAL</th>
+                <th style="width: 15%;">CANTIDAD</th>
+                <th style="width: 20%;">UNIDAD DE MEDIDA</th>
+                <th style="width: 65%;">CONCEPTO</th>
             </tr>
         </thead>
         <tbody>
             {% for detalle in detalles %}
                 <tr>
-                    <td class="center">{{ forloop.counter }}</td>
-                    <td>
-                        <strong>{{ detalle.concepto }}</strong>
-                        {% if detalle.descripcion %}<br><span style="font-size: 8pt; color: #555;">{{ detalle.descripcion }}</span>{% endif %}
-                    </td>
                     <td class="center">{{ detalle.cantidad }}</td>
                     <td class="center">{{ detalle.unidad }}</td>
-                    <td class="right">${{ detalle.precio_unitario }}</td>
-                    <td class="right"><strong>${{ detalle.subtotal }}</strong></td>
+                    <td>{{ detalle.concepto }}</td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="6" class="center">No hay partidas en esta orden.</td>
+                    <td colspan="3" class="center">No hay partidas en esta orden.</td>
                 </tr>
             {% endfor %}
-            
-            <tr>
-                <td colspan="5" class="right" style="border-bottom: none; border-left: none;">SUBTOTAL:</td>
-                <td class="right">${{ orden.subtotal }}</td>
-            </tr>
-            <tr>
-                <td colspan="5" class="right" style="border-bottom: none; border-left: none; border-top: none;">IVA (16%):</td>
-                <td class="right">${{ orden.iva }}</td>
-            </tr>
-            <tr>
-                <td colspan="5" class="right" style="border-bottom: none; border-left: none; border-top: none; font-weight: bold; font-size: 11pt;">TOTAL:</td>
-                <td class="right" style="font-weight: bold; font-size: 11pt;">${{ orden.total }}</td>
-            </tr>
         </tbody>
     </table>
 {% endblock %}
 
 {% block pie_contenido %}
-    <div style="margin-top: 15px;">
-        <table class="datos-table" style="width: 100%;">
-            <tbody>
-                {% if orden.condiciones_pago %}
-                <tr>
-                    <td style="width: 30%; font-weight: bold;">CONDICIONES DE PAGO:</td>
-                    <td style="width: 70%;">{{ orden.condiciones_pago }}</td>
-                </tr>
-                {% endif %}
-                
-                {% if orden.lugar_entrega %}
-                <tr>
-                    <td style="font-weight: bold;">LUGAR DE ENTREGA:</td>
-                    <td>{{ orden.lugar_entrega }}</td>
-                </tr>
-                {% endif %}
-                
-                {% if orden.notas %}
-                <tr>
-                    <td style="font-weight: bold;">NOTAS:</td>
-                    <td>{{ orden.notas }}</td>
-                </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
+    <p class="oficio-texto" style="margin-top: 20px;">
+        Dichos materiales deberán ser entregados en la Oficina de Adquisiciones de Bienes
+        y Servicios del H. Ayuntamiento Municipal de {{ company.municipio }} en un horario
+        de 8:00 AM a 3:00 PM. Y los servicios en el lugar y hora acordados.
+    </p>
 
-    <div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; font-size: 9pt;">
-        <div style="font-weight: bold; margin-bottom: 5px;">DATOS PARA FACTURACIÓN:</div>
-        <div>RFC: {{ company.rfc }} | Razón Social: {{ company.razon_social }}</div>
-        <div>Domicilio: {{ company.direccion_completa }}</div>
+    {% if orden.notas %}
+    <p class="oficio-texto" style="margin-top: 10px;">
+        <strong>Observaciones:</strong> {{ orden.notas }}
+    </p>
+    {% endif %}
+{% endblock %}
+
+{% block firmas %}
+<div class="firmas-container">
+    <div class="firmas-row">
+        <div class="firma-bloque">
+            <div style="height: 80px;"></div>
+            <div class="firma-linea"></div>
+            <div class="firma-nombre">{{ firmantes.0.nombre_completo|upper }}</div>
+            <div class="firma-cargo">{{ firmantes.0.cargo|upper }}</div>
+        </div>
+        <div class="firma-bloque">
+            <div style="height: 80px;"></div>
+            <div class="firma-linea"></div>
+            <div class="firma-nombre">{{ firmantes.1.nombre_completo|upper }}</div>
+            <div class="firma-cargo">{{ firmantes.1.cargo|upper }}</div>
+        </div>
     </div>
+</div>
 {% endblock %}

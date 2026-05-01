@@ -334,7 +334,7 @@
 
     <!-- FRASE DEL AÑO -->
     <div class="frase-anio">
-        "2024, Año de Felipe Carrillo Puerto, Benemérito del Proletariado, Revolucionario y Defensor del Mayab"
+        {{ lema_anual }}
     </div>
 
     <!-- DESTINATARIOS -->
@@ -344,6 +344,7 @@
                 {% block destinatario_izq %}{% endblock %}
             </div>
             <div class="destinatario-der">
+                {% block folio_doc %}{% endblock %}
                 {% block destinatario_der %}{% endblock %}
             </div>
         </div>

@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.db import connection
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -28,6 +29,36 @@ class TenantViewSet(viewsets.ReadOnlyModelViewSet):
         if self.request.query_params.get('active_only'):
             queryset = queryset.filter(is_active=True)
         return queryset
+
+    def _get_current_tenant(self):
+        tenant = getattr(connection, 'tenant', None)
+        if tenant is None or not getattr(tenant, 'pk', None):
+            tenant = Tenant.objects.first()
+        return tenant
+
+    @action(detail=False, methods=['get', 'patch'], url_path='current')
+    def current(self, request):
+        """Get or update the current tenant. PATCH merges `settings` JSON."""
+        tenant = self._get_current_tenant()
+        if tenant is None:
+            return Response({'error': 'No tenant.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.method.lower() == 'get':
+            return Response(TenantSerializer(tenant).data)
+
+        # PATCH: merge settings JSON instead of overwriting
+        new_settings = request.data.get('settings')
+        if isinstance(new_settings, dict):
+            merged = dict(tenant.settings or {})
+            merged.update(new_settings)
+            tenant.settings = merged
+
+        for field in ('name', 'rfc'):
+            if field in request.data:
+                setattr(tenant, field, request.data[field])
+
+        tenant.save()
+        return Response(TenantSerializer(tenant).data)
 
 
 class SolicitudGubernamentalViewSet(viewsets.ModelViewSet):

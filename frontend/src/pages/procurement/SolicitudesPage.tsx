@@ -52,6 +52,7 @@ export default function SolicitudesPage() {
   const [ineFoto, setIneFoto] = useState<File | null>(null)
   const [inePreview, setInePreview] = useState<string | null>(null)
   const [uploadingIne, setUploadingIne] = useState(false)
+  const [filtroEstado, setFiltroEstado] = useState('todos')
 
   // Determinar permisos según rol
   const isArea = user?.role === 'area'
@@ -59,10 +60,10 @@ export default function SolicitudesPage() {
   const isAdmin = user?.role === 'admin'
   const canCreateSolicitud = isArea || isAdmin
 
-  const loadData = async () => {
+  const loadData = async (estado?: string) => {
     setLoading(true)
     try {
-      const data = await procurementService.getSolicitudes()
+      const data = await procurementService.getSolicitudes(estado)
       setSolicitudes(data)
     } catch (error) {
       toast.error('Error al cargar las solicitudes')
@@ -72,8 +73,8 @@ export default function SolicitudesPage() {
   }
 
   useEffect(() => {
-    loadData()
-  }, [])
+    loadData(filtroEstado)
+  }, [filtroEstado])
 
   // INE handlers
   const handleIneFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,7 +130,7 @@ export default function SolicitudesPage() {
     try {
       await procurementService.enviarSolicitud(solicitud.id)
       toast.success('Solicitud enviada correctamente')
-      loadData()
+      loadData(filtroEstado)
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Error al enviar la solicitud')
     }
@@ -139,7 +140,7 @@ export default function SolicitudesPage() {
     try {
       await procurementService.enviarACotizacion(solicitud.id)
       toast.success('Solicitud enviada a cotización')
-      loadData()
+      loadData(filtroEstado)
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Error al enviar a cotización')
     }
@@ -149,7 +150,7 @@ export default function SolicitudesPage() {
     try {
       await procurementService.cancelarSolicitud(solicitud.id)
       toast.success('Solicitud cancelada')
-      loadData()
+      loadData(filtroEstado)
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Error al cancelar la solicitud')
     }
@@ -162,7 +163,7 @@ export default function SolicitudesPage() {
       await procurementService.deleteSolicitud(selectedSolicitud.id)
       toast.success('Solicitud eliminada correctamente')
       setDeleteModalOpen(false)
-      loadData()
+      loadData(filtroEstado)
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Error al eliminar la solicitud')
     } finally {
@@ -342,8 +343,8 @@ export default function SolicitudesPage() {
         }
       />
 
-      {/* Sección de gestión de INE */}
-      {canCreateSolicitud && (
+      {/* Sección de gestión de INE - solo para rol area */}
+      {isArea && (
         <div className="mb-6">
           {!user?.ine_foto ? (
             // Usuario sin INE registrada
@@ -410,6 +411,7 @@ export default function SolicitudesPage() {
       <div className="mb-4 flex flex-wrap gap-2">
         {Object.entries({
           todos: 'Todos',
+          ...(isAdmin ? { pendiente_verificacion: 'Verificar INE' } : {}),
           borrador: 'Borradores',
           enviado: 'Enviados',
           en_cotizacion: 'En Cotización',
@@ -417,7 +419,14 @@ export default function SolicitudesPage() {
         }).map(([key, label]) => (
           <button
             key={key}
-            className="px-3 py-1 text-sm rounded-full border border-gray-300 hover:bg-gray-50"
+            onClick={() => setFiltroEstado(key)}
+            className={`px-3 py-1 text-sm rounded-full border transition-colors ${
+              filtroEstado === key
+                ? key === 'pendiente_verificacion'
+                  ? 'bg-amber-500 text-white border-amber-500'
+                  : 'bg-blue-600 text-white border-blue-600'
+                : 'border-gray-300 hover:bg-gray-50'
+            }`}
           >
             {label}
           </button>

@@ -3,13 +3,14 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from .models import Company, Proveedor, ProductoProveedor
+from .models import Company, Proveedor, ProductoProveedor, FirmanteDocumento
 from .serializers import (
     CompanySerializer,
     ProveedorSerializer,
     ProveedorSignupSerializer,
     ProductoProveedorSerializer,
     ProductoProveedorCreateSerializer,
+    FirmanteDocumentoSerializer,
 )
 from apps.accounts.permissions import IsAdmin, IsAdquisiciones, IsProveedor
 from apps.accounts.models import User, Role
@@ -269,3 +270,27 @@ class ProductoProveedorViewSet(viewsets.ModelViewSet):
                 {'error': 'No se pudo decodificar el archivo. Asegúrese de que sea UTF-8.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class FirmanteDocumentoViewSet(viewsets.ModelViewSet):
+    """CRUD de firmantes de documentos por empresa (tenant)."""
+    queryset = FirmanteDocumento.objects.select_related('company', 'user').all()
+    serializer_class = FirmanteDocumentoSerializer
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        company_id = self.request.query_params.get('company')
+        if company_id:
+            qs = qs.filter(company_id=company_id)
+        return qs
+
+    def perform_create(self, serializer):
+        # Default to first company if not specified (single-company tenant scenario)
+        if not serializer.validated_data.get('company'):
+            company = Company.objects.first()
+            serializer.save(company=company)
+        else:
+            serializer.save()
+
+

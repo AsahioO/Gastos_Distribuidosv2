@@ -18,7 +18,8 @@ import {
   DocumentPlusIcon,
   BoltIcon,
   ArchiveBoxIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  BanknotesIcon
 } from '@heroicons/react/24/outline'
 
 interface NavItem {
@@ -53,6 +54,9 @@ const navigation: NavItem[] = [
 
   // Facturas/Pagos: tesorería procesa pagos a proveedores
   { name: 'Facturas', href: '/facturas', icon: ReceiptPercentIcon, roles: ['admin', 'tesoreria'] },
+
+  // Claves Presupuestarias: plantillas de claves presupuestales
+  { name: 'Claves Presupuestarias', href: '/budget/plantillas', icon: BanknotesIcon, roles: ['admin', 'tesoreria'] },
 
   // Distribución Rápida: subir XML y distribuir gastos directamente
   { name: 'Dist. Rápida', href: '/facturas/distribucion-rapida', icon: BoltIcon, roles: ['admin', 'tesoreria'] },

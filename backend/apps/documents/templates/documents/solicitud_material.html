@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block lugar_fecha %}
-    {{ lugar }}, {{ fecha_solicitud|date:'j \d\e F \d\e Y'|upper }}
+    {{ lugar }}, {{ solicitud.fecha|date:'j \d\e F \d\e Y'|upper }}
 {% endblock %}
 
 {% block destinatario_izq %}
@@ -20,12 +20,15 @@
     {% endif %}
 {% endblock %}
 
+{% block folio_doc %}No. {{ solicitud.numero }}{% endblock %}
+
 {% block destinatario_der %}
     {% if destinatario_adquisiciones %}
-        <div><strong>ATENCIÓN:</strong></div>
-        <div class="nombre-destinatario">{{ destinatario_adquisiciones.full_name }}</div>
-        <div>ENCARGADO DE ADQUISICIONES DE BIENES Y SERVICIOS</div>
-        <div>MESA DE VALIDACIÓN</div>
+        <div style="text-align: center;">
+            <div class="nombre-destinatario">{{ destinatario_adquisiciones.full_name }}</div>
+            <div>ENCARGADO DE ADQUISICIONES DE BIENES Y SERVICIOS</div>
+            <div style="letter-spacing: 4px; font-weight: bold; margin-top: 2px;">A T E N C I O N</div>
+        </div>
     {% endif %}
 {% endblock %}
 
@@ -36,30 +39,26 @@
         ACTIVIDADES Y ACCIONES ENCOMENDADAS AL ÁREA A MI CARGO.
     </p>
 
-    <div style="margin-top: 15px; margin-bottom: 5px; font-weight: bold; font-size: 9pt;">
-        ESTOS MATERIALES SOLICITADOS SON CON CARGO A LA SIGUIENTE FUENTE DE FINANCIAMIENTO:
+    <div style="margin-top: 15px; margin-bottom: 10px; font-weight: bold; font-size: 9pt;">
+        ESTOS MATERIALES SOLICITADOS SON CON CARGO AL SIGUIENTE PROGRAMA PRESUPUESTARIO.
     </div>
 
-    <table class="datos-table" style="margin-top: 5px; margin-bottom: 15px;">
+    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; margin-bottom: 15px; font-size: 9.5pt;">
         <tbody>
             <tr>
-                <td style="width: 30%; font-weight: bold;">EJE RECTOR:</td>
-                <td style="width: 70%;">{{ solicitud.eje_rector|default:"-" }}</td>
+                <td style="width: 30%; font-weight: bold; padding: 3px 0; vertical-align: top;">EJE RECTOR:</td>
+                <td style="width: 70%; padding: 3px 0; vertical-align: top;">{{ solicitud.eje_rector|default:"-" }}</td>
             </tr>
             <tr>
-                <td style="font-weight: bold;">PROGRAMA PRESUPUESTARIO:</td>
-                <td>{{ solicitud.programa_presupuestario|default:"-" }}</td>
+                <td style="font-weight: bold; padding: 3px 0; vertical-align: top;">PROGRAMA PRESUPUESTARIO:</td>
+                <td style="padding: 3px 0; vertical-align: top;">{{ solicitud.programa_presupuestario|default:"-" }}</td>
             </tr>
             <tr>
-                <td style="font-weight: bold;">ACTIVIDAD O ACCIÓN:</td>
-                <td>{{ solicitud.actividad|default:"-" }}</td>
+                <td style="font-weight: bold; padding: 3px 0; vertical-align: top;">ACTIVIDAD O ACCION:</td>
+                <td style="padding: 3px 0; vertical-align: top;">{{ solicitud.actividad|default:"-" }}</td>
             </tr>
         </tbody>
     </table>
-
-    <div style="font-weight: bold; font-size: 9.5pt; margin-bottom: 5px;">
-        MATERIALES SOLICITADOS:
-    </div>
 {% endblock %}
 
 {% block tabla_datos %}

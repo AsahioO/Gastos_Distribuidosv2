@@ -20,7 +20,7 @@
 
 {% block destinatario_der %}
     <div><strong>FOLIO:</strong> {{ salida.numero }}</div>
-    <div><strong>FECHA DE SALIDA:</strong> {{ salida.fecha|date:'j \d\e F \d\e Y'|upper }}</div>
+    <div><strong>FECHA DE SALIDA:</strong> {{ salida.fecha_salida|date:'j \d\e F \d\e Y'|upper }}</div>
     <div><strong>ÁREA DESTINO:</strong> {{ salida.destino_area.name|upper }}</div>
     <div><strong>AUTORIZADO POR:</strong> {{ salida.responsable.get_full_name|upper }}</div>
 {% endblock %}
