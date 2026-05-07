@@ -20,13 +20,5 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
-# Logging for production
-LOGGING['handlers']['file'] = {  # noqa: F405
-    'class': 'logging.handlers.RotatingFileHandler',
-    'filename': BASE_DIR / 'logs' / 'django.log',  # noqa: F405
-    'maxBytes': 1024 * 1024 * 10,  # 10 MB
-    'backupCount': 5,
-    'formatter': 'json',
-}
-
-LOGGING['root']['handlers'] = ['console', 'file']  # noqa: F405
+# Logging para produccion en la nube — solo consola (Render captura stdout)
+LOGGING['root']['handlers'] = ['console']  # noqa: F405
