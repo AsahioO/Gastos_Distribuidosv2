@@ -20,9 +20,6 @@ django-storages>=1.14.0
 boto3>=1.34.0
 whitenoise>=6.6.0
 
-# PDF Generation
-weasyprint>=60.0
-
 # XML Parsing (CFDI)
 lxml>=5.0.0
 xmltodict>=0.13.0

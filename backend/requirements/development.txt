@@ -1,6 +1,9 @@
 # Development requirements
 -r base.txt
 
+# PDF Generation (solo desarrollo, requiere libs nativas: libpango, libcairo)
+weasyprint>=60.0
+
 # Testing
 pytest>=7.4.0
 pytest-django>=4.7.0
