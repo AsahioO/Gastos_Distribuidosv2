@@ -37,3 +37,4 @@ dj-database-url>=2.1.0
 # Utils
 Pillow>=10.0.0
 python-dateutil>=2.8.2
+num2words>=0.5.13
