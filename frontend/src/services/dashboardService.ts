@@ -53,21 +53,21 @@ export const dashboardService = {
 
   getGastosPorArea: async (): Promise<GastosPorArea[]> => {
     const response = await api.get('/reports/dashboard/gastos-por-area/')
-    return response.data
+    return Array.isArray(response.data) ? response.data : []
   },
 
   getGastosMensuales: async (): Promise<GastosMensuales[]> => {
     const response = await api.get('/reports/dashboard/gastos-mensuales/')
-    return response.data
+    return Array.isArray(response.data) ? response.data : []
   },
 
   getSolicitudesRecientes: async (): Promise<SolicitudReciente[]> => {
     const response = await api.get('/reports/dashboard/solicitudes-recientes/')
-    return response.data
+    return Array.isArray(response.data) ? response.data : []
   },
 
   getActividadReciente: async (): Promise<ActividadReciente[]> => {
     const response = await api.get('/reports/dashboard/actividad-reciente/')
-    return response.data
+    return Array.isArray(response.data) ? response.data : []
   },
 }
