@@ -87,3 +87,4 @@ services:
     name: gastos-redis
     plan: free
     maxmemoryPolicy: noeviction
+    ipAllowList: []
