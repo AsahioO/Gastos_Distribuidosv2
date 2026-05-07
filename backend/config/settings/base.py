@@ -6,6 +6,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+import dj_database_url
 from decouple import Csv, config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -101,18 +102,29 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database - PostgreSQL with django-tenants
-DATABASE_URL = config('DATABASE_URL', default='postgres://gastos_user:gastos_password@localhost:5432/gastos_db')
+# Usa DATABASE_URL si está disponible (Neon/Render), si no usa variables individuales
+_DATABASE_URL = config('DATABASE_URL', default='')
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': config('POSTGRES_DB', default='gastos_db'),
-        'USER': config('POSTGRES_USER', default='gastos_user'),
-        'PASSWORD': config('POSTGRES_PASSWORD', default='gastos_password'),
-        'HOST': config('DB_HOST', default='db'),
-        'PORT': config('DB_PORT', default='5432'),
+if _DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            _DATABASE_URL,
+            engine='django_tenants.postgresql_backend',
+            conn_max_age=600,
+            ssl_require=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django_tenants.postgresql_backend',
+            'NAME': config('POSTGRES_DB', default='gastos_db'),
+            'USER': config('POSTGRES_USER', default='gastos_user'),
+            'PASSWORD': config('POSTGRES_PASSWORD', default='gastos_password'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5432'),
+        }
+    }
 
 DATABASE_ROUTERS = (
     'django_tenants.routers.TenantSyncRouter',
