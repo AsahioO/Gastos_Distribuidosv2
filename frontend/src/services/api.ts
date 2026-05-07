@@ -45,7 +45,7 @@ api.interceptors.response.use(
           // Reuse an in-flight refresh request instead of creating a new one
           if (!pendingRefresh) {
             pendingRefresh = axios
-              .post('/api/auth/token/refresh/', { refresh: refreshToken })
+              .post(`${import.meta.env.VITE_API_URL || '/api'}/auth/token/refresh/`, { refresh: refreshToken })
               .then((res) => {
                 const { access, refresh: newRefresh } = res.data
                 const { user } = useAuthStore.getState()
