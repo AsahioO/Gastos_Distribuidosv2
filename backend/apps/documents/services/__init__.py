@@ -6,8 +6,10 @@ from .pdf_generator import (
     generate_autorizacion_pdf,
     generate_cotizacion_pdf,
     generate_entrega_pdf,
+    generate_evidencias_pdf,
     generate_salida_pdf,
     generate_solicitud_autorizacion_pdf,
+    generate_expediente_completo_pdf,
 )
 
 __all__ = [
@@ -18,6 +20,10 @@ __all__ = [
     'generate_autorizacion_pdf',
     'generate_cotizacion_pdf',
     'generate_entrega_pdf',
+    'generate_evidencias_pdf',
     'generate_salida_pdf',
     'generate_solicitud_autorizacion_pdf',
+    'generate_expediente_completo_pdf',
 ]
+
+

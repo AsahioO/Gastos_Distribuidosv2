@@ -8,7 +8,7 @@
             margin: 0cm; /* We use 0 margin so the watermark and header can be full width */
             
             {% if company.membrete %}
-                background-image: url('file://{{ membrete_path }}');
+                background-image: url('file:///{{ membrete_path }}');
                 background-size: cover;
                 background-position: center;
                 background-repeat: no-repeat;
@@ -290,7 +290,7 @@
     <!-- Si no hay membrete cargado de fondo, al menos ponemos los datos institucionales fijos -->
     <div class="membrete-generico">
         {% if logo_path %}
-            <div class="membrete-logo" style="background-image: url('file://{{ logo_path }}');"></div>
+            <div class="membrete-logo" style="background-image: url('file:///{{ logo_path }}');"></div>
         {% endif %}
         <div class="membrete-datos">
             <h1>{{ company.razon_social }}</h1>
@@ -374,7 +374,7 @@
             <div class="firma-bloque">
                 {% if firmante.sello_path %}
                 <div class="sello-img-container">
-                     <img src="file://{{ firmante.sello_path }}" alt="Sello" class="sello-img">
+                     <img src="file:///{{ firmante.sello_path }}" alt="Sello" class="sello-img">
                 </div>
                 {% else %}
                 <div style="height: 80px;"></div>
@@ -387,6 +387,8 @@
         </div>
     </div>
     {% endblock %}
+
+    {% block post_firmas %}{% endblock %}
 
 </body>
 </html>

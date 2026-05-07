@@ -55,6 +55,15 @@ class EntregaBienesViewSet(viewsets.ModelViewSet):
         
         return Response(EvidenciaEntregaSerializer(evidencia).data, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=['get'], url_path='evidencias')
+    def list_evidencias(self, request, pk=None):
+        """List all photo evidence for a delivery."""
+        entrega = self.get_object()
+        evidencias = EvidenciaEntrega.objects.filter(
+            entrega=entrega).order_by('created_at')
+        return Response(
+            EvidenciaEntregaSerializer(evidencias, many=True).data)
+
 
 class SalidaBienesViewSet(viewsets.ModelViewSet):
     queryset = SalidaBienes.objects.select_related(

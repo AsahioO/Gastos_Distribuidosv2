@@ -1,6 +1,6 @@
 import io
 
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from apps.documents.services.pdf_generator import (
     generate_distribucion_gasto_pdf,
     generate_expediente_gasto_pdf,
+    generate_expediente_completo_pdf,
     generate_solicitud_gasto_pdf,
     generate_solicitud_pago_pdf,
 )
@@ -94,6 +95,29 @@ class SolicitudGastoViewSet(viewsets.ModelViewSet):
             filename=f'expediente_{instance.numero}.pdf',
             content_type='application/pdf',
         )
+
+    @action(detail=True, methods=['get'], url_path='expediente-completo')
+    def expediente_completo(self, request, pk=None):
+        instance = self.get_object()
+        try:
+            pdf_bytes = generate_expediente_completo_pdf(
+                instance.id, _get_current_tenant()
+            )
+        except ValueError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Error generando expediente completo: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        filename = f'expediente_completo_{instance.numero}.pdf'
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
 
     @action(detail=True, methods=['get'], url_path='distribucion')
     def distribucion_pdf(self, request, pk=None):

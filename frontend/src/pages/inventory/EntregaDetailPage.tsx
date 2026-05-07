@@ -215,7 +215,13 @@ export default function EntregaDetailPage() {
               className="hidden"
               title="Seleccionar imagen"
             />
-            
+            <Button
+              variant="secondary"
+              loading={uploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              📷 Subir Evidencia
+            </Button>
           </div>
         </div>
         <div className="p-6">

@@ -37,11 +37,11 @@ def get_base_context():
     
     if company:
         if company.membrete and hasattr(company.membrete, 'path'):
-            context['membrete_path'] = company.membrete.path
+            context['membrete_path'] = Path(company.membrete.path).as_posix()
         if company.logo and hasattr(company.logo, 'path'):
-            context['logo_path'] = company.logo.path
+            context['logo_path'] = Path(company.logo.path).as_posix()
         if company.pie_pagina and hasattr(company.pie_pagina, 'path'):
-            context['pie_path'] = company.pie_pagina.path
+            context['pie_path'] = Path(company.pie_pagina.path).as_posix()
             
     return context
 
@@ -57,7 +57,7 @@ def get_firmantes_context(tipo_documento):
         firmantes_data.append({
             'nombre_completo': f.nombre_completo,
             'cargo': f.cargo,
-            'sello_path': f.sello_imagen.path if f.sello_imagen and hasattr(f.sello_imagen, 'path') else None
+            'sello_path': Path(f.sello_imagen.path).as_posix() if f.sello_imagen and hasattr(f.sello_imagen, 'path') else None
         })
         
     return firmantes_data
@@ -197,6 +197,20 @@ def generate_entrega_pdf(entrega) -> bytes:
 
     context['firmantes'] = get_firmantes_context('entrega_bienes')
 
+    # Photo evidence (rendered on a separate page after firmas)
+    from apps.inventory.models import EvidenciaEntrega
+    evidencias_qs = EvidenciaEntrega.objects.filter(
+        entrega=entrega).order_by('created_at')
+    fotos = []
+    for ev in evidencias_qs:
+        if ev.imagen and hasattr(ev.imagen, 'path'):
+            fotos.append({
+                'path': Path(ev.imagen.path).as_posix(),
+                'descripcion': ev.descripcion or '',
+                'fecha': ev.created_at,
+            })
+    context['evidencias'] = fotos
+
     html = render_template('entrega_bienes.html', context)
     return generate_pdf_from_html(html)
 
@@ -232,6 +246,39 @@ def generate_solicitud_autorizacion_pdf(solicitud_aut) -> bytes:
     context['firmantes'] = get_firmantes_context('solicitud_autorizacion')
 
     html = render_template('solicitud_autorizacion.html', context)
+    return generate_pdf_from_html(html)
+
+
+def generate_evidencias_pdf(entrega) -> bytes:
+    """Generate a photo evidence sheet PDF for an EntregaBienes.
+
+    Returns bytes with the rendered PDF, or None if no photos exist.
+    """
+    evidencias = entrega.evidencias.all().order_by('created_at')
+    if not evidencias.exists():
+        return None
+
+    fotos = []
+    for ev in evidencias:
+        if ev.imagen and hasattr(ev.imagen, 'path'):
+            fotos.append({
+                'path': Path(ev.imagen.path).as_posix(),
+                'descripcion': ev.descripcion or '',
+                'fecha': ev.created_at,
+            })
+
+    if not fotos:
+        return None
+
+    context = get_base_context()
+    context.update({
+        'entrega': entrega,
+        'fotos': fotos,
+        'lugar': 'Presidencia Municipal',
+    })
+    context['firmantes'] = get_firmantes_context('entrega_bienes')
+
+    html = render_template('evidencias_entrega.html', context)
     return generate_pdf_from_html(html)
 
 
@@ -377,5 +424,145 @@ def generate_expediente_gasto_pdf(solicitud_gasto_id, tenant) -> bytes:
 
     if len(pdf_parts) == 1:
         return gasto_bytes
+
+    return merge_pdfs_in_memory(pdf_parts)
+
+
+def generate_expediente_completo_pdf(solicitud_gasto_id, tenant):
+    """
+    Traverses the full procurement cycle backwards from SolicitudGasto
+    and merges all available documents in order.  Skips gracefully if
+    a link is missing (quick_flow facturas have no order chain).
+
+    Order:
+    1. SolicitudMaterial PDF        (if found)
+    2. Cotizacion PDF               (if found)
+    3. SolicitudAutorizacion PDF    (if found)
+    4. AutorizacionPresupuestal PDF (if found)
+    5. OrdenCompra PDF              (if found)
+    6. EntregaBienes PDF            (if found)
+    7. SalidaBienes PDF             (best-effort — skipped, no direct FK)
+    8. SolicitudGasto PDF           (always present)
+    9. DistribucionGasto PDF        (always present if distribuciones exist)
+    10. SolicitudPago PDF           (if exists)
+    """
+    from apps.treasury.models import SolicitudGasto
+    from apps.invoices.models import DistribucionGasto
+    from apps.orders.models import (
+        OrdenCompra, SolicitudAutorizacion, AutorizacionPresupuestal,
+    )
+    from apps.procurement.models import SolicitudMaterial
+    from apps.quotations.models import CotizacionMaterial
+    from apps.inventory.models import EntregaBienes
+
+    pdf_parts = []
+
+    # Load root object
+    solicitud_gasto = SolicitudGasto.objects.select_related(
+        'factura',
+    ).get(id=solicitud_gasto_id, tenant=tenant)
+    factura = solicitud_gasto.factura
+
+    # --- Steps 1-6: traverse backwards via EntregaBienes bridge ---
+    # EntregaBienes links both OrdenCompra and Factura
+    entrega = (
+        EntregaBienes.objects
+        .filter(factura=factura)
+        .select_related('orden__cotizacion__solicitud')
+        .first()
+    )
+
+    if entrega and entrega.orden:
+        orden = entrega.orden
+
+        # 1. SolicitudMaterial
+        solicitud_mat = None
+        if orden.cotizacion and orden.cotizacion.solicitud:
+            solicitud_mat = orden.cotizacion.solicitud
+            try:
+                pdf_parts.append(generate_solicitud_pdf(solicitud_mat))
+            except Exception:
+                logger.exception("Expediente: error generating SolicitudMaterial PDF")
+
+        # 2. Cotizacion
+        if orden.cotizacion:
+            try:
+                pdf_parts.append(generate_cotizacion_pdf(orden.cotizacion))
+            except Exception:
+                logger.exception("Expediente: error generating Cotizacion PDF")
+
+        # 3. SolicitudAutorizacion + 4. AutorizacionPresupuestal
+        if solicitud_mat:
+            sol_aut = SolicitudAutorizacion.objects.filter(
+                solicitud=solicitud_mat,
+            ).first()
+            if sol_aut:
+                try:
+                    pdf_parts.append(
+                        generate_solicitud_autorizacion_pdf(sol_aut))
+                except Exception:
+                    logger.exception(
+                        "Expediente: error generating SolicitudAutorizacion PDF")
+                if hasattr(sol_aut, 'autorizacion_presupuestal'):
+                    try:
+                        pdf_parts.append(
+                            generate_autorizacion_pdf(
+                                sol_aut.autorizacion_presupuestal))
+                    except Exception:
+                        logger.exception(
+                            "Expediente: error generating AutorizacionPresupuestal PDF")
+
+        # 5. OrdenCompra
+        try:
+            pdf_parts.append(generate_orden_compra_pdf(orden))
+        except Exception:
+            logger.exception("Expediente: error generating OrdenCompra PDF")
+
+        # 6. EntregaBienes
+        try:
+            pdf_parts.append(generate_entrega_pdf(entrega))
+        except Exception:
+            logger.exception("Expediente: error generating EntregaBienes PDF")
+
+    # 6b. Evidencias fotográficas de la entrega
+    if entrega:
+        try:
+            ev_bytes = generate_evidencias_pdf(entrega)
+            if ev_bytes:  # None when no photos exist
+                pdf_parts.append(ev_bytes)
+        except Exception:
+            logger.exception("Expediente: error generating Evidencias PDF")
+
+    # 7. SalidaBienes — best effort, no direct FK
+    # Skip for now (disconnected model); include when FK is added.
+
+    # 8. SolicitudGasto (always present)
+    try:
+        pdf_parts.append(
+            generate_solicitud_gasto_pdf(solicitud_gasto_id, tenant))
+    except Exception:
+        logger.exception("Expediente: error generating SolicitudGasto PDF")
+
+    # 9. DistribucionGasto
+    if factura and DistribucionGasto.objects.filter(factura=factura).exists():
+        try:
+            pdf_parts.append(
+                generate_distribucion_gasto_pdf(factura.id, tenant))
+        except Exception:
+            logger.exception(
+                "Expediente: error generating DistribucionGasto PDF")
+
+    # 10. SolicitudPago
+    if hasattr(solicitud_gasto, 'solicitud_pago'):
+        try:
+            pdf_parts.append(
+                generate_solicitud_pago_pdf(
+                    solicitud_gasto.solicitud_pago.id, tenant))
+        except Exception:
+            logger.exception("Expediente: error generating SolicitudPago PDF")
+
+    if not pdf_parts:
+        raise ValueError(
+            "No documents could be generated for this expediente")
 
     return merge_pdfs_in_memory(pdf_parts)

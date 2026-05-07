@@ -175,6 +175,19 @@ export default function FacturaDetailPage() {
     }
   }
 
+  const handleDownloadExpedienteCompleto = async (gastoId: number, numero: string) => {
+    try {
+      setPdfLoading(`expediente-completo-${gastoId}`)
+      await treasuryService.downloadExpedienteCompleto(gastoId, numero)
+      toast.success('Expediente completo del ciclo descargado correctamente')
+    } catch (err) {
+      toast.error('Error al descargar el expediente completo del ciclo')
+      console.error(err)
+    } finally {
+      setPdfLoading(null)
+    }
+  }
+
   const handleDelete = async () => {
     if (!factura) return
 
@@ -731,6 +744,14 @@ export default function FacturaDetailPage() {
                   className="bg-purple-600 hover:bg-purple-700"
                 >
                   📦 Descargar Expediente Completo
+                </Button>
+                <Button
+                  loading={pdfLoading === `expediente-completo-${sg.id}`}
+                  onClick={() => handleDownloadExpedienteCompleto(sg.id, sg.numero)}
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                  title="Incluye todos los documentos del ciclo de compra"
+                >
+                  📋 Expediente Completo del Ciclo
                 </Button>
               </div>
             </div>

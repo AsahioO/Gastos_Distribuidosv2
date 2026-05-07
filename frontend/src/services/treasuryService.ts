@@ -127,4 +127,11 @@ export const treasuryService = {
     })
     downloadBlob(response.data, `distribucion_${numero ?? id}.pdf`)
   },
+
+  downloadExpedienteCompleto: async (id: number, numero?: string): Promise<void> => {
+    const response = await api.get(`/treasury/solicitudes-gasto/${id}/expediente-completo/`, {
+      responseType: 'blob',
+    })
+    downloadBlob(response.data, `expediente_completo_${numero ?? id}.pdf`)
+  },
 }
