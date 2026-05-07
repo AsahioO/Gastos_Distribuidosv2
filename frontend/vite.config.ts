@@ -31,5 +31,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    // Relative paths so static assets resolve when served from Django
+    // e.g. /static/assets/index-ABC.js instead of /assets/index-ABC.js
   },
 })
