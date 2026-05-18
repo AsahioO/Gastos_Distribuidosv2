@@ -147,3 +147,5 @@ postgres_data/
 redis_data/
 
 .agents
+
+opencode.jsonc
